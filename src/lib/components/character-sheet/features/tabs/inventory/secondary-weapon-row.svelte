@@ -41,7 +41,7 @@
 	// Toggle equip/unequip
 	function toggleEquip(e: MouseEvent) {
 		e.stopPropagation();
-		if (!weapon) return;
+		if (!weapon || !characterCtx.canEditInventory) return;
 
 		if (isEquipped) {
 			characterCtx.unequipItem('secondary_weapon');
@@ -116,19 +116,21 @@
 	>
 		<td class="px-4 py-2">
 			<div class="flex items-center gap-1">
-				<button
-					class="group -my-2 -ml-4 self-stretch pr-1 pl-4"
-					onclick={toggleEquip}
-					title={equipTitle}
-				>
-					<div
-						class="flex size-[16px] items-center justify-center rounded-full border-2 border-muted-foreground transition-colors group-hover:border-foreground"
+				{#if characterCtx.canEditInventory}
+					<button
+						class="group -my-2 -ml-4 self-stretch pr-1 pl-4"
+						onclick={toggleEquip}
+						title={equipTitle}
 					>
-						{#if isEquipped}
-							<div class="size-[8px] rounded-full bg-muted-foreground"></div>
-						{/if}
-					</div>
-				</button>
+						<div
+							class="flex size-[16px] items-center justify-center rounded-full border-2 border-muted-foreground transition-colors group-hover:border-foreground"
+						>
+							{#if isEquipped}
+								<div class="size-[8px] rounded-full bg-muted-foreground"></div>
+							{/if}
+						</div>
+					</button>
+				{/if}
 				<div class="-mb-1">
 					<p>{weapon.title}</p>
 					<p class="flex items-center gap-1.5 text-[10px] text-muted-foreground">
