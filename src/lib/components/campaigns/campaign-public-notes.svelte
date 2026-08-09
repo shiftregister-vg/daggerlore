@@ -4,7 +4,6 @@
 	import { getCampaignContext } from '$lib/state/campaign.svelte';
 	import { cn, renderMarkdown } from '$lib/utils';
 	import Check from '@lucide/svelte/icons/check';
-	import Eye from '@lucide/svelte/icons/eye';
 	import SquarePen from '@lucide/svelte/icons/square-pen';
 
 	let {
