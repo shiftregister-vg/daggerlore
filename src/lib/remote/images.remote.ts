@@ -1,6 +1,7 @@
 import { command, getRequestEvent } from '$app/server';
+import { putUserContentImage } from '$lib/server/usercontent-storage';
 import { z } from 'zod';
-import { require_r2_usercontent, require_auth, is_failure, ok } from './utils';
+import { require_auth, is_failure, ok, fail } from './utils';
 
 const MAX_IMAGE_SIZE = 5 * 1024 * 1024; // 5MB in bytes
 const ALLOWED_IMAGE_MIME_TYPES = new Set([
@@ -40,13 +41,7 @@ export const upload_user_image = command(imageDataSchema, async ({ data, name, t
 		return auth_result;
 	}
 
-	const r2_result = require_r2_usercontent(event);
-	if (is_failure(r2_result)) {
-		return r2_result;
-	}
-
 	const { userId } = auth_result.data;
-	const r2 = r2_result.data;
 
 	// Decode base64 to ArrayBuffer
 	const binaryString = atob(data);
@@ -59,12 +54,12 @@ export const upload_user_image = command(imageDataSchema, async ({ data, name, t
 	const fileExtension = name.split('.').pop() || 'bin';
 	const imageKey = `${userId}/${crypto.randomUUID()}.${fileExtension}`;
 
-	// Upload to R2 usercontent bucket
-	await r2.put(imageKey, bytes.buffer, {
-		httpMetadata: {
-			contentType: type
-		}
-	});
+	try {
+		await putUserContentImage(event.platform, imageKey, bytes.buffer, type);
+	} catch (error) {
+		console.error('Failed to upload user image', error);
+		return fail('dependency_unavailable', 'Image storage is not available', 503);
+	}
 
 	// Generate the URL for the image
 	const url = new URL(`/api/usercontent/images/${imageKey}`, event.url.origin);
