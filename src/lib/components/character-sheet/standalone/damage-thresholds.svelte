@@ -31,7 +31,7 @@
 				</g>
 			</svg>
 			<div
-				class="absolute top-[30%] right-[13%] text-center text-[clamp(0.55rem,3.3cqw,0.75rem)] leading-none font-bold text-foreground"
+				class="character-sheet-section-label absolute top-[30%] right-[13%] text-center text-[clamp(0.55rem,3.3cqw,0.75rem)] leading-none font-bold text-foreground"
 			>
 				<p>MASSIVE</p>
 			</div>
@@ -76,20 +76,20 @@
 	</svg>
 
 	<div
-		class="absolute top-[17%] left-[12.25%] -translate-x-1/2 text-center text-[clamp(0.55rem,3.3cqw,0.75rem)] leading-none font-bold text-background"
+		class="character-sheet-section-label absolute top-[17%] left-[12.25%] -translate-x-1/2 text-center text-[clamp(0.55rem,3.3cqw,0.75rem)] leading-none font-bold text-background"
 	>
 		<p class="mb-[2px]">MINOR</p>
 		<p>DAMAGE</p>
 	</div>
 
 	<div
-		class="absolute top-[17%] left-1/2 -translate-x-1/2 text-center text-[clamp(0.55rem,3.3cqw,0.75rem)] leading-none font-bold text-background"
+		class="character-sheet-section-label absolute top-[17%] left-1/2 -translate-x-1/2 text-center text-[clamp(0.55rem,3.3cqw,0.75rem)] leading-none font-bold text-background"
 	>
 		<p class="mb-[2px]">MAJOR</p>
 		<p>DAMAGE</p>
 	</div>
 	<div
-		class="absolute top-[17%] left-[87.75%] -translate-x-1/2 text-center text-[clamp(0.55rem,3.3cqw,0.75rem)] leading-none font-bold text-background"
+		class="character-sheet-section-label absolute top-[17%] left-[87.75%] -translate-x-1/2 text-center text-[clamp(0.55rem,3.3cqw,0.75rem)] leading-none font-bold text-background"
 	>
 		<p class="mb-[2px]">SEVERE</p>
 		<p>DAMAGE</p>

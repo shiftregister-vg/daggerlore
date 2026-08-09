@@ -118,19 +118,33 @@
 <Tabs.Root value={tab} onValueChange={setTab} class="h-full">
 	<div class={cn('relative z-11 grid h-full grid-rows-[auto_1fr]')}>
 		<Tabs.List class="-mt-2 flex h-auto w-full flex-wrap gap-y-1 rounded-none p-2">
-			<Tabs.Trigger value="weapons" class="h-auto flex-initial">Weapons & Armor</Tabs.Trigger>
+			<Tabs.Trigger value="weapons" class="character-sheet-section-label h-auto flex-initial"
+				>Weapons & Armor</Tabs.Trigger
+			>
 			{#if hasSheetAddons}
-				<Tabs.Trigger value="addons" class="h-auto flex-initial">Add-ons</Tabs.Trigger>
+				<Tabs.Trigger value="addons" class="character-sheet-section-label h-auto flex-initial"
+					>Add-ons</Tabs.Trigger
+				>
 			{/if}
 			{#if derived_character_data?.hasBeastformClassFeature}
-				<Tabs.Trigger value="beastform" class="h-auto flex-initial">Beastform</Tabs.Trigger>
+				<Tabs.Trigger value="beastform" class="character-sheet-section-label h-auto flex-initial"
+					>Beastform</Tabs.Trigger
+				>
 			{/if}
 			{#if derived_character_data?.hasCompanionSubclassFeature}
-				<Tabs.Trigger value="companion" class="h-auto flex-initial">Companion</Tabs.Trigger>
+				<Tabs.Trigger value="companion" class="character-sheet-section-label h-auto flex-initial"
+					>Companion</Tabs.Trigger
+				>
 			{/if}
-			<Tabs.Trigger value="inventory" class="h-auto flex-initial">Inventory</Tabs.Trigger>
-			<Tabs.Trigger value="background" class="h-auto flex-initial">Background</Tabs.Trigger>
-			<Tabs.Trigger value="notes" class="h-auto flex-initial">Notes</Tabs.Trigger>
+			<Tabs.Trigger value="inventory" class="character-sheet-section-label h-auto flex-initial"
+				>Inventory</Tabs.Trigger
+			>
+			<Tabs.Trigger value="background" class="character-sheet-section-label h-auto flex-initial"
+				>Background</Tabs.Trigger
+			>
+			<Tabs.Trigger value="notes" class="character-sheet-section-label h-auto flex-initial"
+				>Notes</Tabs.Trigger
+			>
 		</Tabs.List>
 
 		<div class="overflow-hidden">

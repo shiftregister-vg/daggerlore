@@ -54,7 +54,7 @@
 			{max}
 		</p>
 		<p
-			class="absolute bottom-[10px] left-1/2 -translate-x-1/2 text-[11px] leading-none font-medium text-primary-foreground"
+			class="character-sheet-section-label absolute bottom-[10px] left-1/2 -translate-x-1/2 text-[11px] leading-none font-medium text-primary-foreground"
 		>
 			ARMOR
 		</p>
