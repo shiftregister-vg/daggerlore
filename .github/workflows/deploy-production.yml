@@ -12,6 +12,8 @@ jobs:
   deploy:
     name: Deploy release to Railway production
     runs-on: ubuntu-latest
+    environment:
+      name: Odyssey / production
     steps:
       - name: Check out release tag
         uses: actions/checkout@v4
