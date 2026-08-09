@@ -608,27 +608,49 @@
 	</div>
 {/snippet}
 
-{#snippet renderCardItem(card: CardSpaceItem)}
-	<div
-		class={cn(
-			'relative rounded-2xl transition-shadow',
-			arranging && 'cursor-grab active:cursor-grabbing'
-		)}
-		use:dragHandle
-		data-card-key={card.key}
-	>
-		{@render renderCard(card)}
-		{#if arranging && card.type === 'domain_card' && !card.card.forced_in_loadout}
-			<Button
-				size="sm"
-				class="absolute right-3 bottom-3 z-20 rounded-full shadow-lg"
-				onclick={() => removeLoadoutCard(card)}
-			>
-				Move to Vault
-				<ArrowUpRight class="size-4" />
-			</Button>
+{#snippet renderCardItem(card: CardSpaceItem, draggable = false)}
+	{#if draggable}
+		<div
+			class="relative cursor-grab rounded-2xl transition-shadow active:cursor-grabbing"
+			use:dragHandle
+			data-card-key={card.key}
+		>
+			{@render renderCard(card)}
+			{#if card.type === 'domain_card' && !card.card.forced_in_loadout}
+				<Button
+					size="sm"
+					class="absolute right-3 bottom-3 z-20 rounded-full shadow-lg"
+					onclick={() => removeLoadoutCard(card)}
+				>
+					Move to Vault
+					<ArrowUpRight class="size-4" />
+				</Button>
+			{/if}
+		</div>
+	{:else}
+		<div class="relative rounded-2xl transition-shadow" data-card-key={card.key}>
+			{@render renderCard(card)}
+		</div>
+	{/if}
+{/snippet}
+
+{#snippet renderTabletopItems(draggable = false)}
+	{#each tabletopItems as item (item.id)}
+		{@const card = allCardsByKey.get(item.id)}
+		{#if card}
+			<div aria-label={card.label}>
+				{@render renderCardItem(card, draggable)}
+			</div>
 		{/if}
-	</div>
+	{/each}
+	{#if allCards.length === 0}
+		<div class="col-span-full grid min-h-52 place-items-center rounded-lg border border-dashed border-muted">
+			<div class="text-center text-muted-foreground">
+				<BookOpen class="mx-auto mb-2 size-8" />
+				<p>No active cards yet.</p>
+			</div>
+		</div>
+	{/if}
 {/snippet}
 
 {#snippet renderFeatureSummary()}
@@ -873,30 +895,24 @@
 		{/if}
 
 		{#if viewMode === 'cards'}
-			<div
-				class="tabletop-grid min-h-[520px] rounded-xl border border-dashed border-primary/30 bg-background/40 p-4"
-				aria-label="Character card tabletop"
-				use:dragHandleZone={tabletopDndOptions}
-				onconsider={handleLooseConsider}
-				onfinalize={handleLooseFinalize}
-			>
-				{#each tabletopItems as item (item.id)}
-					{@const card = allCardsByKey.get(item.id)}
-					{#if card}
-						<div aria-label={card.label}>
-							{@render renderCardItem(card)}
-						</div>
-					{/if}
-				{/each}
-				{#if allCards.length === 0}
-					<div class="col-span-full grid min-h-52 place-items-center rounded-lg border border-dashed border-muted">
-						<div class="text-center text-muted-foreground">
-							<BookOpen class="mx-auto mb-2 size-8" />
-							<p>No active cards yet.</p>
-						</div>
-					</div>
-				{/if}
-			</div>
+			{#if arranging}
+				<div
+					class="tabletop-grid min-h-[520px] rounded-xl border border-dashed border-primary/30 bg-background/40 p-4"
+					aria-label="Character card tabletop"
+					use:dragHandleZone={tabletopDndOptions}
+					onconsider={handleLooseConsider}
+					onfinalize={handleLooseFinalize}
+				>
+					{@render renderTabletopItems(true)}
+				</div>
+			{:else}
+				<div
+					class="tabletop-grid min-h-[520px] rounded-xl border border-dashed border-primary/30 bg-background/40 p-4"
+					aria-label="Character card tabletop"
+				>
+					{@render renderTabletopItems()}
+				</div>
+			{/if}
 		{:else}
 			<div class="overflow-hidden rounded-lg border border-primary/40 bg-card/80">
 				<div class="grid grid-cols-[minmax(220px,0.9fr)_minmax(0,2.4fr)] gap-4 border-b border-primary/30 bg-primary/30 px-3 py-2 text-xs font-bold text-muted-foreground uppercase max-lg:hidden">
