@@ -88,13 +88,22 @@ export const LootInventoryItemSchema = z.object({
 });
 export type LootInventoryItem = z.infer<typeof LootInventoryItemSchema>;
 
+export const AdventuringGearInventoryItemSchema = z.union([
+	AdventuringGearSchema,
+	z.object({
+		title: z.string().trim().min(1),
+		quantity: z.number().int().min(1).default(1)
+	})
+]);
+export type AdventuringGearInventoryItem = z.infer<typeof AdventuringGearInventoryItemSchema>;
+
 export const InventorySchema = z.object({
 	primary_weapons: z.array(PrimaryWeaponInventoryItemSchema),
 	secondary_weapons: z.array(SecondaryWeaponInventoryItemSchema),
 	armor: z.array(ArmorInventoryItemSchema),
 	loot: z.array(LootInventoryItemSchema),
 	consumables: z.array(ConsumableInventoryItemSchema),
-	adventuring_gear: z.array(AdventuringGearSchema),
+	adventuring_gear: z.array(AdventuringGearInventoryItemSchema),
 	gold_coins: z.number().int().min(0)
 });
 export type Inventory = z.infer<typeof InventorySchema>;

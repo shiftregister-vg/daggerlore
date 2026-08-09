@@ -10,6 +10,7 @@
 		Loot
 	} from '@domain/schemas/compendium';
 	import Dropdown from '$lib/components/utility/dropdown.svelte';
+	import type { AdventuringGearInventoryItem } from '$lib/domain/schemas/characters';
 	import ArmorDetails from '$lib/components/compendium-items/equipment/armor-details.svelte';
 	import ConsumableDetails from '$lib/components/compendium-items/equipment/consumable-details.svelte';
 	import LootDetails from '$lib/components/compendium-items/equipment/loot-details.svelte';
@@ -44,6 +45,14 @@
 		return titleMatch || descMatch;
 	}
 
+	function gearTitle(gear: AdventuringGearInventoryItem) {
+		return typeof gear === 'string' ? gear : gear.title;
+	}
+
+	function gearQuantity(gear: AdventuringGearInventoryItem) {
+		return typeof gear === 'string' ? 1 : (gear.quantity ?? 1);
+	}
+
 	// Filtered weapons and armor
 	const filteredWeapons = $derived([
 		...(derived_character_data?.inventory_primary_weapons ?? [])
@@ -75,7 +84,9 @@
 
 	// Filtered adventuring gear
 	const filteredAdventuringGear = $derived(
-		character?.inventory.adventuring_gear.filter((gear) => matchesSearch(gear, searchQuery)) || []
+		character?.inventory.adventuring_gear
+			.map((gear, index) => ({ gear, index }))
+			.filter(({ gear }) => matchesSearch(gearTitle(gear), searchQuery)) || []
 	);
 
 	const hasItems = $derived(
@@ -274,14 +285,17 @@
 					<p class="ml-2 font-medium">Adventuring Gear</p>
 
 					<ul class="">
-						{#each filteredAdventuringGear as gear}
+						{#each filteredAdventuringGear as { gear, index } (index)}
 							<li class="flex items-center text-sm text-muted-foreground">
 								<span class="mr-3 ml-4">•</span>
-								{gear}
+								<span>{gearTitle(gear)}</span>
+								{#if gearQuantity(gear) > 1}
+									<span class="ml-2 text-xs font-medium text-foreground">x{gearQuantity(gear)}</span>
+								{/if}
 								<Button
 									variant="link"
 									class="ml-auto h-auto py-1 text-foreground"
-									onclick={() => characterCtx.removeFromInventory('adventuring_gear', gear)}
+									onclick={() => characterCtx.removeAdventuringGear(index)}
 								>
 									<CircleMinus class="size-4" />
 								</Button>

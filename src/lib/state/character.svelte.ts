@@ -402,7 +402,7 @@ function createCharacter() {
 				quantity: 1
 			});
 		} else if (options.type === 'adventuring_gear') {
-			character.inventory.adventuring_gear.push(options.title);
+			character.inventory.adventuring_gear.push({ title: options.title, quantity: 1 });
 		}
 	}
 
@@ -453,7 +453,9 @@ function createCharacter() {
 				(c) => c.inventory_id !== inventory_id
 			);
 		} else if (type === 'adventuring_gear') {
-			const idx = character.inventory.adventuring_gear.indexOf(inventory_id);
+			const idx = character.inventory.adventuring_gear.findIndex((gear) =>
+				typeof gear === 'string' ? gear === inventory_id : gear.title === inventory_id
+			);
 			if (idx !== -1) character.inventory.adventuring_gear.splice(idx, 1);
 		}
 	}
@@ -461,7 +463,21 @@ function createCharacter() {
 	function updateAdventuringGear(index: number, title: string) {
 		if (!character) return;
 		if (index < 0 || index >= character.inventory.adventuring_gear.length) return;
-		character.inventory.adventuring_gear[index] = title;
+		const current = character.inventory.adventuring_gear[index];
+		character.inventory.adventuring_gear[index] =
+			typeof current === 'string' ? title : { ...current, title };
+	}
+
+	function setAdventuringGearQuantity(index: number, quantity: number) {
+		if (!character || !characterQuery.data?.canEditInventory) return;
+		if (index < 0 || index >= character.inventory.adventuring_gear.length) return;
+
+		const current = character.inventory.adventuring_gear[index];
+		const title = typeof current === 'string' ? current : current.title;
+		character.inventory.adventuring_gear[index] = {
+			title,
+			quantity: Math.max(1, Math.floor(quantity || 1))
+		};
 	}
 
 	function setConsumableQuantity(inventory_id: string, quantity: number) {
@@ -635,6 +651,7 @@ function createCharacter() {
 		removeFromInventory,
 		setConsumableQuantity,
 		updateAdventuringGear,
+		setAdventuringGearQuantity,
 		removeAdventuringGear,
 		equipItem,
 		unequipItem,
