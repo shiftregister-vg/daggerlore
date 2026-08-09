@@ -328,14 +328,25 @@ function createCharacter() {
 		clearPendingSync();
 
 		if (local_snapshot === server_snapshot) return;
+		if (!characterQuery.data?.canEdit && !characterQuery.data?.canEditInventory) return;
 
 		const capturedId = id;
 		const capturedCharacter: Character = JSON.parse(JSON.stringify(sync_character));
 		debounceTimer = setTimeout(() => {
 			debounceTimer = undefined;
-			void patchApi<void>(`/characters/${capturedId}`, capturedCharacter).then(() =>
-				characterQuery.refresh()
-			);
+			const endpoint = characterQuery.data?.canEdit
+				? `/characters/${capturedId}`
+				: `/characters/${capturedId}/inventory`;
+			const payload = characterQuery.data?.canEdit
+				? capturedCharacter
+				: {
+						inventory: capturedCharacter.inventory,
+						active_armor_inventory_id: capturedCharacter.active_armor_inventory_id,
+						active_primary_weapon_inventory_id: capturedCharacter.active_primary_weapon_inventory_id,
+						active_secondary_weapon_inventory_id:
+							capturedCharacter.active_secondary_weapon_inventory_id
+					};
+			void patchApi<void>(endpoint, payload).then(() => characterQuery.refresh());
 		}, SYNC_DEBOUNCE_MS);
 
 		return () => {
@@ -444,6 +455,18 @@ function createCharacter() {
 			const idx = character.inventory.adventuring_gear.indexOf(inventory_id);
 			if (idx !== -1) character.inventory.adventuring_gear.splice(idx, 1);
 		}
+	}
+
+	function updateAdventuringGear(index: number, title: string) {
+		if (!character) return;
+		if (index < 0 || index >= character.inventory.adventuring_gear.length) return;
+		character.inventory.adventuring_gear[index] = title;
+	}
+
+	function removeAdventuringGear(index: number) {
+		if (!character) return;
+		if (index < 0 || index >= character.inventory.adventuring_gear.length) return;
+		character.inventory.adventuring_gear.splice(index, 1);
 	}
 
 	function nextEquippedWeaponBurden(
@@ -560,6 +583,9 @@ function createCharacter() {
 		get canEdit() {
 			return characterQuery.data?.canEdit ?? false;
 		},
+		get canEditInventory() {
+			return characterQuery.data?.canEditInventory ?? false;
+		},
 		get isOwner() {
 			return characterQuery.data?.isOwner ?? false;
 		},
@@ -583,6 +609,8 @@ function createCharacter() {
 		refreshCompendiumState,
 		addToInventory,
 		removeFromInventory,
+		updateAdventuringGear,
+		removeAdventuringGear,
 		equipItem,
 		unequipItem,
 		addScar,

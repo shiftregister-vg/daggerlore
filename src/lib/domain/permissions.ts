@@ -33,6 +33,7 @@ export type CampaignAccess = {
 export type CharacterAccess = {
 	character: Character;
 	canEdit: boolean;
+	canEditInventory: boolean;
 	isOwner: boolean;
 };
 

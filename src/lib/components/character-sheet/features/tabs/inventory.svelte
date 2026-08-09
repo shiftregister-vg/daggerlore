@@ -124,7 +124,7 @@
 			bind:gold_coins={character.inventory.gold_coins}
 			class="mx-4 justify-center"
 			isCoinMode={!!character?.settings.use_gold_coins}
-			canEdit={characterCtx.canEdit}
+			canEdit={characterCtx.canEditInventory}
 		/>
 
 		<div class="mx-4 flex items-center gap-2">
@@ -135,7 +135,7 @@
 				/>
 				<Input bind:value={searchQuery} placeholder="Search inventory..." class="pl-9" />
 			</div>
-			{#if characterCtx.canEdit}
+			{#if characterCtx.canEditInventory}
 				<Button class="mx-4" variant="outline" onclick={onAddItems}>Add Items</Button>
 			{/if}
 		</div>

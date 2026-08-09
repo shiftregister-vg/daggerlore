@@ -2228,6 +2228,7 @@ export async function getCharacterAccess(userId: string | undefined, characterId
 		return {
 			character: { ...character, campaign_id: campaignId ?? undefined },
 			canEdit: true,
+			canEditInventory: true,
 			isOwner: true,
 			ownerUserId: row.owner_user_id
 		};
@@ -2239,10 +2240,17 @@ export async function getCharacterAccess(userId: string | undefined, characterId
 	const members = parseJson<CampaignMember[]>(campaign.members);
 	const member = members.find((campaignMember) => campaignMember.clerk_id === id);
 	if (!member) return null;
+	const campaignCharacters = parseJson<CampaignCharacter[]>(campaign.characters);
+	const campaignCharacter = campaignCharacters.find(
+		(entry) => entry.character_id === characterId && entry.status === 'active'
+	);
+	const canEdit = member.role === 'GM';
+	const canEditInventory = canEdit || campaignCharacter?.claimed_by_clerk_id === id;
 
 	return {
 		character: { ...character, campaign_id: campaignId },
-		canEdit: member.role === 'GM',
+		canEdit,
+		canEditInventory,
 		isOwner: false,
 		ownerUserId: row.owner_user_id
 	};
@@ -2257,6 +2265,35 @@ export async function updateCharacter(
 	if (!access?.canEdit) throw new Error('Not authorized');
 	await execute('update characters set character = ?, updated_at = ? where id = ?', [
 		jsonParam({ ...character, campaign_id: access.character.campaign_id }),
+		nowIso(),
+		characterId
+	]);
+}
+
+export async function updateCharacterInventory(
+	userId: string | undefined,
+	characterId: string,
+	data: Pick<
+		Character,
+		| 'inventory'
+		| 'active_armor_inventory_id'
+		| 'active_primary_weapon_inventory_id'
+		| 'active_secondary_weapon_inventory_id'
+	>
+) {
+	const access = await getCharacterAccess(userId, characterId);
+	if (!access?.canEditInventory) throw new Error('Not authorized');
+
+	const nextCharacter: Character = {
+		...access.character,
+		inventory: data.inventory,
+		active_armor_inventory_id: data.active_armor_inventory_id,
+		active_primary_weapon_inventory_id: data.active_primary_weapon_inventory_id,
+		active_secondary_weapon_inventory_id: data.active_secondary_weapon_inventory_id
+	};
+
+	await execute('update characters set character = ?, updated_at = ? where id = ?', [
+		jsonParam(nextCharacter),
 		nowIso(),
 		characterId
 	]);

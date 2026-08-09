@@ -1,8 +1,5 @@
 <script lang="ts">
 	import * as Sheet from '$lib/components/ui/sheet';
-	import * as Collapsible from '$lib/components/ui/collapsible';
-	import { cn } from '$lib/utils';
-	import ChevronRight from '@lucide/svelte/icons/chevron-right';
 	import CircleMinus from '@lucide/svelte/icons/circle-minus';
 	import { getCharacterContext } from '$lib/state/character.svelte';
 	import Button from '$lib/components/ui/button/button.svelte';
@@ -21,7 +18,7 @@
 
 <div class="flex flex-col gap-6 overflow-y-auto px-4 pb-6">
 	<!-- Add New Gear Section -->
-	{#if context.canEdit}
+	{#if context.canEditInventory}
 		<div class="flex items-center gap-2">
 			<Input
 				bind:value={newGearTitle}
@@ -50,21 +47,29 @@
 	{/if}
 
 	{#if adventuringGear.length > 0}
-		<!-- Adventuring Gear Table -->
 		<table class="w-full border-collapse text-sm">
 			<tbody>
-				{#each adventuringGear as gear}
+				{#each adventuringGear as gear, index}
 					<tr class="border-b">
-						<td class="py-2 pr-4 text-left text-muted-foreground">
-							{gear}
+						<td class="py-2 pr-2 text-left text-muted-foreground">
+							{#if context.canEditInventory}
+								<Input
+									value={gear}
+									aria-label="Adventuring gear name"
+									oninput={(event) =>
+										context.updateAdventuringGear(index, event.currentTarget.value)}
+								/>
+							{:else}
+								{gear}
+							{/if}
 						</td>
 						<td class="py-2 text-right">
-							{#if context.canEdit}
+							{#if context.canEditInventory}
 								<Button
 									variant="ghost"
 									size="sm"
 									class="h-auto"
-									onclick={() => context.removeFromInventory('adventuring_gear', gear)}
+									onclick={() => context.removeAdventuringGear(index)}
 								>
 									<CircleMinus class="size-3.5" />
 								</Button>

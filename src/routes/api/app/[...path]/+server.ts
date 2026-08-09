@@ -262,6 +262,10 @@ export async function PATCH(event) {
 		const parts = pathParts(event);
 		const uid = await userId(event);
 
+		if (parts[0] === 'characters' && parts[1] && parts[2] === 'inventory') {
+			await repo.updateCharacterInventory(uid, parts[1], await body(event));
+			return noContent();
+		}
 		if (parts[0] === 'characters' && parts[1]) {
 			await repo.updateCharacter(uid, parts[1], await body(event));
 			return noContent();

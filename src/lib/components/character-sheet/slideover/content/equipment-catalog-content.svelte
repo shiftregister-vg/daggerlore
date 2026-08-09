@@ -7,7 +7,7 @@
 	const derived_character_data = $derived(characterCtx.derived_character_data);
 </script>
 
-{#if derived_character_data && characterCtx.canEdit}
+{#if derived_character_data && characterCtx.canEditInventory}
 	<Sheet.Header>
 		<Sheet.Title>Add Items</Sheet.Title>
 		<Sheet.Description>Browse and add items to your inventory</Sheet.Description>

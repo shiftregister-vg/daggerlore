@@ -390,7 +390,7 @@
 			</div>
 		{/if}
 
-		{#if inventoryItem && characterCtx.canEdit}
+		{#if inventoryItem && characterCtx.canEditInventory}
 			<Collapsible.Root bind:open={customizeOpen}>
 				<Collapsible.Trigger
 					class={cn(
@@ -542,7 +542,7 @@
 		</Collapsible.Root>
 	</div>
 
-	{#if inventoryItem}
+	{#if inventoryItem && characterCtx.canEditInventory}
 		<Sheet.Footer>
 			<Sheet.Close
 				class={cn(buttonVariants({ size: 'sm', variant: 'link' }), 'text-destructive')}
