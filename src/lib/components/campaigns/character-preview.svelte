@@ -197,8 +197,8 @@
 			{/if}
 		</div>
 
-		<div class="mx-auto mb-4">
-			<DamageThresholds thresholds={summary.damage_thresholds} class="scale-92" />
+		<div class="mx-auto mb-4 w-[312px] max-w-[calc(100%-2rem)]">
+			<DamageThresholds thresholds={summary.damage_thresholds} />
 		</div>
 
 		<div class="mb-4 flex flex-col items-center gap-4 px-3">
