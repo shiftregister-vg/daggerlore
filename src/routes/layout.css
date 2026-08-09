@@ -172,6 +172,25 @@
 	[role='button']:not(:disabled) {
 		cursor: pointer;
 	}
+	button,
+	a,
+	[role='button'],
+	[role='checkbox'],
+	[role='tab'],
+	[role='menuitem'] {
+		touch-action: manipulation;
+	}
+	[class~='overflow-y-auto'],
+	[class~='overflow-auto'],
+	[data-slot='scroll-area-viewport'] {
+		-webkit-overflow-scrolling: touch;
+		touch-action: pan-y;
+	}
+	[class~='overflow-x-auto'],
+	[class~='snap-x'] {
+		-webkit-overflow-scrolling: touch;
+		touch-action: pan-x pan-y;
+	}
 	ul {
 		list-style-type: disc;
 		list-style-position: inside;
