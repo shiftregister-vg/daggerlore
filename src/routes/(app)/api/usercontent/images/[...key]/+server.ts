@@ -1,4 +1,8 @@
 import { error } from '@sveltejs/kit';
+import {
+	getUserContentImage,
+	USER_CONTENT_CACHE_CONTROL
+} from '$lib/server/usercontent-storage';
 import type { RequestHandler } from './$types';
 
 /**
@@ -7,7 +11,7 @@ import type { RequestHandler } from './$types';
  * This allows easy sharing in campaigns without complex auth flows.
  */
 // Serves images from the daggerbrain-usercontent R2 bucket (user-uploaded images)
-export const GET: RequestHandler = async ({ params, platform }) => {
+export const GET: RequestHandler = async ({ params, platform, request }) => {
 	const { key } = params;
 
 	if (!key) {
@@ -17,29 +21,42 @@ export const GET: RequestHandler = async ({ params, platform }) => {
 	// key is an array when using catch-all, join it back to the original path
 	const imageKey = Array.isArray(key) ? key.join('/') : key;
 
-	if (!platform?.env?.R2_USERCONTENT) {
+	let object;
+	try {
+		object = await getUserContentImage(platform, imageKey);
+	} catch (err) {
+		console.error('Failed to fetch user image', err);
 		throw error(500, 'Internal server error');
 	}
-
-	const r2 = platform.env.R2_USERCONTENT;
-	const object = await r2.get(imageKey);
 
 	if (!object) {
 		throw error(404, 'Image not found');
 	}
 
-	// Get the image data as ArrayBuffer
-	const arrayBuffer = await object.arrayBuffer();
-
 	const headers = new Headers();
+	headers.set('Cache-Control', object.cacheControl || USER_CONTENT_CACHE_CONTROL);
+	headers.set('Vary', 'Accept-Encoding');
+
+	if (object.etag) {
+		headers.set('ETag', object.etag);
+	}
+
+	if (object.lastModified) {
+		headers.set('Last-Modified', object.lastModified);
+	}
+
+	if (object.size !== null) {
+		headers.set('Content-Length', String(object.size));
+	}
 
 	// Set content type from R2 metadata or default to image
-	const contentType = object.httpMetadata?.contentType || 'image/webp';
+	const contentType = object.contentType || 'image/webp';
 	headers.set('Content-Type', contentType);
 
-	// Cache for 1 year
-	headers.set('Cache-Control', 'public, max-age=31536000, immutable');
+	if (object.etag && request.headers.get('if-none-match') === object.etag) {
+		return new Response(null, { status: 304, headers });
+	}
 
 	// Return the image as a Response
-	return new Response(arrayBuffer, { headers });
+	return new Response(object.body, { headers });
 };

@@ -561,6 +561,19 @@ function createCharacter() {
 		await Promise.all([characterQuery.refresh(), compendiumScopeQuery.refresh()]);
 	}
 
+	async function updateImageUrl(imageUrl: string) {
+		if (!character || !id || !characterQuery.data?.canEdit) return;
+
+		character.image_url = imageUrl;
+		clearPendingSync();
+
+		const capturedCharacter: Character = JSON.parse(
+			JSON.stringify({ ...(sync_character ?? character), image_url: imageUrl })
+		);
+		await patchApi<void>(`/characters/${id}`, capturedCharacter);
+		await characterQuery.refresh();
+	}
+
 	return {
 		get id() {
 			return id;
@@ -607,6 +620,7 @@ function createCharacter() {
 			return sources.find((source) => source.source_key === sourceKey);
 		},
 		refreshCompendiumState,
+		updateImageUrl,
 		addToInventory,
 		removeFromInventory,
 		updateAdventuringGear,

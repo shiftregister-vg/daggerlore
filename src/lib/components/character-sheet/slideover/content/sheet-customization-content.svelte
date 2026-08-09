@@ -169,7 +169,7 @@
 				<ImageUploader
 					bind:this={imageUploader}
 					autoUpload
-					onUpload={(url) => (character.image_url = url)}
+					onUpload={(url) => void characterCtx.updateImageUrl(url)}
 					placeholderImage={character.image_url || '/images/art/portrait-placeholder.webp'}
 					alt={character.name}
 					class="h-[90px] w-[90px] shrink-0"
@@ -184,8 +184,8 @@
 						class="h-6.5 w-min px-0 font-normal text-muted-foreground"
 						onclick={async () => {
 							if (!character) return;
-							imageUploader?.clear();
-							character.image_url = '';
+							await imageUploader?.clear();
+							await characterCtx.updateImageUrl('');
 						}}
 					>
 						Remove image
