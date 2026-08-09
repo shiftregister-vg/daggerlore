@@ -668,7 +668,11 @@ function fillMainPage(
 		form,
 		'inventory',
 		[
-			...character.inventory.adventuring_gear,
+			...character.inventory.adventuring_gear.map((item) => {
+				const title = typeof item === 'string' ? item : item.title;
+				const quantity = typeof item === 'string' ? 1 : (item.quantity ?? 1);
+				return `${quantity > 1 ? `${quantity}x ` : ''}${title}`;
+			}),
 			...derived.inventory_loot.map((item) => `${item.title}: ${stripHtml(item.description_html)}`),
 			...derived.inventory_consumables.map(
 				(item) =>

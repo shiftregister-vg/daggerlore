@@ -11,6 +11,7 @@
 	import WeaponRow from './inventory/secondary-weapon-row.svelte';
 	import ArmorRow from './inventory/armor-row.svelte';
 	import ConsumableRow from './inventory/consumable-row.svelte';
+	import type { AdventuringGearInventoryItem } from '$lib/domain/schemas/characters';
 	import LootRow from './inventory/loot-row.svelte';
 	import { getCharacterContext } from '$lib/state/character.svelte';
 	import { cn } from '$lib/utils';
@@ -62,6 +63,14 @@
 		}
 	}
 
+	function gearTitle(gear: AdventuringGearInventoryItem) {
+		return typeof gear === 'string' ? gear : gear.title;
+	}
+
+	function gearQuantity(gear: AdventuringGearInventoryItem) {
+		return typeof gear === 'string' ? 1 : (gear.quantity ?? 1);
+	}
+
 	// Filtered weapons and armor
 	const filteredPrimaryWeapons = $derived(
 		(derived_character_data?.inventory_primary_weapons ?? []).filter((weapon) =>
@@ -100,7 +109,7 @@
 		if (!character) return [];
 		return character.inventory.adventuring_gear
 			.map((gear, index) => ({ gear, originalIndex: index }))
-			.filter(({ gear }) => matchesSearch(gear, searchQuery));
+			.filter(({ gear }) => matchesSearch(gearTitle(gear), searchQuery));
 	});
 
 	const hasItems = $derived(
@@ -219,7 +228,7 @@
 				<div class="flex flex-col gap-1">
 					<table class="w-full border-collapse">
 						<colgroup>
-							<col />
+							<col class="w-[55%]" />
 							<col class="w-14" />
 							<col />
 						</colgroup>
@@ -272,25 +281,42 @@
 			<!-- Adventuring Gear -->
 			{#if filteredAdventuringGear.length > 0}
 				<div class="flex flex-col gap-1">
-					<p
-						class="border-b bg-primary-muted px-4 py-2 text-xs font-medium text-primary-foreground"
-					>
-						Adventuring Gear
-					</p>
-
-					<button
-						class="flex w-full items-center px-4 py-2 text-left text-xs"
-						onclick={() => onAdventuringGearClick()}
-					>
-						<ul class="w-full">
+					<table class="w-full border-collapse">
+						<colgroup>
+							<col class="w-[55%]" />
+							<col class="w-14" />
+							<col />
+						</colgroup>
+						<thead>
+							<tr class="border-b bg-primary-muted text-xs text-primary-foreground">
+								<th class="px-4 py-2 text-left">Adventuring Gear</th>
+								<th class="py-2 pr-4 text-center">Qty</th>
+								<th class="py-2 pr-4"></th>
+							</tr>
+						</thead>
+						<tbody>
 							{#each filteredAdventuringGear as { gear, originalIndex } (originalIndex)}
-								<li class="flex items-center">
-									<span class="mr-3">•</span>
-									{gear}
-								</li>
+								<tr
+									class="cursor-pointer text-xs"
+									onclick={() => onAdventuringGearClick()}
+									role="button"
+									tabindex="0"
+									onkeydown={(e) => {
+										if (e.key === 'Enter' || e.key === ' ') {
+											e.preventDefault();
+											onAdventuringGearClick();
+										}
+									}}
+								>
+									<td class="px-4 py-2">{gearTitle(gear)}</td>
+									<td class="py-2 pr-4 text-center font-medium text-foreground">
+										{gearQuantity(gear)}
+									</td>
+									<td class="py-2 pr-4"></td>
+								</tr>
 							{/each}
-						</ul>
-					</button>
+						</tbody>
+					</table>
 				</div>
 			{/if}
 
