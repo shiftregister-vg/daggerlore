@@ -1,0 +1,32 @@
+name: Deploy production
+
+on:
+  release:
+    types:
+      - published
+
+permissions:
+  contents: read
+
+jobs:
+  deploy:
+    name: Deploy release to Railway production
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check out release tag
+        uses: actions/checkout@v4
+        with:
+          ref: ${{ github.event.release.tag_name }}
+
+      - name: Install Railway CLI
+        run: npm install -g @railway/cli
+
+      - name: Deploy to Railway
+        env:
+          RAILWAY_TOKEN: ${{ secrets.RAILWAY_TOKEN }}
+        run: |
+          railway up \
+            --project "${{ secrets.RAILWAY_PROJECT_ID }}" \
+            --environment production \
+            --service "${{ secrets.RAILWAY_SERVICE }}" \
+            --detach
