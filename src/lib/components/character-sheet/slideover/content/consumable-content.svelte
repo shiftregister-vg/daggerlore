@@ -116,7 +116,7 @@
 			{/if}
 		</div>
 
-		{#if inventoryItem && characterCtx.canEdit}
+		{#if inventoryItem && characterCtx.canEditInventory}
 			<Collapsible.Root bind:open={customizeOpen}>
 				<Collapsible.Trigger
 					class={cn(
@@ -171,14 +171,16 @@
 		</Collapsible.Root>
 	</div>
 
-	<Sheet.Footer>
-		<Sheet.Close
-			class={cn(buttonVariants({ size: 'sm', variant: 'link' }), 'text-destructive')}
-			onclick={() => {
-				characterCtx.removeFromInventory('consumable', consumable_inventory_id);
-			}}
-		>
-			Remove
-		</Sheet.Close>
-	</Sheet.Footer>
+	{#if characterCtx.canEditInventory}
+		<Sheet.Footer>
+			<Sheet.Close
+				class={cn(buttonVariants({ size: 'sm', variant: 'link' }), 'text-destructive')}
+				onclick={() => {
+					characterCtx.removeFromInventory('consumable', consumable_inventory_id);
+				}}
+			>
+				Remove
+			</Sheet.Close>
+		</Sheet.Footer>
+	{/if}
 {/if}

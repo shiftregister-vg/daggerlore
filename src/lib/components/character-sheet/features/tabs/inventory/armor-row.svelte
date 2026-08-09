@@ -29,7 +29,7 @@
 	// Toggle equip/unequip
 	function toggleEquip(e: MouseEvent) {
 		e.stopPropagation();
-		if (!armor) return;
+		if (!armor || !characterCtx.canEditInventory) return;
 		if (isEquipped) {
 			characterCtx.unequipItem('armor');
 		} else {
@@ -61,7 +61,7 @@
 	>
 		<td class="px-4 py-2">
 			<div class="flex items-center gap-1">
-				{#if showEquipButton}
+				{#if showEquipButton && characterCtx.canEditInventory}
 					<button
 						class="group -my-2 -ml-4 self-stretch pr-1 pl-4"
 						onclick={toggleEquip}
