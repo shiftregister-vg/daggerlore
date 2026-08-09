@@ -9,9 +9,11 @@
 	}: { class?: string; thresholds: DamageThresholds; massive_damage?: boolean } = $props();
 </script>
 
-<div class={cn('relative w-[360px] text-muted-foreground', className)}>
+<div class={cn('@container relative w-full max-w-[360px] text-muted-foreground', className)}>
 	{#if massive_damage}
-		<div class="absolute -bottom-[32px] left-1/2 w-[150px] -translate-x-1/2 text-primary">
+		<div
+			class="absolute -bottom-[32px] left-1/2 w-[42%] min-w-[132px] -translate-x-1/2 text-primary"
+		>
 			<svg xmlns="http://www.w3.org/2000/svg" viewBox="-60.472 903.307 879.245 226.772">
 				<g>
 					<path
@@ -29,17 +31,19 @@
 				</g>
 			</svg>
 			<div
-				class="absolute top-[17px] right-[20px] text-center text-xs leading-none font-bold text-foreground"
+				class="absolute top-[30%] right-[13%] text-center text-[clamp(0.55rem,3.3cqw,0.75rem)] leading-none font-bold text-foreground"
 			>
 				<p>MASSIVE</p>
 			</div>
-			<div class="absolute top-[12px] left-[24px] font-bold text-foreground">
+			<div
+				class="absolute top-[23%] left-[16%] text-[clamp(0.75rem,4.4cqw,1rem)] font-bold text-foreground"
+			>
 				<p>{thresholds.severe * 2}</p>
 			</div>
 		</div>
 	{/if}
 
-	<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 416.79 47.33" class="relative">
+	<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 416.79 47.33" class="relative w-full">
 		<path
 			style="fill: currentcolor;"
 			d="M 0 0 L 0 9.466 L 3.057 12.239 L 2.956 35.293 L 0 37.864 L 0 47.33 L 9.262 47.33 L 12.018 44.578 L 89.967 44.476 L 92.62 47.33 L 101.882 47.33 L 101.882 37.864 L 99.232 35.798 L 98.926 11.833 L 101.882 9.466 L 101.882 0 M 101.882 0 L 92.62 0 L 89.942 3.465 L 11.305 2.854 L 9.262 0 L 0 0"
@@ -72,29 +76,33 @@
 	</svg>
 
 	<div
-		class="absolute top-[8px] left-[19px] text-center text-xs leading-none font-bold text-background"
+		class="absolute top-[17%] left-[12.25%] -translate-x-1/2 text-center text-[clamp(0.55rem,3.3cqw,0.75rem)] leading-none font-bold text-background"
 	>
 		<p class="mb-[2px]">MINOR</p>
 		<p>DAMAGE</p>
 	</div>
 
 	<div
-		class="absolute top-[8px] left-[155px] text-center text-xs leading-none font-bold text-background"
+		class="absolute top-[17%] left-1/2 -translate-x-1/2 text-center text-[clamp(0.55rem,3.3cqw,0.75rem)] leading-none font-bold text-background"
 	>
 		<p class="mb-[2px]">MAJOR</p>
 		<p>DAMAGE</p>
 	</div>
 	<div
-		class="absolute top-[8px] right-[16px] text-center text-xs leading-none font-bold text-background"
+		class="absolute top-[17%] left-[87.75%] -translate-x-1/2 text-center text-[clamp(0.55rem,3.3cqw,0.75rem)] leading-none font-bold text-background"
 	>
 		<p class="mb-[2px]">SEVERE</p>
 		<p>DAMAGE</p>
 	</div>
 
-	<div class="absolute top-[8px] left-[112px] -translate-x-1/2 font-bold text-foreground">
+	<div
+		class="absolute top-[17%] left-[31.1%] -translate-x-1/2 text-[clamp(0.75rem,4.4cqw,1rem)] font-bold text-foreground"
+	>
 		<p>{thresholds.major}</p>
 	</div>
-	<div class="absolute top-[8px] left-[248px] -translate-x-1/2 font-bold text-foreground">
+	<div
+		class="absolute top-[17%] left-[68.9%] -translate-x-1/2 text-[clamp(0.75rem,4.4cqw,1rem)] font-bold text-foreground"
+	>
 		<p>{thresholds.severe}</p>
 	</div>
 </div>
