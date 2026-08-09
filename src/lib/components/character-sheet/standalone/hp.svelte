@@ -15,7 +15,7 @@
 		// onclick={() => {
 		// 	marked = 0;
 		// }}
-		class="text-sm font-medium"
+		class="character-sheet-section-label text-sm font-medium"
 	>
 		HP
 	</div>

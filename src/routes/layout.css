@@ -205,6 +205,13 @@
 }
 
 @layer components {
+	.character-sheet-section-label {
+		font-family: 'Inter', sans-serif;
+		font-kerning: normal;
+		text-rendering: optimizeLegibility;
+		text-transform: uppercase;
+	}
+
 	.markdown-table {
 		display: table;
 		width: 100%;

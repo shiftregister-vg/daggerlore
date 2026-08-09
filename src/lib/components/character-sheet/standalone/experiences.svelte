@@ -51,7 +51,7 @@
 						/>
 					</svg>
 					<p
-						class="absolute top-[10px] left-1/2 -translate-x-1/2 text-[12px] leading-none font-bold text-muted-foreground"
+						class="character-sheet-section-label absolute top-[10px] left-1/2 -translate-x-1/2 text-[12px] leading-none font-bold text-muted-foreground"
 					>
 						EXPERIENCES
 					</p>

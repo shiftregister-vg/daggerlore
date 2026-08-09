@@ -27,7 +27,7 @@
 		// onclick={() => {
 		// 	onScarClick?.();
 		// }}
-		class="-mb-[1px] text-sm font-medium text-hope"
+		class="character-sheet-section-label -mb-[1px] text-sm font-medium text-hope"
 	>
 		HOPE
 	</div>
