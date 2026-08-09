@@ -398,7 +398,8 @@ function createCharacter() {
 			character.inventory.consumables.push({
 				inventory_id: newUid,
 				base_consumable_id: options.id,
-				choices: {}
+				choices: {},
+				quantity: 1
 			});
 		} else if (options.type === 'adventuring_gear') {
 			character.inventory.adventuring_gear.push(options.title);
@@ -461,6 +462,15 @@ function createCharacter() {
 		if (!character) return;
 		if (index < 0 || index >= character.inventory.adventuring_gear.length) return;
 		character.inventory.adventuring_gear[index] = title;
+	}
+
+	function setConsumableQuantity(inventory_id: string, quantity: number) {
+		if (!character || !characterQuery.data?.canEditInventory) return;
+
+		const item = character.inventory.consumables.find((c) => c.inventory_id === inventory_id);
+		if (!item) return;
+
+		item.quantity = Math.max(1, Math.floor(quantity || 1));
 	}
 
 	function removeAdventuringGear(index: number) {
@@ -623,6 +633,7 @@ function createCharacter() {
 		updateImageUrl,
 		addToInventory,
 		removeFromInventory,
+		setConsumableQuantity,
 		updateAdventuringGear,
 		removeAdventuringGear,
 		equipItem,

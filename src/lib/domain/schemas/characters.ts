@@ -73,6 +73,7 @@ export const ConsumableInventoryItemSchema = z.object({
 	inventory_id: z.string(),
 	base_consumable_id: z.string(),
 	choices: z.record(z.string(), z.array(z.string())),
+	quantity: z.number().int().min(1).default(1),
 	custom_title: z.string().optional(),
 	custom_description: z.string().optional()
 });

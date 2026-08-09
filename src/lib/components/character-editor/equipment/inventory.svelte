@@ -243,8 +243,11 @@
 					{#each filteredConsumables as consumable (consumable.inventory_id)}
 						{#snippet title_snippet()}
 							<div class="gap-4 text-left">
-								<p class="text-md font-medium">
-									{consumable.title}
+								<p class="text-md flex items-center gap-2 font-medium">
+									<span>{consumable.title}</span>
+									{#if consumable.quantity > 1}
+										<span class="text-xs text-muted-foreground">x{consumable.quantity}</span>
+									{/if}
 								</p>
 							</div>
 						{/snippet}

@@ -69,7 +69,12 @@
 		{:else if content?.type === 'unarmored'}
 			<UnarmoredContent />
 		{:else if content?.type === 'consumable'}
-			<ConsumableContent consumable_inventory_id={content.inventory_id} />
+			<ConsumableContent
+				consumable_inventory_id={content.inventory_id}
+				onRemove={() => {
+					open = false;
+				}}
+			/>
 		{:else if content?.type === 'loot'}
 			<LootContent loot_inventory_id={content.inventory_id} />
 		{:else if content?.type === 'adventuring_gear'}

@@ -671,7 +671,8 @@ function fillMainPage(
 			...character.inventory.adventuring_gear,
 			...derived.inventory_loot.map((item) => `${item.title}: ${stripHtml(item.description_html)}`),
 			...derived.inventory_consumables.map(
-				(item) => `${item.title}: ${stripHtml(item.description_html)}`
+				(item) =>
+					`${item.quantity > 1 ? `${item.quantity}x ` : ''}${item.title}: ${stripHtml(item.description_html)}`
 			)
 		].join('\n')
 	);

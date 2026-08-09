@@ -49,7 +49,7 @@ type InventoryPrimaryWeapon = PrimaryWeapon & { inventory_id: string };
 type InventorySecondaryWeapon = SecondaryWeapon & { inventory_id: string };
 type InventoryArmor = Armor & { inventory_id: string };
 type InventoryLoot = Loot & { inventory_id: string };
-type InventoryConsumable = Consumable & { inventory_id: string };
+type InventoryConsumable = Consumable & { inventory_id: string; quantity: number };
 type VaultDomainCard = DomainCard & { id: string };
 type SubclassCardType = 'foundation' | 'specialization' | 'mastery';
 type SubclassSide = 'primary' | 'secondary';
@@ -111,7 +111,7 @@ export type DerivedCharacterData = {
 	inventory_secondary_weapons: (SecondaryWeapon & { inventory_id: string })[];
 	inventory_armor: (Armor & { inventory_id: string })[];
 	inventory_loot: (Loot & { inventory_id: string })[];
-	inventory_consumables: (Consumable & { inventory_id: string })[];
+	inventory_consumables: (Consumable & { inventory_id: string; quantity: number })[];
 
 	// derived active items (with modifiers applied)
 	derived_armor?: Armor & { inventory_id: string };
@@ -539,6 +539,7 @@ function customizeConsumable(
 	return {
 		...base,
 		inventory_id: item.inventory_id,
+		quantity: item.quantity ?? 1,
 		title: item.custom_title ?? base.title,
 		description_html: item.custom_description ?? base.description_html
 	};

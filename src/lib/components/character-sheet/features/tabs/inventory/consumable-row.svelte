@@ -18,6 +18,7 @@
 			(c) => c.inventory_id === inventory_id
 		)
 	);
+
 </script>
 
 {#if consumable}
@@ -43,6 +44,9 @@
 	>
 		<td class="px-4 py-2">
 			{consumable.title}
+		</td>
+		<td class="py-2 pr-4 text-center font-medium text-foreground">
+			{consumable.quantity}
 		</td>
 		<td class="py-2 pr-4 text-right">
 			{#if consumable.description_html}
