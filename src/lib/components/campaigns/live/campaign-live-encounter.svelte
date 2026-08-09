@@ -146,7 +146,11 @@
 </script>
 
 <div class={cn('relative grow', className)}>
-	<Encounter class={cn(!encounter && 'h-0')} onBeforeDelete={clearCurrentEncounterOnDelete}>
+	<Encounter
+		class={cn(!encounter && 'h-0')}
+		hideDesktopNotesColumn={true}
+		onBeforeDelete={clearCurrentEncounterOnDelete}
+	>
 		{#if encounter}
 			<div class="flex items-center gap-2 truncate">
 				{#if isGM}

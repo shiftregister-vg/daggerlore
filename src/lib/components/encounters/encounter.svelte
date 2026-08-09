@@ -1,7 +1,7 @@
 <script lang="ts">
 	import { goto } from '$app/navigation';
 	import { flip } from 'svelte/animate';
-	import type { Snippet } from 'svelte';
+	import { onMount, type Snippet } from 'svelte';
 	import type { Adversary, Environment } from '@domain/schemas/compendium';
 	import type { AdversaryInstance, Encounter } from '@domain/schemas/encounters';
 	import { artEncounters } from '$lib/assets/images';
@@ -37,10 +37,12 @@
 	let {
 		children,
 		class: className = '',
+		hideDesktopNotesColumn = false,
 		onBeforeDelete
 	}: {
 		children?: Snippet;
 		class?: string;
+		hideDesktopNotesColumn?: boolean;
 		onBeforeDelete?: (encounterId: string) => void | Promise<void>;
 	} = $props();
 
@@ -160,6 +162,39 @@
 	let settingsDialogOpen = $state(false);
 	let encounterName = $state('');
 	let enableMassiveDamage = $state(false);
+
+	onMount(() => {
+		function openAdversarySelector() {
+			adversarySheetOpen = true;
+		}
+
+		function openEnvironmentSelector() {
+			environmentSheetOpen = true;
+		}
+
+		function openEncounterSettings() {
+			settingsDialogOpen = true;
+		}
+
+		window.addEventListener('daggerlore:encounter-open-adversary-selector', openAdversarySelector);
+		window.addEventListener(
+			'daggerlore:encounter-open-environment-selector',
+			openEnvironmentSelector
+		);
+		window.addEventListener('daggerlore:encounter-open-settings', openEncounterSettings);
+
+		return () => {
+			window.removeEventListener(
+				'daggerlore:encounter-open-adversary-selector',
+				openAdversarySelector
+			);
+			window.removeEventListener(
+				'daggerlore:encounter-open-environment-selector',
+				openEnvironmentSelector
+			);
+			window.removeEventListener('daggerlore:encounter-open-settings', openEncounterSettings);
+		};
+	});
 
 	const encounterAdversaryInstances = $derived.by(
 		() =>
@@ -524,196 +559,207 @@
 
 	<div
 		bind:this={scrollContainer}
-		class="thin-scrollbar flex snap-x snap-mandatory gap-2 overflow-x-auto sm:snap-none sm:gap-6"
+		class={cn(
+			'thin-scrollbar flex min-h-0 flex-1 snap-x snap-mandatory gap-2 overflow-x-auto sm:snap-none sm:gap-6',
+			hideDesktopNotesColumn && 'lg:px-6'
+		)}
 		bind:clientHeight
 	>
-		<div class="min-w-19 grow"></div>
+		<div
+			class={cn(
+				'min-w-19 grow',
+				hideDesktopNotesColumn && 'lg:hidden'
+			)}
+		></div>
 		{#if encounter}
 			{#each encounter.items as item, i (item)}
-				<div
-					use:registerViewport={item}
-					animate:flip={{ duration: 200 }}
-					class="relative flex"
-					data-encounter-column
+			<div
+				use:registerViewport={item}
+				animate:flip={{ duration: 200 }}
+				class="relative flex"
+				data-encounter-column
+			>
+				<ScrollArea
+					class="shrink-0 snap-center overflow-x-hidden overflow-y-auto"
+					style="scrollbar-width: none;"
+					scrollbarYClasses="pt-9 mr-[3px]"
+					scrollbarYStyles={`padding-bottom: ${clientHeight / 2 + 60}px`}
 				>
-					<ScrollArea
-						class="shrink-0 snap-center overflow-x-hidden overflow-y-auto"
-						style="scrollbar-width: none;"
-						scrollbarYClasses="pt-9 mr-[3px]"
-						scrollbarYStyles={`padding-bottom: ${clientHeight / 2 + 60}px`}
-					>
-						{#if item.type === 'adversary'}
-							{@const adversary =
-								item.edited_adversary ?? compendium.adversaries[item.base_adversary_id]}
-							{@const collapsibleState =
-								encounterCollapsiblePreferences.adversaryCards[item.base_adversary_id]}
-							{#if adversary && collapsibleState}
-								<div
-									class="flex flex-col items-center gap-2 pt-4"
-									style={`margin-bottom: ${clientHeight / 2}px;`}
+					{#if item.type === 'adversary'}
+						{@const adversary =
+							item.edited_adversary ?? compendium.adversaries[item.base_adversary_id]}
+						{@const collapsibleState =
+							encounterCollapsiblePreferences.adversaryCards[item.base_adversary_id]}
+						{#if adversary && collapsibleState}
+							<div
+								class="flex flex-col items-center gap-2 pt-4"
+								style={`margin-bottom: ${clientHeight / 2}px;`}
+							>
+								<SimpleContainer
+									backgroundClass="fill-background/70 bg-background/70"
+									edgeClass="fill-background/70  border-background/70"
 								>
-									<SimpleContainer
-										backgroundClass="fill-background/70 bg-background/70"
-										edgeClass="fill-background/70  border-background/70"
-									>
-										<AdversaryCard
-											{adversary}
-											bind:instances={item.instances}
-											addBonusDamage={encounter.bonus_damage}
-											enableMassiveDamage={!!encounter.enable_massive_damage}
-											bind:movesOpen={collapsibleState.movesOpen}
-											bind:featuresOpen={collapsibleState.featuresOpen}
-											bind:instanceOpenStates={collapsibleState.instanceOpenStates}
-											onOpenConditions={(instanceIndex) =>
-												openAdversaryConditions(adversary, item.instances, instanceIndex)}
-											class="max-w-[calc(min(416px,100vw)-16px)] min-w-[calc(min(416px,100vw)-16px)] bg-transparent pt-0 pb-1"
-										/>
-									</SimpleContainer>
-									<div class="sticky top-4 z-10 flex items-center justify-center gap-2">
-										<div class="flex items-center">
-											<Button
-												variant="outline"
-												size="sm"
-												class="rounded-l-full rounded-r-none bg-background px-2 text-muted-foreground hover:bg-background hover:text-accent disabled:text-muted disabled:opacity-100"
-												disabled={i === 0}
-												onclick={() => swapItemWithPrevious(i)}
-											>
-												<ChevronLeft class="size-3.5" />
-											</Button>
-											<Button
-												variant="outline"
-												size="sm"
-												class="rounded-l-none rounded-r-full border-l-0 bg-background px-2 text-muted-foreground hover:bg-background hover:text-accent disabled:text-muted disabled:opacity-100"
-												disabled={i === encounter.items.length - 1}
-												onclick={() => swapItemWithNext(i)}
-											>
-												<ChevronRight class="size-3.5" />
-											</Button>
-										</div>
-
-										<div
-											class={cn(
-												buttonVariants({ variant: 'outline', size: 'sm' }),
-												'gap-0 rounded-full bg-background pr-0 text-muted-foreground hover:bg-background hover:text-muted-foreground'
-											)}
-										>
-											<span class="ml-1 text-xs font-medium">Quantity</span>
-											<Button
-												variant="ghost"
-												size="icon"
-												class="h-full"
-												onclick={() => {
-													if (item.instances.length > 1) {
-														item.instances.pop();
-														collapsibleState.instanceOpenStates.pop();
-													} else {
-														removeItem(i);
-													}
-												}}
-											>
-												<Minus class="size-3.5 stroke-3" />
-											</Button>
-											<span class="w-3 text-center text-sm font-bold">{item.instances.length}</span>
-											<Button
-												variant="ghost"
-												size="icon"
-												class="h-full rounded-r-full"
-												disabled={item.instances.length >= 8}
-												onclick={() => {
-													collapsibleState.instanceOpenStates.push(true);
-													item.instances.push({
-														name: '',
-														conditions: [],
-														marked_hp: 0,
-														marked_stress: 0
-													});
-												}}
-											>
-												<Plus class="size-3.5 stroke-3" />
-											</Button>
-										</div>
-
+									<AdversaryCard
+										{adversary}
+										bind:instances={item.instances}
+										addBonusDamage={encounter.bonus_damage}
+										enableMassiveDamage={!!encounter.enable_massive_damage}
+										bind:movesOpen={collapsibleState.movesOpen}
+										bind:featuresOpen={collapsibleState.featuresOpen}
+										bind:instanceOpenStates={collapsibleState.instanceOpenStates}
+										onOpenConditions={(instanceIndex) =>
+											openAdversaryConditions(adversary, item.instances, instanceIndex)}
+										class="max-w-[calc(min(416px,100vw)-16px)] min-w-[calc(min(416px,100vw)-16px)] bg-transparent pt-0 pb-1"
+									/>
+								</SimpleContainer>
+								<div class="sticky top-4 z-10 flex items-center justify-center gap-2">
+									<div class="flex items-center">
 										<Button
 											variant="outline"
 											size="sm"
-											class="rounded-full bg-background text-muted-foreground hover:bg-background hover:text-accent"
-											onclick={() => openItemEditor(i)}
+											class="rounded-l-full rounded-r-none bg-background px-2 text-muted-foreground hover:bg-background hover:text-accent disabled:text-muted disabled:opacity-100"
+											disabled={i === 0}
+											onclick={() => swapItemWithPrevious(i)}
 										>
-											<SquarePen class="size-3.5" />
-											Edit
+											<ChevronLeft class="size-3.5" />
+										</Button>
+										<Button
+											variant="outline"
+											size="sm"
+											class="rounded-l-none rounded-r-full border-l-0 bg-background px-2 text-muted-foreground hover:bg-background hover:text-accent disabled:text-muted disabled:opacity-100"
+											disabled={i === encounter.items.length - 1}
+											onclick={() => swapItemWithNext(i)}
+										>
+											<ChevronRight class="size-3.5" />
 										</Button>
 									</div>
-								</div>
-							{/if}
-						{:else}
-							{@const environment =
-								item.edited_environment ?? compendium.environments[item.base_environment_id]}
-							{@const collapsibleState =
-								encounterCollapsiblePreferences.environmentCards[item.base_environment_id]}
-							{#if environment && collapsibleState}
-								<div
-									class="flex flex-col items-center gap-2 pt-4"
-									style={`margin-bottom: ${clientHeight / 2}px;`}
-								>
-									<SimpleContainer
-										edgeClass="fill-primary border-primary"
-										backgroundClass="fill-background/70 bg-background/70"
-									>
-										<EnvironmentCard
-											{environment}
-											bind:detailsOpen={collapsibleState.detailsOpen}
-											bind:featuresOpen={collapsibleState.featuresOpen}
-											class="max-w-[calc(min(416px,100vw)-16px)] min-w-[calc(min(416px,100vw)-16px)] bg-transparent  pt-0 pb-1"
-										/>
-									</SimpleContainer>
-									<div class="flex items-center justify-center gap-2">
-										<div class="flex items-center">
-											<Button
-												variant="outline"
-												size="sm"
-												class="rounded-l-full rounded-r-none bg-background px-2 text-muted-foreground hover:bg-background hover:text-accent disabled:text-muted disabled:opacity-100"
-												disabled={i === 0}
-												onclick={() => swapItemWithPrevious(i)}
-											>
-												<ChevronLeft class="size-3.5" />
-											</Button>
-											<Button
-												variant="outline"
-												size="sm"
-												class="rounded-l-none rounded-r-full border-l-0 bg-background px-2 text-muted-foreground hover:bg-background hover:text-accent disabled:text-muted disabled:opacity-100"
-												disabled={i === encounter.items.length - 1}
-												onclick={() => swapItemWithNext(i)}
-											>
-												<ChevronRight class="size-3.5" />
-											</Button>
-										</div>
-										<Button
-											variant="outline"
-											size="sm"
-											class="rounded-full bg-background text-muted-foreground hover:bg-background hover:text-accent"
-											onclick={() => openItemEditor(i)}
-										>
-											<SquarePen class="size-3.5" />
-											Edit
-										</Button>
 
+									<div
+										class={cn(
+											buttonVariants({ variant: 'outline', size: 'sm' }),
+											'gap-0 rounded-full bg-background pr-0 text-muted-foreground hover:bg-background hover:text-muted-foreground'
+										)}
+									>
+										<span class="ml-1 text-xs font-medium">Quantity</span>
 										<Button
-											variant="outline"
-											size="sm"
-											class="rounded-full bg-background text-muted-foreground hover:bg-background hover:text-destructive"
-											onclick={() => removeItem(i)}
+											variant="ghost"
+											size="icon"
+											class="h-full"
+											onclick={() => {
+												if (item.instances.length > 1) {
+													item.instances.pop();
+													collapsibleState.instanceOpenStates.pop();
+												} else {
+													removeItem(i);
+												}
+											}}
 										>
-											<Trash class="size-3.5" />
-											Delete
+											<Minus class="size-3.5 stroke-3" />
+										</Button>
+										<span class="w-3 text-center text-sm font-bold">{item.instances.length}</span>
+										<Button
+											variant="ghost"
+											size="icon"
+											class="h-full rounded-r-full"
+											disabled={item.instances.length >= 8}
+											onclick={() => {
+												collapsibleState.instanceOpenStates.push(true);
+												item.instances.push({
+													name: '',
+													conditions: [],
+													marked_hp: 0,
+													marked_stress: 0
+												});
+											}}
+										>
+											<Plus class="size-3.5 stroke-3" />
 										</Button>
 									</div>
+
+									<Button
+										variant="outline"
+										size="sm"
+										class="rounded-full bg-background text-muted-foreground hover:bg-background hover:text-accent"
+										onclick={() => openItemEditor(i)}
+									>
+										<SquarePen class="size-3.5" />
+										Edit
+									</Button>
 								</div>
-							{/if}
+							</div>
 						{/if}
-					</ScrollArea>
-				</div>
+					{:else}
+						{@const environment =
+							item.edited_environment ?? compendium.environments[item.base_environment_id]}
+						{@const collapsibleState =
+							encounterCollapsiblePreferences.environmentCards[item.base_environment_id]}
+						{#if environment && collapsibleState}
+							<div
+								class="flex flex-col items-center gap-2 pt-4"
+								style={`margin-bottom: ${clientHeight / 2}px;`}
+							>
+								<SimpleContainer
+									edgeClass="fill-primary border-primary"
+									backgroundClass="fill-background/70 bg-background/70"
+								>
+									<EnvironmentCard
+										{environment}
+										bind:detailsOpen={collapsibleState.detailsOpen}
+										bind:featuresOpen={collapsibleState.featuresOpen}
+										class="max-w-[calc(min(416px,100vw)-16px)] min-w-[calc(min(416px,100vw)-16px)] bg-transparent  pt-0 pb-1"
+									/>
+								</SimpleContainer>
+								<div class="flex items-center justify-center gap-2">
+									<div class="flex items-center">
+										<Button
+											variant="outline"
+											size="sm"
+											class="rounded-l-full rounded-r-none bg-background px-2 text-muted-foreground hover:bg-background hover:text-accent disabled:text-muted disabled:opacity-100"
+											disabled={i === 0}
+											onclick={() => swapItemWithPrevious(i)}
+										>
+											<ChevronLeft class="size-3.5" />
+										</Button>
+										<Button
+											variant="outline"
+											size="sm"
+											class="rounded-l-none rounded-r-full border-l-0 bg-background px-2 text-muted-foreground hover:bg-background hover:text-accent disabled:text-muted disabled:opacity-100"
+											disabled={i === encounter.items.length - 1}
+											onclick={() => swapItemWithNext(i)}
+										>
+											<ChevronRight class="size-3.5" />
+										</Button>
+									</div>
+									<Button
+										variant="outline"
+										size="sm"
+										class="rounded-full bg-background text-muted-foreground hover:bg-background hover:text-accent"
+										onclick={() => openItemEditor(i)}
+									>
+										<SquarePen class="size-3.5" />
+										Edit
+									</Button>
+
+									<Button
+										variant="outline"
+										size="sm"
+										class="rounded-full bg-background text-muted-foreground hover:bg-background hover:text-destructive"
+										onclick={() => removeItem(i)}
+									>
+										<Trash class="size-3.5" />
+										Delete
+									</Button>
+								</div>
+							</div>
+						{/if}
+					{/if}
+				</ScrollArea>
+			</div>
 			{/each}
-			<div class="flex" data-encounter-column>
+			<div
+				class={cn('flex', hideDesktopNotesColumn && 'lg:hidden')}
+				data-encounter-column
+			>
 				<ScrollArea
 					class="shrink-0 snap-center overflow-x-hidden overflow-y-auto"
 					style="scrollbar-width: none;"
@@ -759,7 +805,12 @@
 				</ScrollArea>
 			</div>
 		{/if}
-		<div class="min-w-19 grow"></div>
+		<div
+			class={cn(
+				'min-w-19 grow',
+				hideDesktopNotesColumn && 'lg:hidden'
+			)}
+		></div>
 	</div>
 
 	<div
