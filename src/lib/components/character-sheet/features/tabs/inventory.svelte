@@ -220,11 +220,13 @@
 					<table class="w-full border-collapse">
 						<colgroup>
 							<col />
+							<col class="w-14" />
 							<col />
 						</colgroup>
 						<thead>
 							<tr class="border-b bg-primary-muted text-xs text-primary-foreground">
 								<th class="px-4 py-2 text-left">Consumables</th>
+								<th class="py-2 pr-4 text-center">Qty</th>
 								<th class="py-2 pr-4 text-right">Description</th>
 							</tr>
 						</thead>

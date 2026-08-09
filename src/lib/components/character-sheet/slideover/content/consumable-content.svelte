@@ -1,5 +1,6 @@
 <script lang="ts">
 	import * as Sheet from '$lib/components/ui/sheet';
+	import * as Dialog from '$lib/components/ui/dialog';
 	import * as Collapsible from '$lib/components/ui/collapsible';
 	import Input from '$lib/components/ui/input/input.svelte';
 	import Textarea from '$lib/components/ui/textarea/textarea.svelte';
@@ -8,12 +9,17 @@
 	import { renderMarkdown } from '$lib/utils';
 	import ChevronRight from '@lucide/svelte/icons/chevron-right';
 	import ChevronLeft from '@lucide/svelte/icons/chevron-left';
+	import Minus from '@lucide/svelte/icons/minus';
+	import Plus from '@lucide/svelte/icons/plus';
 	import ConsumableRules from '$lib/components/rule-snippets/consumable-rules.svelte';
 	import HomebrewBadge from '$lib/components/decorations/badges/homebrew-badge.svelte';
 	import { getCharacterContext } from '$lib/state/character.svelte';
 	import CampaignBadge from '$lib/components/decorations/badges/campaign-badge.svelte';
 
-	let { consumable_inventory_id }: { consumable_inventory_id: string } = $props();
+	let {
+		consumable_inventory_id,
+		onRemove = () => {}
+	}: { consumable_inventory_id: string; onRemove?: () => void } = $props();
 
 	const characterCtx = getCharacterContext();
 	const character = $derived(characterCtx.character);
@@ -21,6 +27,7 @@
 
 	let whatIsConsumablesOpen = $state(false);
 	let customizeOpen = $state(false);
+	let removeLastDialogOpen = $state(false);
 
 	// Get consumable from inventory
 	let consumable = $derived(
@@ -84,6 +91,30 @@
 		customDescription = '';
 		handleSave();
 	}
+
+	function updateQuantity(quantity: number) {
+		characterCtx.setConsumableQuantity(consumable_inventory_id, quantity);
+	}
+
+	function decrementQuantity() {
+		if (!inventoryItem || !consumable) return;
+
+		const currentQuantity = inventoryItem.quantity ?? 1;
+		if (currentQuantity > 1) {
+			updateQuantity(currentQuantity - 1);
+			return;
+		}
+
+		removeLastDialogOpen = true;
+	}
+
+	function removeLastConsumable() {
+		if (!inventoryItem) return;
+
+		characterCtx.removeFromInventory('consumable', consumable_inventory_id);
+		removeLastDialogOpen = false;
+		onRemove();
+	}
 </script>
 
 {#if consumable}
@@ -100,6 +131,38 @@
 	</Sheet.Header>
 
 	<div class="flex flex-col gap-6 overflow-y-auto px-4 pb-6">
+		{#if inventoryItem && characterCtx.canEditInventory}
+			<div class="flex items-center justify-between gap-3 rounded-lg border bg-card px-4 py-3">
+				<div>
+					<p class="text-sm font-medium">Quantity</p>
+					<p class="text-xs text-muted-foreground">
+						Decrementing the last one removes it from inventory.
+					</p>
+				</div>
+				<div class="flex items-center gap-2">
+					<Button
+						type="button"
+						variant="outline"
+						size="icon"
+						aria-label={`Decrease ${consumable.title} quantity`}
+						onclick={decrementQuantity}
+					>
+						<Minus class="size-4" />
+					</Button>
+					<span class="min-w-8 text-center text-lg font-semibold">{inventoryItem.quantity ?? 1}</span>
+					<Button
+						type="button"
+						variant="outline"
+						size="icon"
+						aria-label={`Increase ${consumable.title} quantity`}
+						onclick={() => updateQuantity((inventoryItem?.quantity ?? 1) + 1)}
+					>
+						<Plus class="size-4" />
+					</Button>
+				</div>
+			</div>
+		{/if}
+
 		<!-- Description -->
 		<div class="rounded-lg border bg-primary/5 px-4 py-3">
 			<p class="text-sm">Description</p>
@@ -177,10 +240,31 @@
 				class={cn(buttonVariants({ size: 'sm', variant: 'link' }), 'text-destructive')}
 				onclick={() => {
 					characterCtx.removeFromInventory('consumable', consumable_inventory_id);
+					onRemove();
 				}}
 			>
 				Remove
 			</Sheet.Close>
 		</Sheet.Footer>
 	{/if}
+
+	<Dialog.Root bind:open={removeLastDialogOpen}>
+		<Dialog.Content class="sm:max-w-md">
+			<Dialog.Header>
+				<Dialog.Title>Use Last Consumable?</Dialog.Title>
+				<Dialog.Description>
+					Using the last {consumable.title} will remove it from your inventory.
+				</Dialog.Description>
+			</Dialog.Header>
+
+			<Dialog.Footer class="flex gap-3">
+				<Button type="button" variant="outline" onclick={() => (removeLastDialogOpen = false)}>
+					Cancel
+				</Button>
+				<Button type="button" variant="destructive" onclick={removeLastConsumable}>
+					Use and Remove
+				</Button>
+			</Dialog.Footer>
+		</Dialog.Content>
+	</Dialog.Root>
 {/if}
