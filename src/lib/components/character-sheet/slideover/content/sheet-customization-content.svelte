@@ -169,6 +169,8 @@
 				<ImageUploader
 					bind:this={imageUploader}
 					autoUpload
+					cropSquare
+					hasImage={!!character.image_url}
 					onUpload={(url) => void characterCtx.updateImageUrl(url)}
 					placeholderImage={character.image_url || '/images/art/portrait-placeholder.webp'}
 					alt={character.name}
