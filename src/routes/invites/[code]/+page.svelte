@@ -1,5 +1,4 @@
 <script lang="ts">
-	import { goto } from '$app/navigation';
 	import { page } from '$app/state';
 	import { signIn } from '@auth/sveltekit/client';
 	import ShieldCheck from '@lucide/svelte/icons/shield-check';
@@ -8,7 +7,6 @@
 	import { Button } from '$lib/components/ui/button';
 	import LoadError from '$lib/components/utility/load-error.svelte';
 	import Loader from '$lib/components/utility/loader.svelte';
-	import { getUserContext } from '$lib/state/user.svelte';
 	import { createApiResource } from '$lib/state/api-resource.svelte';
 	import { getApi, postApi } from '$lib/api/client';
 
@@ -21,8 +19,8 @@
 		created_by_name: string | null;
 	};
 
-	const userCtx = getUserContext();
 	const inviteCode = $derived(page.params.code ?? '');
+	const sessionUser = $derived(page.data.session?.user ?? null);
 	const inviteQuery = createApiResource<AccessInvite | null>(
 		async () => (inviteCode ? await getApi(`/access-invites/${inviteCode}`) : null)
 	);
@@ -32,12 +30,6 @@
 
 	let accepting = $state(false);
 	let acceptError = $state('');
-
-	$effect(() => {
-		if (userCtx.user?.invite_accepted && invite?.accepted_by_user_id === userCtx.user._id) {
-			goto('/');
-		}
-	});
 
 	async function acceptInvite() {
 		if (!invite || accepting) return;
@@ -74,7 +66,7 @@
 			<p class="mt-3 text-muted-foreground">
 				This one-time invite grants access to Daggerlore.
 			</p>
-			{#if userCtx.user}
+			{#if sessionUser}
 				{#if acceptError}
 					<p class="mt-5 rounded-md border border-destructive/40 bg-destructive/10 p-3 text-sm text-destructive">
 						{acceptError}
