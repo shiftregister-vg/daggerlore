@@ -1,0 +1,15 @@
+.git
+.codex
+.devenv
+.svelte-kit
+.wrangler
+
+build
+node_modules
+
+.env
+.env.*
+!.env.example
+
+npm-debug.log*
+*.tmp
