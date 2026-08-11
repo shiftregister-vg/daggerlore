@@ -2,6 +2,7 @@
 
 {
   packages = with pkgs; [
+    docker
     git
     gomod2nix
     gopls

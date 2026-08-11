@@ -1,0 +1,38 @@
+name: CI
+
+on:
+  pull_request:
+  push:
+    branches:
+      - main
+  workflow_dispatch:
+
+jobs:
+  validate:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v5
+
+      - name: Install Nix
+        uses: cachix/install-nix-action@v31
+
+      - name: Use devenv Cachix cache
+        uses: cachix/cachix-action@v16
+        with:
+          name: devenv
+
+      - name: Install devenv
+        run: nix profile add nixpkgs#devenv
+
+      - name: Run devenv tests
+        run: devenv test
+
+      - name: Build web Dockerfile
+        shell: devenv shell bash -- -e {0}
+        run: docker build --build-arg PUBLIC_ORIGIN=http://localhost:3000 -f Dockerfile.web .
+
+      - name: Build API Dockerfile
+        shell: devenv shell bash -- -e {0}
+        run: docker build -f Dockerfile.api .
