@@ -1,3 +1,66 @@
 schema = 3
 
 [mod]
+  [mod.'github.com/andybalholm/brotli']
+    version = 'v1.2.2'
+    hash = 'sha256-XVnD/ruaOOYmt1Eipv/kIzNStI9fqOYc3hJHJ7ao9Yg='
+
+  [mod.'github.com/gofiber/fiber/v3']
+    version = 'v3.4.0'
+    hash = 'sha256-n4M4oOCx3tOaVcx+RQabRigFwE8NaZ6YfwhgyG0Jh/M='
+
+  [mod.'github.com/gofiber/schema']
+    version = 'v1.8.0'
+    hash = 'sha256-753BztphDwObgiNNRlvYRnkLl2jhurnZ/z84YBWqPXI='
+
+  [mod.'github.com/gofiber/utils/v2']
+    version = 'v2.1.1'
+    hash = 'sha256-RtR8Y+fYXj//m89EjhH0vYpXNBR1ewL11UmbG3GkLFY='
+
+  [mod.'github.com/google/uuid']
+    version = 'v1.6.0'
+    hash = 'sha256-VWl9sqUzdOuhW0KzQlv0gwwUQClYkmZwSydHG2sALYw='
+
+  [mod.'github.com/klauspost/compress']
+    version = 'v1.19.0'
+    hash = 'sha256-8tAQw82P+RzHACxt5Y8vV8jY+oHvKGCVyHCvMNdNiXM='
+
+  [mod.'github.com/mattn/go-colorable']
+    version = 'v0.1.15'
+    hash = 'sha256-hH+yMJHjboEDQbv399OEjfc50RgtO/edw0r2sJfxEJg='
+
+  [mod.'github.com/mattn/go-isatty']
+    version = 'v0.0.22'
+    hash = 'sha256-6O/0jc33pKUzlzUGpH8Ekk54XgJvx6Qe7kJtbcNJAV4='
+
+  [mod.'github.com/philhofer/fwd']
+    version = 'v1.2.0'
+    hash = 'sha256-cGx2/0QQay46MYGZuamFmU0TzNaFyaO+J7Ddzlr/3dI='
+
+  [mod.'github.com/tinylib/msgp']
+    version = 'v1.6.4'
+    hash = 'sha256-obRMzgNod1WvJCEquhze0v3Yu9L+6uSnXA5ogTCw3gc='
+
+  [mod.'github.com/valyala/bytebufferpool']
+    version = 'v1.0.0'
+    hash = 'sha256-I9FPZ3kCNRB+o0dpMwBnwZ35Fj9+ThvITn8a3Jr8mAY='
+
+  [mod.'github.com/valyala/fasthttp']
+    version = 'v1.72.0'
+    hash = 'sha256-+s+Jkufi0Hmdjb66XRhMgQGVjyzkdR3Og5uelzbgi9c='
+
+  [mod.'golang.org/x/crypto']
+    version = 'v0.53.0'
+    hash = 'sha256-TWcccM4d5t0ZbDyHXEm4elxKk5uzlo29i85lVHSZcNw='
+
+  [mod.'golang.org/x/net']
+    version = 'v0.56.0'
+    hash = 'sha256-JUORjxDZqZanYWo2yunaDpQ2/zvHiFb0TnF1Jw6D+30='
+
+  [mod.'golang.org/x/sys']
+    version = 'v0.46.0'
+    hash = 'sha256-NzRXMSEk6upeudJvUEPVnw6clJ3d8UdC/vdfANWAc8g='
+
+  [mod.'golang.org/x/text']
+    version = 'v0.38.0'
+    hash = 'sha256-PzREcn7yzTAJ0WBvyYL/2/r+tfoeKTY/E5HVXi/CJsU='
