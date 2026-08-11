@@ -2,6 +2,8 @@ package main
 
 import (
 	"log"
+	"net"
+	"os"
 
 	"github.com/gofiber/fiber/v3"
 )
@@ -19,5 +21,15 @@ func main() {
 		return c.SendString("Hello, World!")
 	})
 
-	log.Fatal(app.Listen(":3000"))
+	port := os.Getenv("PORT")
+	if port == "" {
+		port = "3000"
+	}
+
+	host := os.Getenv("HOST")
+	if host == "" {
+		host = "::"
+	}
+
+	log.Fatal(app.Listen(net.JoinHostPort(host, port)))
 }

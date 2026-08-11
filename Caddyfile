@@ -3,10 +3,12 @@
 
 	@api path /api/rest /api/rest/*
 	handle @api {
+		# Railway can override this with a private-network upstream, e.g. api.railway.internal:3000.
 		reverse_proxy {$DAGGERLORE_API_UPSTREAM:daggerlore-api.railway.internal:3000}
 	}
 
 	handle {
-		reverse_proxy {$DAGGERLORE_WEB_UPSTREAM:daggerlore.railway.internal:3000}
+		# Local devenv overrides this to Vite on 5173; Railway web currently listens on 8080.
+		reverse_proxy {$DAGGERLORE_WEB_UPSTREAM:daggerlore.railway.internal:8080}
 	}
 }
