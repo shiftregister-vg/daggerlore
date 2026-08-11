@@ -36,3 +36,7 @@ jobs:
       - name: Build API Dockerfile
         shell: devenv shell bash -- -e {0}
         run: docker build -f Dockerfile.api .
+
+      - name: Build gateway Dockerfile
+        shell: devenv shell bash -- -e {0}
+        run: docker build -f Dockerfile.gateway .

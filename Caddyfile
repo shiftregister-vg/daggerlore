@@ -1,0 +1,12 @@
+:{$PORT:8080} {
+	encode zstd gzip
+
+	@api path /api/rest /api/rest/*
+	handle @api {
+		reverse_proxy {$DAGGERLORE_API_UPSTREAM:daggerlore-api.railway.internal:3000}
+	}
+
+	handle {
+		reverse_proxy {$DAGGERLORE_WEB_UPSTREAM:daggerlore.railway.internal:3000}
+	}
+}

@@ -219,10 +219,10 @@ function hasProtocol(value: string) {
 }
 
 export function normalizePublicOrigin(rawOrigin: string) {
-	const trimmedOrigin = rawOrigin.trim();
+	let trimmedOrigin = rawOrigin.trim();
 
 	if (!trimmedOrigin) {
-		throw new Error('PUBLIC_ORIGIN environment variable is not set');
+		trimmedOrigin = 'http://localhost:5173';
 	}
 
 	const normalizedInput = hasProtocol(trimmedOrigin)
