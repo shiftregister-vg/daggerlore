@@ -1,17 +1,23 @@
 package main
 
 import (
-    "log"
+	"log"
 
-    "github.com/gofiber/fiber/v3"
+	"github.com/gofiber/fiber/v3"
 )
 
 func main() {
-    app := fiber.New()
+	app := fiber.New()
 
-    app.Get("/", func (c fiber.Ctx) error {
-        return c.SendString("Hello, World!")
-    })
+	app.Get("/liveness", func(c fiber.Ctx) error {
+		return c.SendString("alive!")
+	})
+	api := app.Group("/api")
+	rest := api.Group("/rest")
+	restV1 := rest.Group("/v1")
+	restV1.Get("/", func(c fiber.Ctx) error {
+		return c.SendString("Hello, World!")
+	})
 
-    log.Fatal(app.Listen(":3000"))
+	log.Fatal(app.Listen(":3000"))
 }

@@ -2,6 +2,8 @@
 
 {
   packages = with pkgs; [
+    caddy
+    curl
     docker
     git
     gomod2nix
@@ -12,9 +14,10 @@
 
   languages.javascript = {
     enable = true;
+    package = pkgs.nodejs_24;
     npm = {
       enable = true;
-      install.enable = true;
+      install.enable = false;
     };
   };
 
@@ -24,6 +27,38 @@
 
   languages.go.enable = true;
   languages.go.version = "1.26.5";
+
+  process.manager.implementation = "process-compose";
+
+  processes = {
+    daggerlore-web = {
+      exec = "npm run dev -- --host 127.0.0.1 --port 5173 --strictPort";
+      env = {
+        DAGGERLORE_DEV_GATEWAY = "true";
+        PORT = "5173";
+      };
+      ready.exec = "curl -fsS http://127.0.0.1:5173 >/dev/null";
+    };
+
+    daggerlore-api = {
+      exec = "go run ./cmd/server.go";
+      ready.exec = "curl -fsS http://127.0.0.1:3000/liveness >/dev/null";
+    };
+
+    daggerlore-gateway = {
+      exec = "caddy run --config Caddyfile --adapter caddyfile";
+      after = [
+        "devenv:processes:daggerlore-web"
+        "devenv:processes:daggerlore-api"
+      ];
+      env = {
+        PORT = "8080";
+        DAGGERLORE_API_UPSTREAM = "127.0.0.1:3000";
+        DAGGERLORE_WEB_UPSTREAM = "127.0.0.1:5173";
+      };
+      ready.exec = "curl -fsS http://127.0.0.1:8080 >/dev/null";
+    };
+  };
 
   git-hooks.hooks = {
     govet = {
@@ -52,6 +87,9 @@
   enterShell = ''
     hello         # Run scripts directly
     git --version # Use packages
+    go version
+    echo "node version $(node --version)"
+    echo "npm version $(npm --version)"
   '';
 
   enterTest = ''
