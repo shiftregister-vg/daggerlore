@@ -30,6 +30,9 @@ const authConfig = {
 	],
 	secret: env.AUTH_SECRET ?? '',
 	trustHost: true,
+	session: {
+		strategy: 'database'
+	},
 	callbacks: {
 		async signIn({ user }) {
 			if (!user.email) return true;

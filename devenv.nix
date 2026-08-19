@@ -42,6 +42,10 @@
 
     daggerlore-api = {
       exec = "go run ./cmd/server.go";
+      watch = {
+        paths = [ ./cmd ./pkg ];
+        extensions = [ "go" ];
+      };
       env = {
         HOST = "127.0.0.1";
         PORT = "3000";
