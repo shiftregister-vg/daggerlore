@@ -17,6 +17,6 @@
 		]
 	},
 	"deploy": {
-		"startCommand": "env PROTOCOL_HEADER=x-forwarded-proto HOST_HEADER=x-forwarded-host node build"
+		"startCommand": "env HOST=:: PROTOCOL_HEADER=x-forwarded-proto HOST_HEADER=x-forwarded-host node build"
 	}
 }
