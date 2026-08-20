@@ -71,6 +71,13 @@
       "when": 1784657200000,
       "tag": "0009_backfill_character_item_versions",
       "breakpoints": true
+    },
+    {
+      "idx": 10,
+      "version": "7",
+      "when": 1787252400000,
+      "tag": "0010_feedback_github_integration",
+      "breakpoints": true
     }
   ]
 }

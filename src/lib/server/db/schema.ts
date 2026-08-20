@@ -188,12 +188,26 @@ export const feedbackSubmissions = pgTable(
 		status: text('status').default('new').notNull(),
 		adminNotes: text('admin_notes'),
 		resolvedAt: timestamp('resolved_at', { mode: 'date' }),
+		githubRepository: text('github_repository'),
+		githubIssueId: text('github_issue_id'),
+		githubIssueNumber: integer('github_issue_number'),
+		githubIssueUrl: text('github_issue_url'),
+		githubIssueState: text('github_issue_state'),
+		githubIssueStateReason: text('github_issue_state_reason'),
+		githubIssueUpdatedAt: timestamp('github_issue_updated_at', { mode: 'date' }),
+		githubSyncStatus: text('github_sync_status').default('unlinked').notNull(),
+		githubSyncError: text('github_sync_error'),
+		githubSyncedAt: timestamp('github_synced_at', { mode: 'date' }),
 		createdAt: timestamp('created_at', { mode: 'date' }).defaultNow().notNull(),
 		updatedAt: timestamp('updated_at', { mode: 'date' }).defaultNow().notNull()
 	},
 	(table) => ({
 		userIdIdx: index('feedback_submissions_user_id_idx').on(table.userId),
 		statusIdx: index('feedback_submissions_status_idx').on(table.status),
+		githubIssueIdx: index('feedback_submissions_github_issue_idx').on(
+			table.githubRepository,
+			table.githubIssueNumber
+		),
 		createdAtIdx: index('feedback_submissions_created_at_idx').on(table.createdAt)
 	})
 );

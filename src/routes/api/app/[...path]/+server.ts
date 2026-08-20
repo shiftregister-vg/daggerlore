@@ -5,6 +5,7 @@ import { SourceKeySchema, type SourceKey } from '@domain/schemas/rules';
 import { OFFICIAL_COMPENDIUM_TABLES } from '$lib/server/compendium/official-seed';
 import type { HomebrewTable } from '@domain/permissions';
 import type { OfficialItemVersions, OfficialSourceVersions } from '@domain/schemas/characters';
+import * as feedbackGitHub from '$lib/server/app/feedback-github';
 
 async function userId(event: RequestEvent) {
 	const session = await event.locals.auth();
@@ -138,6 +139,12 @@ export async function GET(event) {
 		if (parts[0] === 'admin' && parts[1] === 'system' && parts.length === 2) {
 			return ok(await repo.getAdminSystemSettings(uid));
 		}
+		if (parts[0] === 'admin' && parts[1] === 'github' && parts[2] === 'status') {
+			return ok(await feedbackGitHub.getAdminGitHubStatus(uid));
+		}
+		if (parts[0] === 'admin' && parts[1] === 'github' && parts[2] === 'labels') {
+			return ok(await feedbackGitHub.listAdminGitHubLabels(uid));
+		}
 		if (parts[0] === 'admin' && parts[1] === 'feedback' && parts.length === 2) {
 			return ok(await repo.listAdminFeedback(uid));
 		}
@@ -243,12 +250,38 @@ export async function POST(event) {
 		if (parts[0] === 'admin' && parts[1] === 'invitations') {
 			return ok(await repo.createAdminInvitation(uid, await body(event)));
 		}
+		if (
+			parts[0] === 'admin' &&
+			parts[1] === 'feedback' &&
+			parts[2] === 'github-reconcile' &&
+			parts.length === 3
+		) {
+			return ok(await feedbackGitHub.reconcileAdminFeedbackGitHubIssues(uid));
+		}
+		if (parts[0] === 'admin' && parts[1] === 'feedback' && parts[2] && parts[3]) {
+			if (parts[3] === 'github-issue') {
+				return ok(
+					await feedbackGitHub.createAdminFeedbackGitHubIssue(uid, parts[2], await body(event))
+				);
+			}
+			if (parts[3] === 'github-link') {
+				return ok(
+					await feedbackGitHub.linkAdminFeedbackGitHubIssue(uid, parts[2], await body(event))
+				);
+			}
+			if (parts[3] === 'github-refresh') {
+				return ok(await feedbackGitHub.refreshAdminFeedbackGitHubIssue(uid, parts[2]));
+			}
+			if (parts[3] === 'github-retry') {
+				return ok(await feedbackGitHub.retryAdminFeedbackGitHubSync(uid, parts[2]));
+			}
+		}
 		if (parts[0] === 'feedback') {
-			return ok(
-				await repo.createFeedbackSubmission(uid, await body(event), {
-					userAgent: event.request.headers.get('user-agent')
-				})
-			);
+			const created = await repo.createFeedbackSubmission(uid, await body(event), {
+				userAgent: event.request.headers.get('user-agent')
+			});
+			await feedbackGitHub.tryAutomaticGitHubIssueCreation(uid, created.id);
+			return ok(created);
 		}
 
 		return notFound();
@@ -328,7 +361,7 @@ export async function PATCH(event) {
 			return ok(await repo.updateAdminSystemSettings(uid, await body(event)));
 		}
 		if (parts[0] === 'admin' && parts[1] === 'feedback' && parts[2]) {
-			return ok(await repo.updateAdminFeedback(uid, parts[2], await body(event)));
+			return ok(await feedbackGitHub.updateAdminFeedback(uid, parts[2], await body(event)));
 		}
 		if (parts[0] === 'campaigns' && parts[1]) {
 			await repo.updateCampaign(uid, parts[1], await body(event));
@@ -372,6 +405,9 @@ export async function DELETE(event) {
 		}
 		if (parts[0] === 'admin' && parts[1] === 'invitations' && parts[2]) {
 			return ok(await repo.revokeAdminInvitation(uid, parts[2]));
+		}
+		if (parts[0] === 'admin' && parts[1] === 'feedback' && parts[2] && parts[3] === 'github-link') {
+			return ok(await feedbackGitHub.unlinkAdminFeedbackGitHubIssue(uid, parts[2]));
 		}
 
 		return notFound();

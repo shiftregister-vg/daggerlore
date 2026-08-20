@@ -139,6 +139,37 @@ update users set is_admin = true where email = 'you@example.com';
 The app is invite-only. After the first admin is configured, use the admin
 interface to create invite links for additional users.
 
+### Feedback GitHub integration
+
+The Feedback Manager can create and synchronize issues through a GitHub App.
+Create an app with **Metadata: read-only** and **Issues: read and write**
+repository permissions, subscribe it to the **Issues** event, and install it
+only on the target repository.
+
+Configure these runtime variables:
+
+```bash
+GITHUB_FEEDBACK_ENABLED=true
+GITHUB_FEEDBACK_WEBHOOKS_ENABLED=true
+GITHUB_REPOSITORY=shiftregister-vg/daggerlore
+GITHUB_APP_ID=123456
+GITHUB_APP_INSTALLATION_ID=12345678
+GITHUB_APP_PRIVATE_KEY='-----BEGIN PRIVATE KEY-----\n...'
+GITHUB_WEBHOOK_SECRET=replace-with-a-long-random-secret
+```
+
+Set the GitHub App webhook URL to:
+
+```text
+https://your-domain.example/api/integrations/github/webhook
+```
+
+Only the primary production environment should set
+`GITHUB_FEEDBACK_WEBHOOKS_ENABLED=true`. Preview environments may enable
+outbound issue actions with the same GitHub App credentials, but must use the
+Feedback Manager's **Refresh** action to import issue state. Run
+`npm run db:migrate` before deploying the application changes.
+
 ## Run The App
 
 Start the SvelteKit dev server in a second terminal:
