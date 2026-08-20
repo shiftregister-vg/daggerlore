@@ -184,12 +184,26 @@ export const feedbackSubmissions = sqliteTable(
 		status: text('status').default('new').notNull(),
 		adminNotes: text('admin_notes'),
 		resolvedAt: integer('resolved_at', { mode: 'timestamp_ms' }),
+		githubRepository: text('github_repository'),
+		githubIssueId: text('github_issue_id'),
+		githubIssueNumber: integer('github_issue_number'),
+		githubIssueUrl: text('github_issue_url'),
+		githubIssueState: text('github_issue_state'),
+		githubIssueStateReason: text('github_issue_state_reason'),
+		githubIssueUpdatedAt: integer('github_issue_updated_at', { mode: 'timestamp_ms' }),
+		githubSyncStatus: text('github_sync_status').default('unlinked').notNull(),
+		githubSyncError: text('github_sync_error'),
+		githubSyncedAt: integer('github_synced_at', { mode: 'timestamp_ms' }),
 		createdAt: integer('created_at', { mode: 'timestamp_ms' }).default(nowSql).notNull(),
 		updatedAt: integer('updated_at', { mode: 'timestamp_ms' }).default(nowSql).notNull()
 	},
 	(table) => ({
 		userIdIdx: index('feedback_submissions_user_id_idx').on(table.userId),
 		statusIdx: index('feedback_submissions_status_idx').on(table.status),
+		githubIssueIdx: index('feedback_submissions_github_issue_idx').on(
+			table.githubRepository,
+			table.githubIssueNumber
+		),
 		createdAtIdx: index('feedback_submissions_created_at_idx').on(table.createdAt)
 	})
 );

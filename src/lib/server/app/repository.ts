@@ -25,6 +25,9 @@ import {
 	validateOfficialCompendiumItem
 } from '$lib/server/compendium/official-seed';
 import { acceptCampaignInviteForUser } from './invite-access';
+import type { FeedbackStatus, GitHubSyncStatus } from '$lib/types/feedback';
+import type { GitHubIssue } from '$lib/server/github/client';
+import { githubIssueToFeedbackStatus } from '$lib/feedback/github';
 
 const VAULT_KEYS = [
 	'primary_weapons',
@@ -87,8 +90,6 @@ type InvitationRow = {
 	updated_at: string | number;
 };
 
-type FeedbackStatus = 'new' | 'reviewing' | 'resolved' | 'archived';
-
 type FeedbackRow = {
 	id: string;
 	user_id: string | null;
@@ -104,6 +105,16 @@ type FeedbackRow = {
 	status: FeedbackStatus;
 	admin_notes: string | null;
 	resolved_at: string | number | null;
+	github_repository: string | null;
+	github_issue_id: string | null;
+	github_issue_number: number | null;
+	github_issue_url: string | null;
+	github_issue_state: 'open' | 'closed' | null;
+	github_issue_state_reason: 'completed' | 'not_planned' | null;
+	github_issue_updated_at: string | number | null;
+	github_sync_status: GitHubSyncStatus;
+	github_sync_error: string | null;
+	github_synced_at: string | number | null;
 	created_at: string | number;
 	updated_at: string | number;
 };
@@ -596,6 +607,16 @@ function parseFeedbackRow(row: FeedbackRow) {
 		status: row.status,
 		admin_notes: row.admin_notes,
 		resolved_at: row.resolved_at,
+		github_repository: row.github_repository,
+		github_issue_id: row.github_issue_id,
+		github_issue_number: row.github_issue_number == null ? null : Number(row.github_issue_number),
+		github_issue_url: row.github_issue_url,
+		github_issue_state: row.github_issue_state,
+		github_issue_state_reason: row.github_issue_state_reason,
+		github_issue_updated_at: row.github_issue_updated_at,
+		github_sync_status: row.github_sync_status,
+		github_sync_error: row.github_sync_error,
+		github_synced_at: row.github_synced_at,
 		created_at: row.created_at,
 		updated_at: row.updated_at
 	};
@@ -677,6 +698,198 @@ export async function getAdminFeedback(userId: string | undefined, feedbackId: s
 	);
 	if (!row) throw new Error('Feedback not found');
 	return parseFeedbackRow(row);
+}
+
+export async function getFeedbackForIntegration(feedbackId: string) {
+	const row = await queryOne<FeedbackRow>(
+		`select
+			feedback_submissions.*,
+			users.name as user_name,
+			users.email as user_email
+		from feedback_submissions
+		left join users on users.id = feedback_submissions.user_id
+		where feedback_submissions.id = ?`,
+		[feedbackId]
+	);
+	if (!row) throw new Error('Feedback not found');
+	return parseFeedbackRow(row);
+}
+
+export async function claimFeedbackGitHubCreation(feedbackId: string) {
+	const now = nowDbTimestamp();
+	const claimed = await queryRows<{ id: string }>(
+		`update feedback_submissions
+		set github_sync_status = 'creating', github_sync_error = null, updated_at = ?
+		where id = ?
+			and github_issue_number is null
+			and github_sync_status != 'creating'
+		returning id`,
+		[now, feedbackId]
+	);
+	return claimed.length > 0;
+}
+
+export async function setFeedbackGitHubIssue(
+	feedbackId: string,
+	repository: string,
+	issue: GitHubIssue
+) {
+	const now = nowDbTimestamp();
+	await execute(
+		`update feedback_submissions
+		set github_repository = ?, github_issue_id = ?, github_issue_number = ?, github_issue_url = ?,
+			github_issue_state = ?, github_issue_state_reason = ?, github_issue_updated_at = ?,
+			github_sync_status = 'synced', github_sync_error = null, github_synced_at = ?, updated_at = ?
+		where id = ?`,
+		[
+			repository,
+			issue.id,
+			issue.number,
+			issue.html_url,
+			issue.state,
+			issue.state_reason,
+			normalizeDbTimestamp(issue.updated_at),
+			now,
+			now,
+			feedbackId
+		]
+	);
+}
+
+export async function markFeedbackGitHubError(feedbackId: string, error: string) {
+	const now = nowDbTimestamp();
+	await execute(
+		`update feedback_submissions
+		set github_sync_status = 'error', github_sync_error = ?, updated_at = ?
+		where id = ?`,
+		[error.slice(0, 2000), now, feedbackId]
+	);
+}
+
+export async function resetStaleFeedbackGitHubCreationClaims() {
+	const staleBefore =
+		databaseDialect === 'sqlite'
+			? Date.now() - 10 * 60 * 1000
+			: new Date(Date.now() - 10 * 60 * 1000).toISOString();
+	const now = nowDbTimestamp();
+	await execute(
+		`update feedback_submissions
+		set github_sync_status = 'error',
+			github_sync_error = 'Issue creation was interrupted. Reconcile, then retry creation.',
+			updated_at = ?
+		where github_issue_number is null
+			and github_sync_status = 'creating'
+			and updated_at < ?`,
+		[now, staleBefore]
+	);
+}
+
+export async function markLinkedFeedbackGitHubError(
+	repository: string,
+	issueNumber: number,
+	error: string
+) {
+	const now = nowDbTimestamp();
+	await execute(
+		`update feedback_submissions
+		set github_sync_status = 'error', github_sync_error = ?, updated_at = ?
+		where github_repository = ? and github_issue_number = ?`,
+		[error.slice(0, 2000), now, repository, issueNumber]
+	);
+}
+
+export async function updateLinkedFeedbackStatus(
+	repository: string,
+	issueNumber: number,
+	status: FeedbackStatus
+) {
+	const now = nowDbTimestamp();
+	await execute(
+		`update feedback_submissions
+		set status = ?, resolved_at = ?, updated_at = ?
+		where github_repository = ? and github_issue_number = ?`,
+		[status, status === 'resolved' ? now : null, now, repository, issueNumber]
+	);
+}
+
+export async function updateLinkedFeedbackGitHubIssue(
+	repository: string,
+	issueNumber: number,
+	issue: GitHubIssue
+) {
+	const now = nowDbTimestamp();
+	await execute(
+		`update feedback_submissions
+		set github_issue_id = ?, github_issue_url = ?, github_issue_state = ?,
+			github_issue_state_reason = ?, github_issue_updated_at = ?, github_sync_status = 'synced',
+			github_sync_error = null, github_synced_at = ?, updated_at = ?
+		where github_repository = ? and github_issue_number = ?`,
+		[
+			issue.id,
+			issue.html_url,
+			issue.state,
+			issue.state_reason,
+			normalizeDbTimestamp(issue.updated_at),
+			now,
+			now,
+			repository,
+			issueNumber
+		]
+	);
+}
+
+export async function applyGitHubIssueStateToLinkedFeedback(
+	repository: string,
+	issue: GitHubIssue,
+	options: { ignoreOlder?: boolean } = {}
+) {
+	const issueUpdatedAt = normalizeDbTimestamp(issue.updated_at);
+	const status = githubIssueToFeedbackStatus(issue.state, issue.state_reason);
+	const now = nowDbTimestamp();
+	const timestampGuard = options.ignoreOlder
+		? 'and (github_issue_updated_at is null or github_issue_updated_at <= ?)'
+		: '';
+	const params: unknown[] = [
+		status,
+		status === 'resolved' ? now : null,
+		issue.id,
+		issue.html_url,
+		issue.state,
+		issue.state_reason,
+		issueUpdatedAt,
+		now,
+		now,
+		repository,
+		issue.number
+	];
+	if (options.ignoreOlder) params.push(issueUpdatedAt);
+
+	await execute(
+		`update feedback_submissions
+		set status = ?, resolved_at = ?, github_issue_id = ?, github_issue_url = ?,
+			github_issue_state = ?, github_issue_state_reason = ?, github_issue_updated_at = ?,
+			github_sync_status = 'synced', github_sync_error = null, github_synced_at = ?, updated_at = ?
+		where github_repository = ? and github_issue_number = ? ${timestampGuard}`,
+		params
+	);
+}
+
+export async function clearAdminFeedbackGitHubIssue(
+	userId: string | undefined,
+	feedbackId: string
+) {
+	await getAdminAccess(userId);
+	const now = nowDbTimestamp();
+	await execute(
+		`update feedback_submissions
+		set github_repository = null, github_issue_id = null, github_issue_number = null,
+			github_issue_url = null, github_issue_state = null, github_issue_state_reason = null,
+			github_issue_updated_at = null, github_sync_status = 'unlinked', github_sync_error = null,
+			github_synced_at = null, updated_at = ?
+		where id = ?`,
+		[now, feedbackId]
+	);
+	return getAdminFeedback(userId, feedbackId);
 }
 
 export async function updateAdminFeedback(userId: string | undefined, feedbackId: string, data: unknown) {
