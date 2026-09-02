@@ -60,7 +60,7 @@
 		"@auth/drizzle-adapter": "^1.11.2",
 		"@auth/sveltekit": "^1.11.1",
 		"@sentry/sveltekit": "^10.53.1",
-		"@tiptap/core": "^3.28.0",
+		"@tiptap/core": "^3.30.4",
 		"@tiptap/extension-link": "^3.28.0",
 		"@tiptap/extension-table": "^3.28.0",
 		"@tiptap/extension-table-cell": "^3.28.0",
