@@ -16,10 +16,10 @@ jobs:
         uses: actions/checkout@v5
 
       - name: Install Nix
-        uses: cachix/install-nix-action@v31
+        uses: https://github.com/cachix/install-nix-action@v31
 
       - name: Use devenv Cachix cache
-        uses: cachix/cachix-action@v16
+        uses: https://github.com/cachix/cachix-action@v16
         with:
           name: devenv
 
