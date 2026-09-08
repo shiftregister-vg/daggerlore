@@ -26,6 +26,7 @@
   };
 
   languages.go.enable = true;
+  languages.go.delve.enable = false;
   languages.go.version = "1.26.5";
 
   process.manager.implementation = "process-compose";
