@@ -18,6 +18,26 @@ jobs:
       - name: Install Nix
         uses: https://github.com/cachix/install-nix-action@v31
 
+      - name: Configure unprivileged Nix build users
+        shell: bash
+        run: |
+          # The installer uses a single-user configuration in containers without systemd.
+          # Keep Nix's controller as root, but run package builders as dedicated users.
+          if ! getent group nixbld >/dev/null; then
+            sudo groupadd --system nixbld
+          fi
+          for build_user_index in $(seq 1 16); do
+            build_user="nixbld${build_user_index}"
+            if ! id "$build_user" >/dev/null 2>&1; then
+              sudo useradd --system --no-create-home --home-dir /var/empty \
+                --shell /usr/sbin/nologin --gid nixbld --groups nixbld "$build_user"
+            fi
+          done
+          sudo chgrp nixbld /nix/store
+          sudo chmod 1775 /nix/store
+          sudo sed -i '/^build-users-group[[:space:]]*=/d' /etc/nix/nix.conf
+          printf '\nbuild-users-group = nixbld\n' | sudo tee -a /etc/nix/nix.conf >/dev/null
+
       - name: Use devenv Cachix cache
         uses: https://github.com/cachix/cachix-action@v16
         with:
