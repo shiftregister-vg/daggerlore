@@ -34,5 +34,7 @@ WORKDIR /app
 COPY package.json package-lock.json ./
 COPY --from=production-dependencies /app/node_modules ./node_modules
 COPY --from=build /app/build ./build
+COPY --from=build /app/drizzle/sqlite ./drizzle/sqlite
+COPY --from=build /app/scripts/migrate-sqlite.mjs ./scripts/migrate-sqlite.mjs
 
 CMD ["node", "build"]

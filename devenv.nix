@@ -1,4 +1,10 @@
-{ pkgs, lib, config, inputs, ... }:
+{
+  pkgs,
+  lib,
+  config,
+  inputs,
+  ...
+}:
 
 {
   packages = with pkgs; [
@@ -27,7 +33,7 @@
 
   languages.go.enable = true;
   languages.go.delve.enable = false;
-  languages.go.version = "1.26.5";
+  languages.go.version = "1.27.1";
 
   process.manager.implementation = "process-compose";
 
@@ -78,12 +84,14 @@
     };
   };
 
-  outputs = 
+  outputs =
     let
       name = "daggerlore-api";
       version = "1.0.0";
     in
-    { app = import ./default.nix { inherit pkgs name version; }; };
+    {
+      app = import ./default.nix { inherit pkgs name version; };
+    };
 
   scripts.hello.exec = ''
     echo hello from Daggerlore
