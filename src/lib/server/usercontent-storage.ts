@@ -99,6 +99,27 @@ export async function getUserContentImage(
 	};
 }
 
+export async function deleteUserContent(
+	platform: PlatformWithUserContent | undefined,
+	key: string
+) {
+	const binding = platform?.env?.R2_USERCONTENT;
+	if (binding) {
+		await binding.delete(key);
+		return;
+	}
+
+	const config = getR2S3Config();
+	const url = getR2ObjectUrl(config, key);
+	const payloadHash = await sha256Hex(new Uint8Array());
+	const headers = await signedR2Headers(config, 'DELETE', url, payloadHash);
+	const response = await fetch(url, { method: 'DELETE', headers });
+
+	if (!response.ok && response.status !== 404) {
+		throw new Error(`R2 delete failed with status ${response.status}`);
+	}
+}
+
 function getR2S3Config() {
 	const accountId = env.R2_ACCOUNT_ID;
 	const accessKeyId = env.R2_ACCESS_KEY_ID;

@@ -30,6 +30,7 @@
 	import { MediaQuery } from 'svelte/reactivity';
 	import Sprout from '@lucide/svelte/icons/sprout';
 	import ReviveButton from './standalone/revive-button.svelte';
+	import TransformationStatus from './transformation-status.svelte';
 
 	const isSmall = new MediaQuery('max-width: 639px');
 
@@ -327,6 +328,8 @@
 			<Button variant="outline" onclick={openDowntimeSheet} class="w-min">Downtime</Button>
 			<Button variant="outline" onclick={openConditionsSheet} class="w-min">Conditions</Button>
 		</div>
+
+		<TransformationStatus />
 
 		<!-- layout grid -->
 		<div

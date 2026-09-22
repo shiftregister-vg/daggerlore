@@ -43,6 +43,9 @@ export function communityCardFormDataToItem(formData: CommunityCard): CommunityC
 		title: formData.title.trim(),
 		description_html: stripRawHtml(formData.description_html),
 		artist_name: formData.artist_name.trim(),
+		field_group: formData.field_group
+			? { name: formData.field_group.name.trim(), count: formData.field_group.count }
+			: undefined,
 		features: formData.features.map(normalizeFeature),
 		options: cloneFormValue(formData.options ?? []),
 		tokens_enabled: formData.tokens_enabled || undefined

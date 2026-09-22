@@ -5,9 +5,11 @@
 		type DndEvent,
 		SHADOW_PLACEHOLDER_ITEM_ID
 	} from 'svelte-dnd-action';
+	import ArrowDown from '@lucide/svelte/icons/arrow-down';
 	import ArrowUp from '@lucide/svelte/icons/arrow-up';
 	import ArrowUpRight from '@lucide/svelte/icons/arrow-up-right';
 	import BookOpen from '@lucide/svelte/icons/book-open';
+	import GripVertical from '@lucide/svelte/icons/grip-vertical';
 	import Layers from '@lucide/svelte/icons/layers';
 	import Lock from '@lucide/svelte/icons/lock';
 	import Pencil from '@lucide/svelte/icons/pencil';
@@ -20,6 +22,7 @@
 	import AncestryCardComponent from '$lib/components/compendium-items/cards/ancestry-card.svelte';
 	import CardOptions from '$lib/components/compendium-items/cards/card-options.svelte';
 	import CommunityCardComponent from '$lib/components/compendium-items/cards/community-card.svelte';
+	import CommunityCardFields from '$lib/components/compendium-items/cards/community-card-fields.svelte';
 	import DomainCardComponent from '$lib/components/compendium-items/cards/domain-card.svelte';
 	import SubclassCardComponent from '$lib/components/compendium-items/cards/subclass-card.svelte';
 	import BardFeatures from '$lib/components/character-sheet/features/tabs/class-features/bard-features.svelte';
@@ -51,6 +54,7 @@
 
 	type DndItem = {
 		id: string;
+		cardKey: string;
 	};
 
 	type LegacyCardLayoutStack = {
@@ -228,7 +232,7 @@
 
 	let visibleLooseCards: CardSpaceItem[] = $derived(
 		looseItems
-			.map((item) => allCardsByKey.get(item.id))
+			.map((item) => allCardsByKey.get(item.cardKey))
 			.filter((card): card is CardSpaceItem => Boolean(card))
 	);
 
@@ -261,6 +265,16 @@
 		}
 
 		return cardGroups;
+	});
+
+	let activeTransformation = $derived.by(() => {
+		if (!character || !derivedCharacter || !character.active_transformation_card_id) {
+			return undefined;
+		}
+		if (character.active_transformation_card_id === character.transformation_card_id) {
+			return derivedCharacter.transformation_card;
+		}
+		return derivedCharacter.additional_transformation_cards[character.active_transformation_card_id];
 	});
 
 	let featureSummaryGroups = $derived.by(() => {
@@ -304,14 +318,14 @@
 		addClass('primary', character.primary_class_id, derivedCharacter.primary_class);
 		addClass('secondary', character.secondary_class_id, derivedCharacter.secondary_class);
 
-		const transformation = derivedCharacter.transformation_card;
+		const transformation = activeTransformation;
 		if (transformation && transformation.features.length > 0) {
 			groups.push({
-				key: `transformation:${character.transformation_card_id ?? transformation.title}`,
+				key: `transformation:${character.active_transformation_card_id ?? transformation.title}`,
 				label: transformation.title,
-				meta: 'Transformation',
+				meta: 'Active Transformation',
 				features: transformation.features.map((feature, index) => ({
-					key: `transformation:${character.transformation_card_id ?? transformation.title}:${index}`,
+					key: `transformation:${character.active_transformation_card_id ?? transformation.title}:${index}`,
 					title: feature.name,
 					text: feature.description_html
 				}))
@@ -355,7 +369,7 @@
 		)
 	);
 	let hasTransformationSummary = $derived(
-		Boolean(derivedCharacter?.transformation_card?.features.length)
+		Boolean(activeTransformation?.features.length)
 	);
 	let featureSummaryTitle = $derived(
 		hasTransformationSummary ? 'Class & Transformation Features' : 'Class Features'
@@ -430,8 +444,8 @@
 
 	function applyLayout(layout: CharacterCardLayout | undefined) {
 		const sanitized = sanitizeLayout(layout);
-		looseItems = sanitized.loose_card_keys.map((id) => ({ id }));
-		tabletopItems = (sanitized.tabletop_order ?? sanitized.loose_card_keys).map((id) => ({ id }));
+		looseItems = sanitized.loose_card_keys.map((id) => ({ id, cardKey: id }));
+		tabletopItems = (sanitized.tabletop_order ?? sanitized.loose_card_keys).map((id) => ({ id, cardKey: id }));
 		viewMode = sanitized.view_mode ?? 'cards';
 	}
 
@@ -476,7 +490,18 @@
 	}
 
 	function handleLooseConsider(event: CustomEvent<DndEvent>) {
-		const nextItems = withoutShadowItems(event.detail.items as DndItem[]);
+		// The placeholder preserves cardKey, so the original card remains visible while dragging.
+		tabletopItems = event.detail.items as DndItem[];
+	}
+
+	function moveCard(cardKey: string, offset: number) {
+		const index = tabletopItems.findIndex((item) => item.id === cardKey);
+		const destination = index + offset;
+		if (!arranging || index < 0 || destination < 0 || destination >= tabletopItems.length) return;
+
+		const nextItems = [...tabletopItems];
+		const [item] = nextItems.splice(index, 1);
+		nextItems.splice(destination, 0, item);
 		tabletopItems = nextItems;
 		looseItems = nextItems.filter((item) => activeCardKeys.has(item.id));
 	}
@@ -528,6 +553,16 @@
 		character.card_layout = currentLayout(nextViewMode);
 	}
 
+	function tokenMax(card: CardSpaceItem): number | undefined {
+		if (card.id === 'warrior_call_of_the_slayer') return derivedCharacter?.proficiency;
+		return card.card.token_max;
+	}
+
+	function setCardFieldValues(cardId: string, values: string[]) {
+		if (!character) return;
+		character.card_fields = { ...character.card_fields, [cardId]: values };
+	}
+
 	$effect(() => {
 		character?.card_layout;
 		allCards.map((card: CardSpaceItem) => card.key).join('|');
@@ -560,7 +595,7 @@
 				card={card.card}
 				variant="card"
 				compendium={characterCtx.character_compendium}
-				disabled={arranging}
+				disabled={arranging || !characterCtx.canEdit}
 				enable_choices={!arranging}
 				enable_tokens={!arranging}
 				experiences={character?.experiences ?? []}
@@ -572,7 +607,7 @@
 				card={card.card}
 				variant="card"
 				compendium={characterCtx.character_compendium}
-				disabled={arranging}
+				disabled={arranging || !characterCtx.canEdit}
 				enable_choices={!arranging}
 				enable_tokens={!arranging}
 				enable_mixed_ancestry={!arranging}
@@ -585,21 +620,25 @@
 			<CommunityCardComponent
 				card={card.card}
 				variant="card"
-				disabled={arranging}
+				disabled={arranging || !characterCtx.canEdit}
 				enable_choices={!arranging}
 				enable_tokens={!arranging}
+				enable_fields={!arranging}
 				experiences={character?.experiences ?? []}
 				bind:choices={character!.card_choices[card.id]}
 				bind:tokens={character!.card_tokens[card.id]}
+				field_values={character!.card_fields[card.id] ?? []}
+				on_field_values_change={(values) => setCardFieldValues(card.id, values)}
 			/>
 		{:else if card.type === 'subclass_card'}
 			<SubclassCardComponent
 				card={card.card}
 				variant="card"
 				compendium={characterCtx.character_compendium}
-				disabled={arranging}
+				disabled={arranging || !characterCtx.canEdit}
 				enable_choices={!arranging}
 				enable_tokens={!arranging}
+				token_max={tokenMax(card)}
 				experiences={character?.experiences ?? []}
 				bind:choices={character!.card_choices[card.id]}
 				bind:tokens={character!.card_tokens[card.id]}
@@ -610,11 +649,22 @@
 
 {#snippet renderCardItem(card: CardSpaceItem, draggable = false)}
 	{#if draggable}
-		<div
-			class="relative cursor-grab rounded-2xl transition-shadow active:cursor-grabbing"
-			use:dragHandle
-			data-card-key={card.key}
-		>
+		<div class="relative rounded-2xl transition-shadow" data-card-key={card.key}>
+			<div class="mx-auto mb-2 flex w-full max-w-[320px] items-center justify-between gap-2 rounded-lg border border-primary bg-card p-1">
+				<button
+					type="button"
+					use:dragHandle
+					aria-label={`Drag ${card.label}`}
+					class="flex min-h-11 touch-none items-center gap-2 rounded px-3 text-sm font-medium select-none"
+				>
+					<GripVertical class="size-5" />
+					Drag
+				</button>
+				<div class="flex gap-1">
+					<Button size="icon" variant="ghost" class="size-11" aria-label={`Move ${card.label} earlier`} disabled={tabletopItems[0]?.id === card.key} onclick={() => moveCard(card.key, -1)}><ArrowUp class="size-4" /></Button>
+					<Button size="icon" variant="ghost" class="size-11" aria-label={`Move ${card.label} later`} disabled={tabletopItems.at(-1)?.id === card.key} onclick={() => moveCard(card.key, 1)}><ArrowDown class="size-4" /></Button>
+				</div>
+			</div>
 			{@render renderCard(card)}
 			{#if card.type === 'domain_card' && !card.card.forced_in_loadout}
 				<Button
@@ -636,7 +686,7 @@
 
 {#snippet renderTabletopItems(draggable = false)}
 	{#each tabletopItems as item (item.id)}
-		{@const card = allCardsByKey.get(item.id)}
+		{@const card = allCardsByKey.get(item.cardKey)}
 		{#if card}
 			<div aria-label={card.label}>
 				{@render renderCardItem(card, draggable)}
@@ -890,7 +940,7 @@
 					<Unlock class="size-4" />
 					Layout unlocked
 				</div>
-				<p>Drag cards by their handles to reorder them.</p>
+				<p>Drag cards by their handles or use the arrow buttons to reorder them.</p>
 			</div>
 		{/if}
 
@@ -947,10 +997,20 @@
 													disabled={!characterCtx.canEdit}
 													enable_choices
 													enable_tokens
+													token_max={tokenMax(group.card)}
 													experiences={character.experiences}
 													class="items-start"
 													bind:choices={character.card_choices[group.card.id]}
 													bind:tokens={character.card_tokens[group.card.id]}
+												/>
+											{/if}
+											{#if group.card.type === 'community_card' && group.card.card.field_group}
+												<CommunityCardFields
+													label={group.card.card.field_group.name}
+													count={group.card.card.field_group.count}
+													disabled={!characterCtx.canEdit}
+												values={character.card_fields[group.card.id] ?? []}
+												onchange={(values) => setCardFieldValues(group.card.id, values)}
 												/>
 											{/if}
 										</div>

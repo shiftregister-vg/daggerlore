@@ -59,6 +59,12 @@
 	let maxShortActions = $derived(derived_character_data?.max_short_rest_actions ?? 0);
 	let maxLongActions = $derived(derived_character_data?.max_long_rest_actions ?? 0);
 	let maxHope = $derived(derived_character_data?.max_hope ?? 0);
+	let hasSlayerDice = $derived(
+		character?.primary_subclass_id === 'warrior_call_of_the_slayer' ||
+			character?.secondary_subclass_id === 'warrior_call_of_the_slayer'
+	);
+	const SLAYER_CARD_ID = 'warrior_call_of_the_slayer';
+	const LONG_REST_CARD_IDS = ['a_soldiers_bond', 'power_through_pain'] as const;
 
 	$effect(() => {
 		if (diceCtx.diceOnScreen) return;
@@ -129,6 +135,7 @@
 
 	function applyShortRoll(moveId: ShortDiceMove, amount: number) {
 		if (!character) return;
+		const previousNoMercyBonus = endNoMercy();
 
 		if (moveId === 'tendToWounds') {
 			const previous = character.marked_hp;
@@ -136,6 +143,7 @@
 			character.marked_hp = next;
 			createUndoToast(`${amount} HP cleared`, () => {
 				character.marked_hp = previous;
+				restoreNoMercy(previousNoMercyBonus);
 			});
 			return;
 		}
@@ -146,6 +154,7 @@
 			character.marked_stress = next;
 			createUndoToast(`${amount} Stress cleared`, () => {
 				character.marked_stress = previous;
+				restoreNoMercy(previousNoMercyBonus);
 			});
 			return;
 		}
@@ -155,11 +164,13 @@
 		character.marked_armor = next;
 		createUndoToast(`${amount} Armor Slots cleared`, () => {
 			character.marked_armor = previous;
+			restoreNoMercy(previousNoMercyBonus);
 		});
 	}
 
 	function applyHope(amount: number) {
 		if (!character) return;
+		const previousNoMercyBonus = endNoMercy();
 
 		const previous = character.marked_hope;
 		const next = Math.min(maxHope, previous + amount);
@@ -167,37 +178,100 @@
 
 		createUndoToast(`Gained ${amount} Hope`, () => {
 			character.marked_hope = previous;
+			restoreNoMercy(previousNoMercyBonus);
 		});
 	}
 
 	function clearAllHp() {
 		if (!character) return;
+		const previousNoMercyBonus = endNoMercy();
 
 		const previous = character.marked_hp;
 		character.marked_hp = 0;
 		createUndoToast('Cleared all HP', () => {
 			character.marked_hp = previous;
+			restoreNoMercy(previousNoMercyBonus);
 		});
 	}
 
 	function clearAllStress() {
 		if (!character) return;
+		const previousNoMercyBonus = endNoMercy();
 
 		const previous = character.marked_stress;
 		character.marked_stress = 0;
 		createUndoToast('Cleared all Stress', () => {
 			character.marked_stress = previous;
+			restoreNoMercy(previousNoMercyBonus);
 		});
 	}
 
 	function clearAllArmor() {
 		if (!character) return;
+		const previousNoMercyBonus = endNoMercy();
 
 		const previous = character.marked_armor;
 		character.marked_armor = 0;
 		createUndoToast('Cleared all Armor Slots', () => {
 			character.marked_armor = previous;
+			restoreNoMercy(previousNoMercyBonus);
 		});
+	}
+
+	function startNewSession() {
+		if (!character || !characterCtx.canEdit) return;
+
+		const previousHope = character.marked_hope;
+		const previousTokens = character.card_tokens[SLAYER_CARD_ID] ?? 0;
+		character.marked_hope = Math.min(maxHope, previousHope + previousTokens);
+		character.card_tokens = { ...character.card_tokens, [SLAYER_CARD_ID]: 0 };
+
+		const gainedHope = character.marked_hope - previousHope;
+		createUndoToast(
+			'Started a new session',
+			() => {
+				if (!character) return;
+				character.marked_hope = previousHope;
+				character.card_tokens = {
+					...character.card_tokens,
+					[SLAYER_CARD_ID]: previousTokens
+				};
+			},
+			previousTokens > 0
+				? `Cleared ${previousTokens} Slayer Dice and gained ${gainedHope} Hope.`
+				: 'No Slayer Dice were carried over.'
+		);
+	}
+
+	function completeLongRest() {
+		if (!character || !characterCtx.canEdit) return;
+
+		const previousTokens = Object.fromEntries(
+			LONG_REST_CARD_IDS.map((cardId) => [cardId, character.card_tokens[cardId] ?? 0])
+		);
+		const previousNoMercyBonus = endNoMercy();
+		character.card_tokens = {
+			...character.card_tokens,
+			...Object.fromEntries(LONG_REST_CARD_IDS.map((cardId) => [cardId, 0]))
+		};
+
+		createUndoToast('Completed long rest', () => {
+			if (!character) return;
+			character.card_tokens = { ...character.card_tokens, ...previousTokens };
+			restoreNoMercy(previousNoMercyBonus);
+		}, "Restored A Soldier's Bond, cleared long-rest card tokens, and ended No Mercy.");
+	}
+
+	function endNoMercy(): string | undefined {
+		if (!character || !derived_character_data?.hasNoMercyHopeFeature) return undefined;
+		const previous = character.feature_choices.no_mercy_bonus?.[0] ?? '0';
+		character.feature_choices.no_mercy_bonus = ['0'];
+		return previous;
+	}
+
+	function restoreNoMercy(previous: string | undefined) {
+		if (!character || previous === undefined) return;
+		character.feature_choices.no_mercy_bonus = [previous];
 	}
 
 	let shortRestRows = $derived.by<RestRow[]>(() => [
@@ -321,6 +395,23 @@
 </div> -->
 
 <div class="flex flex-col overflow-y-auto px-4 pb-6">
+	{#if hasSlayerDice}
+		<div class="mb-6 flex items-center justify-between gap-3 rounded-md border border-primary/40 bg-primary/10 p-3">
+			<div>
+				<p class="font-semibold text-foreground">New Session</p>
+				<p class="text-xs text-muted-foreground">Convert unspent Slayer Dice to Hope.</p>
+			</div>
+			<Button
+				variant="outline"
+				size="sm"
+				disabled={!characterCtx.canEdit}
+				onclick={startNewSession}
+			>
+				Start New Session
+			</Button>
+		</div>
+	{/if}
+
 	<p class="mb-2 border-b pb-2 font-bold">
 		Short Rest
 		<span class="ml-1 text-xs text-muted-foreground">({maxShortActions} available)</span>
@@ -367,10 +458,20 @@
 		{/each}
 	</div>
 
-	<p class="mt-10 mb-2 border-b pb-2 font-bold">
-		Long Rest
-		<span class="ml-1 text-xs text-muted-foreground">({maxLongActions} available)</span>
-	</p>
+	<div class="mt-10 mb-2 flex items-center justify-between gap-3 border-b pb-2">
+		<p class="font-bold">
+			Long Rest
+			<span class="ml-1 text-xs text-muted-foreground">({maxLongActions} available)</span>
+		</p>
+		<Button
+			variant="outline"
+			size="sm"
+			disabled={!characterCtx.canEdit}
+			onclick={completeLongRest}
+		>
+			Complete Long Rest
+		</Button>
+	</div>
 
 	<div class="gap- flex flex-col text-xs text-muted-foreground">
 		{#each longRestRows as row (row.title)}

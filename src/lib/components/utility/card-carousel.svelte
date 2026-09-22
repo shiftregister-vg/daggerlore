@@ -23,9 +23,11 @@
 		class: className = '',
 		cards,
 		tokens = $bindable({}),
+		field_values = $bindable({}),
 		choices = $bindable({}),
 		enable_choices = false,
 		enable_tokens = false,
+		enable_fields = false,
 		enable_mixed_ancestry = false,
 		mixed_ancestry_choices = $bindable({}),
 		experiences,
@@ -42,6 +44,7 @@
 		cards: Card[];
 		compendium: CompendiumContent;
 		tokens?: Record<string, number>;
+		field_values?: Record<string, string[]>;
 		choices?: Record<string, CardChoices>;
 		experiences?: string[];
 		mixed_ancestry_choices?: Record<
@@ -54,6 +57,7 @@
 		disabled?: boolean;
 		enable_choices?: boolean;
 		enable_tokens?: boolean;
+		enable_fields?: boolean;
 		enable_mixed_ancestry?: boolean;
 		cardWidth?: number;
 		selectedIndex?: number;
@@ -74,6 +78,10 @@
 	let isPointerDown = $state(false);
 	let isAutoSnapping = false;
 	let scrollSettleTimeout: ReturnType<typeof setTimeout> | null = null;
+
+	function setFieldValues(cardId: string, values: string[]) {
+		field_values = { ...field_values, [cardId]: values };
+	}
 
 	function getMaxScrollLeft() {
 		return Math.max(0, scrollContainer.scrollWidth - scrollContainer.clientWidth);
@@ -389,8 +397,11 @@
 						{experiences}
 						{enable_choices}
 						{enable_tokens}
+						{enable_fields}
 						bind:choices={choices[card.id]}
 						bind:tokens={tokens[card.id]}
+						field_values={field_values[card.id] ?? []}
+						on_field_values_change={(values) => setFieldValues(card.id, values)}
 					/>
 				{:else if card.type === 'subclass_card'}
 					<SubclassCardComponent
@@ -495,8 +506,11 @@
 						{experiences}
 						{enable_choices}
 						{enable_tokens}
+						{enable_fields}
 						bind:choices={choices[card.id]}
 						bind:tokens={tokens[card.id]}
+						field_values={field_values[card.id] ?? []}
+						on_field_values_change={(values) => setFieldValues(card.id, values)}
 					/>
 				{:else if card.type === 'subclass_card'}
 					<SubclassCardComponent

@@ -46,6 +46,10 @@ export const COMMUNITY_CARDS = {
 		image_url: '',
 		tokens_enabled: false,
 		title: 'Orderborne',
+		field_group: {
+			name: 'Sayings or Values',
+			count: 3
+		},
 		description_html:
 			"Being part of an orderborne community means you're from a collective that focuses on discipline or faith, and you uphold a set of principles that reflect your experience there.",
 		features: [

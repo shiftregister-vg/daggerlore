@@ -51,12 +51,12 @@ jobs:
 
       - name: Build web Dockerfile
         shell: devenv shell bash -- -e {0}
-        run: docker buildx --build-arg PUBLIC_ORIGIN=http://localhost:3000 -f Dockerfile.web .
+        run: docker buildx build --build-arg PUBLIC_ORIGIN=http://localhost:3000 -f Dockerfile.web .
 
       - name: Build API Dockerfile
         shell: devenv shell bash -- -e {0}
-        run: docker buildx -f Dockerfile.api .
+        run: docker buildx build -f Dockerfile.api .
 
       - name: Build gateway Dockerfile
         shell: devenv shell bash -- -e {0}
-        run: docker buildx -f Dockerfile.gateway .
+        run: docker buildx build -f Dockerfile.gateway .

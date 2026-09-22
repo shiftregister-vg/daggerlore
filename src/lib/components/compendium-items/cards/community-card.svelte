@@ -5,14 +5,18 @@
 	import type { Snippet } from 'svelte';
 	import type { CardChoices } from '@domain/schemas/rules';
 	import CardOptions from './card-options.svelte';
+	import CommunityCardFields from './community-card-fields.svelte';
 
 	let {
 		card,
 		choices = $bindable(),
 		tokens = $bindable(),
+		field_values = [],
+		on_field_values_change = () => {},
 		experiences = [],
 		enable_choices = false,
 		enable_tokens = false,
+		enable_fields = false,
 		// usually not needed:
 		disabled = false,
 		class: className = '',
@@ -22,8 +26,11 @@
 		card: CommunityCard;
 		choices?: CardChoices;
 		tokens?: number;
+		field_values?: string[];
+		on_field_values_change?: (values: string[]) => void;
 		enable_choices?: boolean;
 		enable_tokens?: boolean;
+		enable_fields?: boolean;
 		disabled?: boolean;
 		experiences?: string[];
 		variant?: 'responsive' | 'card';
@@ -75,6 +82,16 @@
 					{@html renderMarkdown(feature.description_html)}
 				</p>
 			{/each}
+
+			{#if enable_fields && card.field_group}
+				<CommunityCardFields
+					label={card.field_group.name}
+					count={card.field_group.count}
+					values={field_values}
+					onchange={on_field_values_change}
+					{disabled}
+				/>
+			{/if}
 
 			<!-- options & tokens -->
 			<CardOptions
@@ -130,6 +147,17 @@
 						{@html renderMarkdown(feature.description_html)}
 					</p>
 				{/each}
+
+				{#if enable_fields && card.field_group}
+					<CommunityCardFields
+						label={card.field_group.name}
+						count={card.field_group.count}
+						values={field_values}
+						onchange={on_field_values_change}
+						{disabled}
+						compact
+					/>
+				{/if}
 
 				<!-- options & tokens -->
 				<CardOptions

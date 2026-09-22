@@ -74,10 +74,14 @@
   git-hooks.hooks = {
     govet = {
       enable = true;
+      package = config.languages.go.package;
       pass_filenames = false;
     };
 
-    gotest.enable = true;
+    gotest = {
+      enable = true;
+      package = config.languages.go.package;
+    };
     golangci-lint = {
       enable = true;
       pass_filenames = false;

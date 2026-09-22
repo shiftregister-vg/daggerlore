@@ -401,7 +401,9 @@ export const BaseCardSchema = z
 	.object({
 		features: z.array(FeatureSchema),
 		options: z.array(CardOptionSchema).optional(),
-		tokens_enabled: z.boolean().optional()
+		tokens_enabled: z.boolean().optional(),
+		token_max: z.number().int().min(1).max(99).optional(),
+		token_label: z.string().trim().min(1).optional()
 	})
 	.superRefine((card, ctx) => {
 		const options = card.options ?? [];

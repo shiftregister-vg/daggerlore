@@ -364,7 +364,13 @@ export const CommunityCardSchema = z
 		title: z.string(),
 		description_html: z.string(),
 		image_url: z.string(),
-		artist_name: z.string()
+		artist_name: z.string(),
+		field_group: z
+			.object({
+				name: z.string().trim().min(1, 'Field group name is required'),
+				count: z.number().int().min(1).max(6)
+			})
+			.optional()
 	})
 	.and(BaseCardSchema);
 export type CommunityCard = z.infer<typeof CommunityCardSchema>;

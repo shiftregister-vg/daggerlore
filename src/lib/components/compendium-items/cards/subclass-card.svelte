@@ -15,6 +15,7 @@
 		tokens = $bindable(),
 		enable_choices = false,
 		enable_tokens = false,
+		token_max,
 		experiences = [],
 		disabled = false,
 		class: className = '',
@@ -27,6 +28,7 @@
 		tokens?: number;
 		enable_choices?: boolean;
 		enable_tokens?: boolean;
+		token_max?: number;
 		disabled?: boolean;
 		experiences?: string[];
 		variant?: 'responsive' | 'card';
@@ -107,6 +109,7 @@
 				bind:tokens
 				{enable_choices}
 				{enable_tokens}
+				{token_max}
 				{experiences}
 				{disabled}
 			/>
@@ -193,6 +196,7 @@
 					bind:tokens
 					{enable_choices}
 					{enable_tokens}
+					{token_max}
 					{experiences}
 					{disabled}
 				/>

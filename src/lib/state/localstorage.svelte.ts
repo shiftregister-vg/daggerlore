@@ -19,6 +19,7 @@ const characterFeatureTabSchema = z.enum([
 	'inventory',
 	'background',
 	'notes',
+	'projects',
 	'beastform',
 	'companion',
 	'addons'

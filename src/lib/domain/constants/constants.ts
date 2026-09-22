@@ -73,6 +73,7 @@ export const CHARACTER_DEFAULTS: Character = {
 	ancestry_card_id: undefined,
 	community_card_id: undefined,
 	transformation_card_id: undefined,
+	active_transformation_card_id: undefined,
 
 	// classes
 	primary_class_id: undefined,
@@ -97,6 +98,7 @@ export const CHARACTER_DEFAULTS: Character = {
 		attitude: ''
 	},
 	notes: '',
+	long_term_projects: [],
 
 	// equipment
 	active_armor_inventory_id: undefined,
@@ -125,6 +127,7 @@ export const CHARACTER_DEFAULTS: Character = {
 	// ephemeral stats set by the player
 	card_choices: {},
 	card_tokens: {},
+	card_fields: {},
 	card_layout: undefined,
 	mixed_ancestry_choices: {},
 	feature_choices: {},

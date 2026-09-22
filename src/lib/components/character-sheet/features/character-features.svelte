@@ -10,6 +10,7 @@
 	import Beastforms from './tabs/beastforms.svelte';
 	import Companion from './tabs/companion.svelte';
 	import SheetAddons from './tabs/sheet-addons.svelte';
+	import Projects from './tabs/projects.svelte';
 	let {
 		class: className = '',
 		hideSides = false,
@@ -45,6 +46,7 @@
 		| 'weapons'
 		| 'inventory'
 		| 'background'
+		| 'projects'
 		| 'notes'
 		| 'beastform'
 		| 'companion'
@@ -56,6 +58,7 @@
 			value === 'weapons' ||
 			value === 'inventory' ||
 			value === 'background' ||
+			value === 'projects' ||
 			value === 'notes' ||
 			value === 'beastform' ||
 			value === 'companion' ||
@@ -88,6 +91,7 @@
 		...(derived_character_data?.hasCompanionSubclassFeature ? ['companion' as const] : []),
 		'inventory',
 		'background',
+		'projects',
 		'notes'
 	]);
 
@@ -142,6 +146,9 @@
 			<Tabs.Trigger value="background" class="character-sheet-section-label h-auto flex-initial"
 				>Background</Tabs.Trigger
 			>
+			<Tabs.Trigger value="projects" class="character-sheet-section-label h-auto flex-initial"
+				>Projects</Tabs.Trigger
+			>
 			<Tabs.Trigger value="notes" class="character-sheet-section-label h-auto flex-initial"
 				>Notes</Tabs.Trigger
 			>
@@ -173,6 +180,9 @@
 					</Tabs.Content>
 					<Tabs.Content value="background" class="px-4">
 						<Background />
+					</Tabs.Content>
+					<Tabs.Content value="projects">
+						<Projects />
 					</Tabs.Content>
 					<Tabs.Content value="notes" class="px-4">
 						<Notes />

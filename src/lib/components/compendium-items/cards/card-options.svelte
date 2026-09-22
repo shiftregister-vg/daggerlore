@@ -20,6 +20,7 @@
 		disabled = false,
 		enable_choices = false,
 		enable_tokens = false,
+		token_max,
 		class: className = ''
 	}: {
 		card: DomainCard | AncestryCard | SubclassCard | CommunityCard;
@@ -28,9 +29,13 @@
 		disabled?: boolean;
 		enable_choices?: boolean;
 		enable_tokens?: boolean;
+		token_max?: number;
 		experiences?: string[];
 		class?: string;
 	} = $props();
+
+	const maxTokens = $derived(Math.max(1, Math.min(99, token_max ?? card.token_max ?? 99)));
+	const tokenLabel = $derived(card.token_label ?? 'Tokens');
 
 	$effect(() => {
 		if (!enable_choices || !(card.options && card.options.length > 0)) return;
@@ -118,12 +123,14 @@
 
 	<!-- Tokens -->
 	{#if enable_tokens && card.tokens_enabled}
-		<div class="flex items-center justify-center gap-2">
+		<div class="flex flex-wrap items-center justify-center gap-2" aria-label={tokenLabel}>
+			<span class="w-full text-center text-xs font-bold text-black">{tokenLabel}</span>
 			<!-- Minus Button -->
 			{#if !disabled}
 				<button
 					type="button"
-					onclick={() => {
+					onclick={(event) => {
+						event.stopPropagation();
 						const current = tokens ?? 0;
 						tokens = Math.max(0, current - 1);
 					}}
@@ -163,11 +170,12 @@
 			{#if !disabled}
 				<button
 					type="button"
-					onclick={() => {
+					onclick={(event) => {
+						event.stopPropagation();
 						const current = tokens ?? 0;
-						tokens = Math.min(99, current + 1);
+						tokens = Math.min(maxTokens, current + 1);
 					}}
-					disabled={(tokens ?? 0) >= 99}
+					disabled={(tokens ?? 0) >= maxTokens}
 					class="flex size-7 items-center justify-center rounded-full bg-green-500 text-lg font-bold text-white shadow-md transition-colors hover:bg-green-600 disabled:cursor-not-allowed disabled:bg-gray-300"
 					aria-label="Increase token count"
 				>

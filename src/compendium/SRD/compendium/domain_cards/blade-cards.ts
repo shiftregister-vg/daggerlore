@@ -113,7 +113,9 @@ export const BLADE_DOMAIN_CARDS = {
 		forced_in_loadout: false,
 		forced_in_vault: false,
 		options: [],
-		tokens_enabled: false,
+		tokens_enabled: true,
+		token_max: 1,
+		token_label: 'Used',
 		features: [
 			{
 				weapon_modifiers: [],

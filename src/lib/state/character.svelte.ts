@@ -1,8 +1,9 @@
 import type { Id } from '@domain/ids';
-import type {
-	Character,
-	CharacterCompendiumScope,
-	OfficialItemVersions
+import {
+	CharacterSchema,
+	type Character,
+	type CharacterCompendiumScope,
+	type OfficialItemVersions
 } from '@domain/schemas/characters';
 import type { CompendiumContent } from '@domain/schemas/compendium';
 import type { SourceKey } from '@domain/schemas/rules';
@@ -66,7 +67,10 @@ function createCharacter() {
 		async () => (id ? await getApi<CharacterCompendiumScope | null>(`/characters/${id}/scope`) : null)
 	);
 	const activeCharacterId = $derived.by(() => id as string | undefined);
-	const serverCharacter = $derived(characterQuery.data?.character ?? null);
+	const serverCharacter = $derived.by(() => {
+		const rawCharacter = characterQuery.data?.character;
+		return rawCharacter ? CharacterSchema.parse(rawCharacter) : null;
+	});
 
 	const activeCharacter = $derived(character ?? serverCharacter);
 	const homebrewEnabled = $derived(activeCharacter?.settings.homebrew_enabled ?? false);

@@ -19,6 +19,14 @@ export type OfficialSourceVersions = z.infer<typeof OfficialSourceVersionsSchema
 export const OfficialItemVersionsSchema = z.record(z.string(), z.number().int().min(1));
 export type OfficialItemVersions = z.infer<typeof OfficialItemVersionsSchema>;
 
+export const LongTermProjectSchema = z.object({
+	id: z.string(),
+	name: z.string(),
+	progress: z.number().int().min(0),
+	goal: z.number().int().min(1).max(20)
+});
+export type LongTermProject = z.infer<typeof LongTermProjectSchema>;
+
 // ============================================================================
 // Inventory Items
 // ============================================================================
@@ -242,6 +250,7 @@ export const CharacterSchema = z.object({
 	ancestry_card_id: z.string().optional(),
 	community_card_id: z.string().optional(),
 	transformation_card_id: z.string().optional(),
+	active_transformation_card_id: z.string().optional(),
 
 	// classes
 	primary_class_id: z.string().optional(),
@@ -274,6 +283,7 @@ export const CharacterSchema = z.object({
 		attitude: z.string()
 	}),
 	notes: z.string(),
+	long_term_projects: z.array(LongTermProjectSchema).default([]),
 
 	// equipment
 	active_armor_inventory_id: z.string().optional(),
@@ -294,6 +304,7 @@ export const CharacterSchema = z.object({
 	sheet_addon_resources: z.record(z.string(), z.number().int().min(0)).optional(),
 	card_choices: z.record(z.string(), CardChoicesSchema), // only for cards (inventory and other compendium choices are stored elsewhere)
 	card_tokens: z.record(z.string(), z.number().int().min(0)),
+	card_fields: z.record(z.string(), z.array(z.string())).default({}),
 	card_layout: CharacterCardLayoutSchema.optional(),
 	feature_choices: z.record(z.string(), z.array(z.string())), // used by specific feature flags
 	unarmed_attack_choices: z.record(z.string(), z.array(z.string())),

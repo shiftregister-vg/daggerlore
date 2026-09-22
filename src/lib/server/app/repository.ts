@@ -2747,7 +2747,8 @@ export async function createCampaign(
 		name,
 		fear_track: 0,
 		countdowns: [],
-		homebrew_vault: createEmptyCompendiumContentIds()
+		homebrew_vault: createEmptyCompendiumContentIds(),
+		files: []
 	};
 	const members: CampaignMember[] = [
 		{

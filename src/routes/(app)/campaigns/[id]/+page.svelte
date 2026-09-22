@@ -11,6 +11,7 @@
 	import CampaignPrivateNotes from '$lib/components/campaigns/campaign-private-notes.svelte';
 	import CampaignPublicNotes from '$lib/components/campaigns/campaign-public-notes.svelte';
 	import CampaignVault from '$lib/components/campaigns/campaign-vault.svelte';
+	import CampaignFiles from '$lib/components/campaigns/campaign-files.svelte';
 	import StreamSettingsDialog from '$lib/components/campaigns/stream-settings-dialog.svelte';
 	import Footer from '$lib/components/navigation/footer.svelte';
 	import { getCampaignContext } from '$lib/state/campaign.svelte';
@@ -172,6 +173,8 @@
 					</div>
 
 					<CampaignCharacters class="mt-6" />
+
+					<CampaignFiles class="mt-6" />
 
 					{#if isGM}
 						<CampaignVault class="mt-10" />

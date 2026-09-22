@@ -18,7 +18,15 @@
 	const secondarySpellcastTrait = $derived(
 		derived_character_data?.secondary_subclass?.spellcast_trait ?? secondary_class?.spellcast_trait
 	);
-	const transformation = $derived(derived_character_data?.transformation_card);
+	const transformation = $derived.by(() => {
+		const character = characterCtx.character;
+		const activeId = character?.active_transformation_card_id;
+		if (!activeId || !derived_character_data) return undefined;
+		if (activeId === character.transformation_card_id) {
+			return derived_character_data.transformation_card;
+		}
+		return derived_character_data.additional_transformation_cards[activeId];
+	});
 	const hasClassFeatures = $derived(
 		Boolean(
 			derived_character_data?.hasRallyClassFeature ||

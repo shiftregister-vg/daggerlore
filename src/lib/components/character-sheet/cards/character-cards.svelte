@@ -178,11 +178,14 @@
 		<CardCarousel
 			cards={character_cards}
 			compendium={characterContext.character_compendium}
+			disabled={!characterContext.canEdit}
 			bind:tokens={character.card_tokens}
+			bind:field_values={character.card_fields}
 			bind:choices={character.card_choices}
 			bind:mixed_ancestry_choices={character.mixed_ancestry_choices}
 			enable_choices
 			enable_tokens
+			enable_fields
 			enable_mixed_ancestry
 			experiences={character.experiences}
 			storageKey={characterContext.id

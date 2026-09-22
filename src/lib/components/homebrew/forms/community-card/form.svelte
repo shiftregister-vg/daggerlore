@@ -174,6 +174,50 @@
 		Enable tokens
 	</label>
 
+	<div class="rounded-md border border-border p-3">
+		{#if $form.field_group}
+			<div class="flex items-end gap-3">
+				<div class="flex grow flex-col gap-1">
+					<label
+						class="text-xs font-medium text-muted-foreground"
+						for="community-card-field-group-name">Character field group</label
+					>
+					<Input
+						id="community-card-field-group-name"
+						bind:value={$form.field_group.name}
+						placeholder="Sayings or Values"
+					/>
+				</div>
+				<div class="flex w-24 flex-col gap-1">
+					<label class="text-xs font-medium text-muted-foreground" for="community-card-field-count"
+						>Fields</label
+					>
+					<Input
+						id="community-card-field-count"
+						type="number"
+						min="1"
+						max="6"
+						bind:value={$form.field_group.count}
+					/>
+				</div>
+				<Button type="button" variant="ghost" onclick={() => ($form.field_group = undefined)}>
+					Remove
+				</Button>
+			</div>
+			<p class="mt-2 text-xs text-muted-foreground">
+				Players can fill in these fields on their character's community card.
+			</p>
+		{:else}
+			<Button
+				type="button"
+				variant="outline"
+				onclick={() => ($form.field_group = { name: '', count: 1 })}
+			>
+				Add character fields
+			</Button>
+		{/if}
+	</div>
+
 	<div class="flex gap-2">
 		<div class="flex flex-col gap-1">
 			<p class="text-xs font-medium text-muted-foreground">Artwork</p>

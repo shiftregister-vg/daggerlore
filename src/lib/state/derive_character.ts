@@ -144,10 +144,12 @@ export type DerivedCharacterData = {
 	primary_class_mastery_level: number;
 	secondary_class_mastery_level: number;
 	spellcast_roll_bonus: number;
+	no_mercy_bonus: number;
 
 	// feature flags
 	hasBeastformClassFeature: boolean;
 	hasEvolutionHopeFeature: boolean;
+	hasNoMercyHopeFeature: boolean;
 	hasCompanionSubclassFeature: boolean;
 	hasCompanionExpertTrainingSubclassFeature: boolean;
 	hasCompanionAdvancedTrainingSubclassFeature: boolean;
@@ -227,6 +229,7 @@ type FeatureFlags = Pick<
 	DerivedCharacterData,
 	| 'hasBeastformClassFeature'
 	| 'hasEvolutionHopeFeature'
+	| 'hasNoMercyHopeFeature'
 	| 'hasCompanionSubclassFeature'
 	| 'hasCompanionExpertTrainingSubclassFeature'
 	| 'hasCompanionAdvancedTrainingSubclassFeature'
@@ -923,6 +926,9 @@ function deriveBaseFeatureFlags(refs: DirectRefs): FeatureFlags {
 		hasBeastformClassFeature &&
 		(refs.primary_class?.hope_feature.title === 'Evolution' ||
 			refs.secondary_class?.hope_feature.title === 'Evolution');
+	const hasNoMercyHopeFeature =
+		refs.primary_class?.hope_feature.title === 'No Mercy' ||
+		refs.secondary_class?.hope_feature.title === 'No Mercy';
 	const hasCompanionSubclassFeature =
 		(refs.primary_subclass?.title === 'Beastbound' &&
 			featureExists(refs.primary_subclass.foundation_card.features, 'Companion')) ||
@@ -932,6 +938,7 @@ function deriveBaseFeatureFlags(refs: DirectRefs): FeatureFlags {
 	return {
 		hasBeastformClassFeature,
 		hasEvolutionHopeFeature,
+		hasNoMercyHopeFeature,
 		hasCompanionSubclassFeature,
 		hasCompanionExpertTrainingSubclassFeature: false,
 		hasCompanionAdvancedTrainingSubclassFeature: false,
@@ -2167,6 +2174,9 @@ export function derive_character_data(
 	);
 
 	const finalFlags = deriveFinalFlags(refs, loop, baseFlags);
+	const noMercyBonus = finalFlags.hasNoMercyHopeFeature
+		? Math.max(0, Number.parseInt(character.feature_choices.no_mercy_bonus?.[0] ?? '0', 10) || 0)
+		: 0;
 	const baseContext: EvaluationContext = {
 		character,
 		refs,
@@ -2187,7 +2197,30 @@ export function derive_character_data(
 		derived_beastform,
 		finalFlags
 	);
-	const finalEquipment = combatTrainingResults.finalEquipment;
+	const finalEquipment = {
+		...combatTrainingResults.finalEquipment,
+		derived_primary_weapon: combatTrainingResults.finalEquipment.derived_primary_weapon
+			? {
+					...combatTrainingResults.finalEquipment.derived_primary_weapon,
+					attack_roll_bonus:
+						combatTrainingResults.finalEquipment.derived_primary_weapon.attack_roll_bonus +
+						noMercyBonus
+				}
+			: undefined,
+		derived_secondary_weapon: combatTrainingResults.finalEquipment.derived_secondary_weapon
+			? {
+					...combatTrainingResults.finalEquipment.derived_secondary_weapon,
+					attack_roll_bonus:
+						combatTrainingResults.finalEquipment.derived_secondary_weapon.attack_roll_bonus +
+						noMercyBonus
+				}
+			: undefined,
+		derived_unarmed_attack: {
+			...combatTrainingResults.finalEquipment.derived_unarmed_attack,
+			attack_roll_bonus:
+				combatTrainingResults.finalEquipment.derived_unarmed_attack.attack_roll_bonus + noMercyBonus
+		}
+	};
 	const experience_modifiers = deriveExperienceModifiers(character, loop.modifiers, baseContext);
 
 	let max_experiences = applyScalarModifiers(
@@ -2319,6 +2352,7 @@ export function derive_character_data(
 		primary_class_mastery_level: loop.primary_mastery,
 		secondary_class_mastery_level: loop.secondary_mastery,
 		spellcast_roll_bonus,
+		no_mercy_bonus: noMercyBonus,
 		...finalFlags
 	};
 }
@@ -2694,6 +2728,15 @@ function normalizeReferencesAndChoices(
 		character.additional_transformation_card_ids = nextAdditionalTransformationCards;
 		changed = true;
 	}
+	const ownedTransformationIds = new Set(nextAdditionalTransformationCards);
+	if (character.transformation_card_id) ownedTransformationIds.add(character.transformation_card_id);
+	if (
+		character.active_transformation_card_id &&
+		!ownedTransformationIds.has(character.active_transformation_card_id)
+	) {
+		character.active_transformation_card_id = undefined;
+		changed = true;
+	}
 
 	const validCardIds = new Set<string>();
 	if (character.ancestry_card_id) validCardIds.add(character.ancestry_card_id);
@@ -2857,6 +2900,21 @@ function normalizeReferencesAndChoices(
 	);
 	if (JSON.stringify(nextCardTokens) !== JSON.stringify(character.card_tokens)) {
 		character.card_tokens = nextCardTokens;
+		changed = true;
+	}
+
+	const currentCardFields = character.card_fields ?? {};
+	const nextCardFields = Object.fromEntries(
+		Object.entries(currentCardFields).filter(([cardId]) => validCardIds.has(cardId))
+	);
+	if (character.community_card_id && refs.community_card?.field_group) {
+		nextCardFields[character.community_card_id] ??= [];
+	}
+	for (const id of character.additional_community_card_ids) {
+		if (compendium.community_cards[id]?.field_group) nextCardFields[id] ??= [];
+	}
+	if (JSON.stringify(nextCardFields) !== JSON.stringify(character.card_fields)) {
+		character.card_fields = nextCardFields;
 		changed = true;
 	}
 
@@ -3224,6 +3282,14 @@ function normalizeDerivedLimits(character: Character, compendium: CompendiumCont
 		nextFeatureChoices.given_out_this_session = [rallyValue === 'yes' ? 'yes' : 'no'];
 	} else if (nextFeatureChoices.given_out_this_session) {
 		delete nextFeatureChoices.given_out_this_session;
+	}
+
+	if (derived.hasNoMercyHopeFeature) {
+		const rawValue = Number.parseInt(nextFeatureChoices.no_mercy_bonus?.[0] ?? '0', 10);
+		const normalizedValue = Number.isInteger(rawValue) ? clamp(rawValue, 0, 20) : 0;
+		nextFeatureChoices.no_mercy_bonus = [String(normalizedValue)];
+	} else if (nextFeatureChoices.no_mercy_bonus) {
+		delete nextFeatureChoices.no_mercy_bonus;
 	}
 
 	if (derived.hasUnstoppableClassFeature) {

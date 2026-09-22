@@ -5,12 +5,25 @@
 	import * as Select from '$lib/components/ui/select';
 	import { TRAITS } from '@domain/constants/rules';
 	import type { TraitId } from '@domain/schemas/rules';
+	import Button from '$lib/components/ui/button/button.svelte';
 
 	const characterCtx = getCharacterContext();
 	const character = $derived(characterCtx.character);
 	const derived_character_data = $derived(characterCtx.derived_character_data);
 
 	let evolution_trait = $derived(character?.feature_choices['evolution_trait']?.[0]);
+	let noMercyBonus = $derived(derived_character_data?.no_mercy_bonus ?? 0);
+
+	function useNoMercy() {
+		if (!character || !characterCtx.canEdit || character.marked_hope < 3) return;
+		character.marked_hope -= 3;
+		character.feature_choices.no_mercy_bonus = [String(noMercyBonus + 1)];
+	}
+
+	function resetNoMercy() {
+		if (!character || !characterCtx.canEdit) return;
+		character.feature_choices.no_mercy_bonus = ['0'];
+	}
 </script>
 
 {#if derived_character_data && derived_character_data.primary_class}
@@ -51,6 +64,21 @@
 					{/each}
 				</Select.Content>
 			</Select.Root>
+		{/if}
+		{#if derived_character_data.hasNoMercyHopeFeature}
+			<div class="flex flex-wrap items-center justify-center gap-2">
+				<span class="rounded-full border border-primary/40 bg-primary-muted px-3 py-1 text-xs font-semibold">
+					Attack bonus +{noMercyBonus}
+				</span>
+				{#if characterCtx.canEdit}
+					<Button size="sm" onclick={useNoMercy} disabled={!character || character.marked_hope < 3}>
+						Spend 3 Hope (+1)
+					</Button>
+					{#if noMercyBonus > 0}
+						<Button size="sm" variant="ghost" onclick={resetNoMercy}>Reset</Button>
+					{/if}
+				{/if}
+			</div>
 		{/if}
 	</div>
 {/if}

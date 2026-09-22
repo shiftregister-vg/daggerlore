@@ -1114,6 +1114,8 @@ You stop being *Charged* at your next long rest.`,
 		image_url: '',
 		artist_name: '',
 		foundation_card: {
+			tokens_enabled: true,
+			token_label: 'Slayer Dice',
 			features: [
 				{
 					title: 'Slayer',

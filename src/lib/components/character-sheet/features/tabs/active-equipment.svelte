@@ -37,7 +37,10 @@
 	// Beastform attack calculations
 	const beastformToHit = $derived.by(() => {
 		if (!derivedBeastform || !derived_character_data?.traits) return 0;
-		return derived_character_data.traits[derivedBeastform.attack.trait] ?? 0;
+		return (
+			(derived_character_data.traits[derivedBeastform.attack.trait] ?? 0) +
+			derived_character_data.no_mercy_bonus
+		);
 	});
 </script>
 
