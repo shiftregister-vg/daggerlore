@@ -1,4 +1,5 @@
 <script lang="ts">
+	import InventoryRemoveButton from './inventory-remove-button.svelte';
 	import { cn, level_to_tier } from '$lib/utils';
 	import Shield from '@lucide/svelte/icons/shield';
 	import { getCharacterContext } from '$lib/state/character.svelte';
@@ -7,12 +8,14 @@
 		inventory_id,
 		showEquipButton = false,
 		class: className = '',
-		onclick
+		onclick,
+		onRemove
 	}: {
 		inventory_id: string;
 		showEquipButton?: boolean;
 		class?: string;
 		onclick?: () => void;
+		onRemove?: () => void;
 	} = $props();
 
 	const characterCtx = getCharacterContext();
@@ -83,6 +86,7 @@
 					</p>
 				</div>
 			</div>
+			<InventoryRemoveButton itemName={armor.title} {onRemove} />
 		</td>
 		<td class="py-2 pr-4 whitespace-nowrap">
 			<div class="mx-auto flex w-min items-center gap-1 rounded-full text-xs leading-none">

@@ -1,4 +1,5 @@
 <script lang="ts">
+	import InventoryRemoveButton from './inventory-remove-button.svelte';
 	import { cn } from '$lib/utils';
 	import { renderMarkdown } from '$lib/utils';
 	import { getCharacterContext } from '$lib/state/character.svelte';
@@ -6,8 +7,14 @@
 	let {
 		inventory_id,
 		class: className = '',
-		onclick
-	}: { inventory_id: string; class?: string; onclick?: () => void } = $props();
+		onclick,
+		onRemove
+	}: {
+		inventory_id: string;
+		class?: string;
+		onclick?: () => void;
+		onRemove?: () => void;
+	} = $props();
 
 	const characterCtx = getCharacterContext();
 	const derived_character_data = $derived(characterCtx.derived_character_data);
@@ -41,6 +48,7 @@
 	>
 		<td class="px-4 py-2">
 			{loot.title}
+			<InventoryRemoveButton itemName={loot.title} {onRemove} />
 		</td>
 		<td class="py-2 pr-4 text-right">
 			{#if loot.description_html}

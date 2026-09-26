@@ -1,4 +1,5 @@
 <script lang="ts">
+	import InventoryRemoveButton from './inventory/inventory-remove-button.svelte';
 	import Input from '$lib/components/ui/input/input.svelte';
 	import type {
 		PrimaryWeapon,
@@ -173,6 +174,9 @@
 						<tbody>
 							{#each filteredArmor as armor (armor.inventory_id)}
 								<ArmorRow
+									onRemove={characterCtx.canEditInventory
+										? () => characterCtx.removeFromInventory('armor', armor.inventory_id)
+										: undefined}
 									inventory_id={armor.inventory_id}
 									showEquipButton={true}
 									onclick={() => onItemClick({ type: 'armor', inventory_id: armor.inventory_id })}
@@ -206,6 +210,9 @@
 						<tbody>
 							{#each filteredPrimaryWeapons as weapon (weapon.inventory_id)}
 								<PrimaryWeaponRow
+									onRemove={characterCtx.canEditInventory
+										? () => characterCtx.removeFromInventory('primary_weapon', weapon.inventory_id)
+										: undefined}
 									inventory_id={weapon.inventory_id}
 									onclick={() =>
 										onItemClick({ type: 'primary_weapon', inventory_id: weapon.inventory_id })}
@@ -213,6 +220,10 @@
 							{/each}
 							{#each filteredSecondaryWeapons as weapon (weapon.inventory_id)}
 								<SecondaryWeaponRow
+									onRemove={characterCtx.canEditInventory
+										? () =>
+												characterCtx.removeFromInventory('secondary_weapon', weapon.inventory_id)
+										: undefined}
 									inventory_id={weapon.inventory_id}
 									onclick={() =>
 										onItemClick({ type: 'secondary_weapon', inventory_id: weapon.inventory_id })}
@@ -242,6 +253,9 @@
 						<tbody>
 							{#each filteredConsumables as consumable (consumable.inventory_id)}
 								<ConsumableRow
+									onRemove={characterCtx.canEditInventory
+										? () => characterCtx.removeFromInventory('consumable', consumable.inventory_id)
+										: undefined}
 									inventory_id={consumable.inventory_id}
 									onclick={() =>
 										onItemClick({ type: 'consumable', inventory_id: consumable.inventory_id })}
@@ -269,6 +283,9 @@
 						<tbody>
 							{#each filteredLoot as loot (loot.inventory_id)}
 								<LootRow
+									onRemove={characterCtx.canEditInventory
+										? () => characterCtx.removeFromInventory('loot', loot.inventory_id)
+										: undefined}
 									inventory_id={loot.inventory_id}
 									onclick={() => onItemClick({ type: 'loot', inventory_id: loot.inventory_id })}
 								/>
@@ -312,7 +329,14 @@
 									<td class="py-2 pr-4 text-center font-medium text-foreground">
 										{gearQuantity(gear)}
 									</td>
-									<td class="py-2 pr-4"></td>
+									<td class="py-2 pr-4 text-right">
+										<InventoryRemoveButton
+											itemName={gearTitle(gear)}
+											onRemove={characterCtx.canEditInventory
+												? () => characterCtx.removeAdventuringGear(originalIndex)
+												: undefined}
+										/>
+									</td>
 								</tr>
 							{/each}
 						</tbody>

@@ -1,4 +1,5 @@
 <script lang="ts">
+	import InventoryRemoveButton from './inventory-remove-button.svelte';
 	import { cn, level_to_tier } from '$lib/utils';
 	import type { DamageType, TraitId, Traits } from '@domain/schemas/rules';
 	import { getCharacterContext } from '$lib/state/character.svelte';
@@ -9,11 +10,13 @@
 	let {
 		inventory_id,
 		class: className = '',
-		onclick
+		onclick,
+		onRemove
 	}: {
 		inventory_id: string;
 		class?: string;
 		onclick?: () => void;
+		onRemove?: () => void;
 	} = $props();
 
 	const characterCtx = getCharacterContext();
@@ -143,6 +146,7 @@
 					</p>
 				</div>
 			</div>
+			<InventoryRemoveButton itemName={weapon.title} {onRemove} />
 		</td>
 		<td class="py-2 pr-4 text-center whitespace-nowrap">{weapon.range}</td>
 		<td class="py-2 pr-4 whitespace-nowrap">

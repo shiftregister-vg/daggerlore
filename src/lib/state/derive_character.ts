@@ -3216,6 +3216,16 @@ function normalizeDerivedLimits(character: Character, compendium: CompendiumCont
 		changed = true;
 	}
 
+	// Companion Experiences follow the character's earned slots. Keep surplus names
+	// so temporarily lowering the character's level cannot destroy player input.
+	if (character.companion && character.companion.experiences.length < maxExperiences) {
+		character.companion.experiences = [
+			...character.companion.experiences,
+			...Array(maxExperiences - character.companion.experiences.length).fill('')
+		];
+		changed = true;
+	}
+
 	const loadoutIds = new Set(loop.loadout.map((card) => card.id));
 	let normalizedLoadout = character.loadout_domain_card_ids.filter((id) =>
 		loadoutIds.has(id.card_id)

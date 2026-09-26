@@ -140,3 +140,63 @@ describe('No Mercy', () => {
 		expect(result.derived.no_mercy_bonus).toBe(0);
 	});
 });
+
+describe('companion Experience normalization', () => {
+	function ranger(level = 2): Character {
+		const character = structuredClone(CHARACTER_DEFAULTS);
+		character.level = level;
+		character.primary_class_id = 'ranger';
+		character.primary_subclass_id = 'ranger_beastbound';
+		return character;
+	}
+
+	it.each([
+		[1, 2],
+		[2, 3],
+		[5, 4],
+		[8, 5]
+	])('creates all earned companion slots at level %i', (level, count) => {
+		const result = derive_character_state(ranger(level), compendium);
+		expect(result.character.companion?.experiences).toHaveLength(count);
+		expect(result.derived.derived_companion?.experiences).toHaveLength(count);
+	});
+
+	it('repairs legacy slots, persists a new name, and applies Intelligent to it', () => {
+		const initial = derive_character_state(ranger(1), compendium).character;
+		initial.companion!.experiences = ['Tracker', 'Guardian'];
+		initial.level = 2;
+		const upgraded = derive_character_state(initial, compendium);
+		expect(upgraded.character.companion!.experiences).toEqual(['Tracker', 'Guardian', '']);
+		expect(initial.companion!.experiences).toEqual(['Tracker', 'Guardian']);
+
+		upgraded.character.companion!.experiences[2] = 'Scout';
+		upgraded.character.companion!.level_up_choices = ['intelligent'];
+		upgraded.character.companion!.choices.intelligent = ['2'];
+		const saved = CharacterSchema.parse(JSON.parse(JSON.stringify(upgraded.character)));
+		const reloaded = derive_character_state(saved, compendium);
+		expect(reloaded.derived.derived_companion!.experiences).toEqual([
+			'Tracker',
+			'Guardian',
+			'Scout'
+		]);
+		expect(reloaded.derived.derived_companion!.experience_modifiers).toEqual([2, 2, 3]);
+		expect(derive_character_state(reloaded.character, compendium).didCorrectCharacter).toBe(false);
+	});
+
+	it('preserves hidden names when lowering the level and restores them on level up', () => {
+		const character = derive_character_state(ranger(5), compendium).character;
+		character.companion!.experiences = ['Tracker', 'Guardian', 'Scout', 'Hunter'];
+		character.level = 1;
+		const lowered = derive_character_state(character, compendium);
+		expect(lowered.character.companion!.experiences).toHaveLength(4);
+		expect(lowered.derived.derived_companion!.experiences).toEqual(['Tracker', 'Guardian']);
+		lowered.character.level = 5;
+		const restored = derive_character_state(lowered.character, compendium);
+		expect(restored.derived.derived_companion!.experiences).toEqual([
+			'Tracker',
+			'Guardian',
+			'Scout',
+			'Hunter'
+		]);
+	});
+});

@@ -1,5 +1,6 @@
 <script lang="ts">
 	import { cn } from '$lib/utils';
+	import { getCompanionCommandRoll } from '$lib/state/companion-rolls';
 	import type { Snippet } from 'svelte';
 	import { getCharacterContext } from '$lib/state/character.svelte';
 	import Button from '$lib/components/ui/button/button.svelte';
@@ -29,6 +30,11 @@
 	const derived_character_data = $derived(characterCtx.derived_character_data);
 	const companion = $derived(character?.companion); // companion that can be updated (including choices)
 	const derived_companion = $derived(derived_character_data?.derived_companion); // used to show final stats and is updated automatically based on companion choices
+
+	const commandRoll = $derived(
+		derived_character_data ? getCompanionCommandRoll(derived_character_data) : undefined
+	);
+	const eligibleExperiences = $derived(derived_companion?.experiences ?? []);
 
 	let edit_mode = $state(false);
 	let select_open = $state(false);
@@ -242,7 +248,7 @@
 							</tr>
 						</thead>
 						<tbody>
-							{#each companion.experiences as experience, i}
+							{#each eligibleExperiences as experience, i}
 								<tr class="text-xs">
 									<td class={cn('px-4 py-1', i === 0 && 'pt-1.5')}>
 										<RollButton
@@ -393,7 +399,7 @@
 												{currentChoice
 													? (() => {
 															const idx = parseInt(currentChoice, 10);
-															if (!isNaN(idx) && idx >= 0 && idx < companion.experiences.length) {
+															if (!isNaN(idx) && idx >= 0 && idx < eligibleExperiences.length) {
 																return companion.experiences[idx] || `Experience ${idx + 1}`;
 															}
 															return 'Invalid';
@@ -405,7 +411,7 @@
 											<Select.Item value="" class="justify-center text-muted-foreground"
 												>-- Select none --</Select.Item
 											>
-											{#each companion.experiences as experience, expIdx}
+											{#each eligibleExperiences as experience, expIdx}
 												<Select.Item value={expIdx.toString()}>
 													{experience.trim() || 'Unnamed Experience'}
 												</Select.Item>
@@ -511,8 +517,21 @@
 									<span>{derived_companion.attack.name || 'Attack'}</span>
 									<span>{derived_companion.attack.range}</span>
 
+									{#if commandRoll}
+										<div class="flex items-center gap-1">
+											<span>Command</span>
+											<RollButton
+												type="duality"
+												name={`${derived_companion.name || 'Companion'} Command / Attack`}
+												traitId={commandRoll.traitId}
+												modifier={commandRoll.modifier}
+											/>
+										</div>
+									{/if}
 									<RollButton
 										type="base"
+										name={`${derived_companion.name || 'Companion'} Damage`}
+										proficiency={derived_character_data?.proficiency}
 										diceString={derived_companion.attack.damage_dice}
 										modifier={derived_companion.attack.damage_bonus}
 										damageType={derived_companion.attack.damage_type}
