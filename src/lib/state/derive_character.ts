@@ -44,6 +44,13 @@ import {
 	COMPANION_BASE_EXPERIENCE_MODIFIER
 } from '@domain/constants/rules';
 import { increaseDie, increase_range } from '$lib/utils';
+import {
+	collectUsageTrackers,
+	pruneFeatureUses,
+	usageKey,
+	type UsageSource,
+	type UsageTracker
+} from './feature-usage';
 
 type InventoryPrimaryWeapon = PrimaryWeapon & { inventory_id: string };
 type InventorySecondaryWeapon = SecondaryWeapon & { inventory_id: string };
@@ -145,6 +152,7 @@ export type DerivedCharacterData = {
 	secondary_class_mastery_level: number;
 	spellcast_roll_bonus: number;
 	no_mercy_bonus: number;
+	usage_trackers: UsageTracker[];
 
 	// feature flags
 	hasBeastformClassFeature: boolean;
@@ -398,6 +406,77 @@ function traitValue(traits: Traits, trait: TraitId): number {
 
 function getLevelChoiceOption(optionId?: AllTierLevelUpOptionId): LevelUpOption | undefined {
 	return optionId ? ALL_LEVEL_UP_OPTIONS[optionId] : undefined;
+}
+
+function deriveUsageSources(
+	character: Character,
+	refs: DirectRefs,
+	vault: VaultDomainCard[],
+	primaryMastery: number,
+	secondaryMastery: number
+): UsageSource[] {
+	const sources: UsageSource[] = vault.map((card) => ({
+		item_type: 'domain_cards',
+		item_id: card.id,
+		title: card.title,
+		features: card.features
+	}));
+	// Only the primary class grants its Hope feature.
+	for (const [classId, characterClass, hopeFeatures] of [
+		[
+			character.primary_class_id,
+			refs.primary_class,
+			refs.primary_class ? [refs.primary_class.hope_feature] : []
+		],
+		[character.secondary_class_id, refs.secondary_class, []]
+	] as const) {
+		if (!classId || !characterClass) continue;
+		sources.push({
+			item_type: 'classes',
+			item_id: classId,
+			title: characterClass.title,
+			features: [...hopeFeatures, ...characterClass.class_features]
+		});
+	}
+	for (const [subclassId, subclass, mastery] of [
+		[character.primary_subclass_id, refs.primary_subclass, primaryMastery],
+		[character.secondary_subclass_id, refs.secondary_subclass, secondaryMastery]
+	] as const) {
+		if (!subclassId || !subclass) continue;
+		sources.push({
+			item_type: 'subclasses',
+			item_id: subclassId,
+			title: subclass.title,
+			features: stageForMastery(mastery).flatMap((stage) => getSubclassCard(subclass, stage))
+		});
+	}
+	const ancestries: [string | undefined, AncestryCard | undefined][] = [
+		[character.ancestry_card_id, refs.ancestry_card],
+		...Object.entries(refs.additional_ancestry_cards)
+	];
+	for (const [id, card] of ancestries) {
+		if (!id || !card) continue;
+		sources.push({
+			item_type: 'ancestry_cards',
+			item_id: id,
+			title: card.title,
+			features: card.features
+		});
+	}
+	const communities: [string | undefined, CommunityCard | undefined][] = [
+		[character.community_card_id, refs.community_card],
+		...Object.entries(refs.additional_community_cards)
+	];
+	for (const [id, card] of communities) {
+		if (!id || !card) continue;
+		sources.push({
+			item_type: 'community_cards',
+			item_id: id,
+			title: card.title,
+			features: card.features
+		});
+	}
+	return sources;
 }
 
 function getSubclassCard(subclass: Subclass | undefined, type: SubclassCardType): Feature[] {
@@ -2353,6 +2432,15 @@ export function derive_character_data(
 		secondary_class_mastery_level: loop.secondary_mastery,
 		spellcast_roll_bonus,
 		no_mercy_bonus: noMercyBonus,
+		usage_trackers: collectUsageTrackers(
+			deriveUsageSources(
+				character,
+				refs,
+				domain_card_vault,
+				loop.primary_mastery,
+				loop.secondary_mastery
+			)
+		),
 		...finalFlags
 	};
 }
@@ -2898,8 +2986,41 @@ function normalizeReferencesAndChoices(
 	const nextCardTokens = Object.fromEntries(
 		Object.entries(character.card_tokens).filter(([cardId]) => validCardIds.has(cardId))
 	);
+	// Every subclass stage counts as owned so locked stages keep their spent uses.
+	const usageSources = deriveUsageSources(character, refs, domainCardVault, 3, 3);
+	const nextFeatureUses = { ...(character.feature_uses ?? {}) };
+
+	// Cards that replaced a manual "Used" token with a single usage tracker (e.g. A Soldier's Bond v3)
+	// carry the old token over once, then drop it.
+	for (const source of usageSources) {
+		const legacyTokens = nextCardTokens[source.item_id];
+		if (legacyTokens === undefined) continue;
+		const card =
+			source.item_type === 'domain_cards'
+				? domainCardVault.find((entry) => entry.id === source.item_id)
+				: source.item_type === 'ancestry_cards'
+					? compendium.ancestry_cards[source.item_id]
+					: source.item_type === 'community_cards'
+						? compendium.community_cards[source.item_id]
+						: undefined;
+		if (!card || card.tokens_enabled) continue;
+		const usages = card.features.flatMap((feature) => (feature.usage ? [feature.usage] : []));
+		if (usages.length !== 1) continue;
+		const key = usageKey(source.item_type, source.item_id, usages[0].id);
+		if (legacyTokens > 0 && nextFeatureUses[key] === undefined) {
+			nextFeatureUses[key] = Math.min(legacyTokens, usages[0].max_uses);
+		}
+		delete nextCardTokens[source.item_id];
+	}
+
 	if (JSON.stringify(nextCardTokens) !== JSON.stringify(character.card_tokens)) {
 		character.card_tokens = nextCardTokens;
+		changed = true;
+	}
+
+	const prunedFeatureUses = pruneFeatureUses(nextFeatureUses, usageSources);
+	if (JSON.stringify(prunedFeatureUses) !== JSON.stringify(character.feature_uses)) {
+		character.feature_uses = prunedFeatureUses;
 		changed = true;
 	}
 

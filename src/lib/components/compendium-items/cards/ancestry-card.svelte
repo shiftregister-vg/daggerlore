@@ -5,6 +5,8 @@
 	import type { CompendiumContent, AncestryCard } from '@domain/schemas/compendium';
 	import type { CardChoices } from '@domain/schemas/rules';
 	import CardOptions from './card-options.svelte';
+	import UsageTracker from '$lib/components/character-sheet/features/usage-tracker.svelte';
+	import { usageKey } from '$lib/state/feature-usage';
 
 	let {
 		card,
@@ -13,6 +15,7 @@
 		tokens = $bindable(),
 		enable_choices = false,
 		enable_tokens = false,
+		usage_item_id,
 		enable_mixed_ancestry = false,
 		mixed_ancestry_choices = $bindable(),
 		experiences = [],
@@ -27,6 +30,8 @@
 		tokens?: number;
 		enable_choices?: boolean;
 		enable_tokens?: boolean;
+		/** Id of the owning item on the character's sheet; enables usage trackers. */
+		usage_item_id?: string;
 		enable_mixed_ancestry?: boolean;
 		mixed_ancestry_choices?: {
 			top_ancestry_id?: string;
@@ -215,6 +220,15 @@
 					<b><em>{feature.title}:</em></b>
 					{@html renderMarkdown(feature.description_html)}
 				</p>
+				{#if feature.usage}
+					<UsageTracker
+						usage={feature.usage}
+						{disabled}
+						tracker_key={usage_item_id
+							? usageKey('ancestry_cards', usage_item_id, feature.usage.id)
+							: undefined}
+					/>
+				{/if}
 			{/each}
 
 			<!-- options & tokens -->
@@ -276,6 +290,15 @@
 						<b><em>{feature.title}:</em></b>
 						{@html renderMarkdown(feature.description_html)}
 					</p>
+					{#if feature.usage}
+						<UsageTracker
+							usage={feature.usage}
+							{disabled}
+							tracker_key={usage_item_id
+								? usageKey('ancestry_cards', usage_item_id, feature.usage.id)
+								: undefined}
+						/>
+					{/if}
 				{/each}
 
 				<!-- options & tokens -->

@@ -272,7 +272,8 @@ export const ARCANA_DOMAIN_CARDS = {
 				title: '',
 				description_html:
 					'You can channel arcane energy to have visions of the future. Once per long rest, immediately after the GM conveys the consequences of a roll you made, you can rescind the move and consequences like they never happened and make another move instead.',
-				character_modifiers: []
+				character_modifiers: [],
+				usage: { id: 'premonition', max_uses: 1, reset: 'long_rest' }
 			}
 		]
 	},
@@ -463,7 +464,8 @@ export const ARCANA_DOMAIN_CARDS = {
 				title: '',
 				description_html:
 					"Make a **Spellcast Roll (16)**. Once per rest on a success, all targets within Very Far range who aren't flying must make a Reaction Roll (18). Targets who fail take **3d10+8** physical damage and are temporarily *Vulnerable*. Targets who succeed take half damage.\n\nAdditionally, when you succeed on the Spellcast Roll, all terrain within Very Far range becomes difficult to move through and structures within this range might sustain damage or crumble.",
-				character_modifiers: []
+				character_modifiers: [],
+				usage: { id: 'earthquake', max_uses: 1, reset: 'rest' }
 			}
 		]
 	},

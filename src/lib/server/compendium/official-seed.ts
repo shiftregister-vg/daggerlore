@@ -61,9 +61,27 @@ const SEED_ITEM_RELEASES: Record<
 		changelog: 'Adds a Slayer Dice tracker with a maximum tied to Proficiency.'
 	},
 	'SRD:domain_cards:a_soldiers_bond': {
+		version: 3,
+		label: "A Soldier's Bond Usage Tracker",
+		changelog:
+			'Replaces the manual Used token with a once-per-long-rest usage tracker that refreshes when you complete a long rest.'
+	},
+	'SRD:domain_cards:scramble': {
 		version: 2,
-		label: "A Soldier's Bond Tracking",
-		changelog: 'Adds a once-per-long-rest use tracker.'
+		label: 'Scramble Usage Tracker',
+		changelog: 'Adds a once-per-rest usage tracker that refreshes on a short or long rest.'
+	},
+	'SRD:domain_cards:earthquake': {
+		version: 2,
+		label: 'Earthquake Usage Tracker',
+		changelog:
+			'Adds a once-per-rest usage tracker for a successful cast that refreshes on a short or long rest.'
+	},
+	'SRD:domain_cards:premonition': {
+		version: 2,
+		label: 'Premonition Usage Tracker',
+		changelog:
+			'Adds a once-per-long-rest usage tracker that refreshes when you complete a long rest.'
 	},
 	'SRD:community_cards:orderborne': {
 		version: 2,

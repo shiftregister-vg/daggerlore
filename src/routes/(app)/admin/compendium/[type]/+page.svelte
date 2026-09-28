@@ -13,6 +13,7 @@
 	import { Button } from '$lib/components/ui/button';
 	import DomainCardEditor from './domain-card-editor.svelte';
 	import MarkdownTextarea from './markdown-textarea.svelte';
+	import FeatureUsageEditor from './feature-usage-editor.svelte';
 	import type { HomebrewTable } from '@domain/permissions';
 	import type { SourceKey } from '@domain/schemas/rules';
 	import type { SourceMetadata } from '@domain/schemas/sources';
@@ -2162,6 +2163,11 @@
 																placeholder="Feature text"
 																bind:value={feature.description_html}
 															/>
+															<FeatureUsageEditor
+																bind:feature={editorItem[card.key].features[index]}
+																siblings={editorItem[card.key].features}
+																fallbackId={`${card.key}_use_${index + 1}`}
+															/>
 														</div>
 													{/each}
 												{/if}
@@ -2702,6 +2708,13 @@
 												<Button size="sm" variant="outline" onclick={() => removeArrayItem(editorItem!, 'features', index)}>Remove</Button>
 											</div>
 											<MarkdownTextarea placeholder="Feature text" bind:value={feature.description_html} />
+											{#if selectedItemType === 'ancestry_cards' || selectedItemType === 'community_cards'}
+												<FeatureUsageEditor
+													bind:feature={editorItem.features[index]}
+													siblings={editorItem.features}
+													fallbackId={`use_${index + 1}`}
+												/>
+											{/if}
 										</div>
 									{/each}
 								</div>
@@ -2788,6 +2801,7 @@
 									<span>Hope Feature Text</span>
 									<MarkdownTextarea bind:value={editorItem.hope_feature.description_html} />
 								</label>
+								<FeatureUsageEditor bind:feature={editorItem.hope_feature} fallbackId="hope_feature" />
 								<div class="grid gap-3">
 									<div class="flex items-center justify-between">
 										<p class="text-sm font-medium text-foreground">Class Features</p>
@@ -2826,6 +2840,11 @@
 													{/if}
 												</div>
 												<MarkdownTextarea placeholder="Feature text" bind:value={feature.description_html} />
+												<FeatureUsageEditor
+													bind:feature={editorItem.class_features[index]}
+													siblings={editorItem.class_features}
+													fallbackId={`use_${index + 1}`}
+												/>
 											</div>
 										{/each}
 									{/if}

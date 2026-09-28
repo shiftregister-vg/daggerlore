@@ -5,6 +5,8 @@
 	import type { Snippet } from 'svelte';
 	import type { CardChoices } from '@domain/schemas/rules';
 	import CardOptions from './card-options.svelte';
+	import UsageTracker from '$lib/components/character-sheet/features/usage-tracker.svelte';
+	import { usageKey } from '$lib/state/feature-usage';
 	import CommunityCardFields from './community-card-fields.svelte';
 
 	let {
@@ -16,6 +18,7 @@
 		experiences = [],
 		enable_choices = false,
 		enable_tokens = false,
+		usage_item_id,
 		enable_fields = false,
 		// usually not needed:
 		disabled = false,
@@ -30,6 +33,8 @@
 		on_field_values_change?: (values: string[]) => void;
 		enable_choices?: boolean;
 		enable_tokens?: boolean;
+		/** Id of the owning item on the character's sheet; enables usage trackers. */
+		usage_item_id?: string;
 		enable_fields?: boolean;
 		disabled?: boolean;
 		experiences?: string[];
@@ -81,6 +86,15 @@
 					<b><em>{feature.title}:</em></b>
 					{@html renderMarkdown(feature.description_html)}
 				</p>
+				{#if feature.usage}
+					<UsageTracker
+						usage={feature.usage}
+						{disabled}
+						tracker_key={usage_item_id
+							? usageKey('community_cards', usage_item_id, feature.usage.id)
+							: undefined}
+					/>
+				{/if}
 			{/each}
 
 			{#if enable_fields && card.field_group}
@@ -146,6 +160,15 @@
 						<b><em>{feature.title}:</em></b>
 						{@html renderMarkdown(feature.description_html)}
 					</p>
+					{#if feature.usage}
+						<UsageTracker
+							usage={feature.usage}
+							{disabled}
+							tracker_key={usage_item_id
+								? usageKey('community_cards', usage_item_id, feature.usage.id)
+								: undefined}
+						/>
+					{/if}
 				{/each}
 
 				{#if enable_fields && card.field_group}

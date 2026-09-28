@@ -7,6 +7,8 @@
 	import HomebrewBadge from '$lib/components/decorations/badges/homebrew-badge.svelte';
 	import type { CardChoices } from '@domain/schemas/rules';
 	import CardOptions from './card-options.svelte';
+	import UsageTracker from '$lib/components/character-sheet/features/usage-tracker.svelte';
+	import { usageKey } from '$lib/state/feature-usage';
 
 	let {
 		card,
@@ -15,6 +17,7 @@
 		tokens = $bindable(),
 		enable_choices = false,
 		enable_tokens = false,
+		usage_item_id,
 		token_max,
 		experiences = [],
 		disabled = false,
@@ -28,6 +31,8 @@
 		tokens?: number;
 		enable_choices?: boolean;
 		enable_tokens?: boolean;
+		/** Id of the owning item on the character's sheet; enables usage trackers. */
+		usage_item_id?: string;
 		token_max?: number;
 		disabled?: boolean;
 		experiences?: string[];
@@ -100,6 +105,15 @@
 				<p class="text-xs">
 					{@html renderMarkdown(`***${feature.title}:*** ` + feature.description_html)}
 				</p>
+				{#if feature.usage}
+					<UsageTracker
+						usage={feature.usage}
+						{disabled}
+						tracker_key={usage_item_id
+							? usageKey('subclasses', usage_item_id, feature.usage.id)
+							: undefined}
+					/>
+				{/if}
 			{/each}
 
 			<!-- options & tokens -->
@@ -187,6 +201,15 @@
 					<p class="text-[12px] text-black">
 						{@html renderMarkdown(`***${feature.title}:*** ` + feature.description_html)}
 					</p>
+					{#if feature.usage}
+						<UsageTracker
+							usage={feature.usage}
+							{disabled}
+							tracker_key={usage_item_id
+								? usageKey('subclasses', usage_item_id, feature.usage.id)
+								: undefined}
+						/>
+					{/if}
 				{/each}
 
 				<!-- options & tokens -->

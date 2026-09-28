@@ -113,16 +113,15 @@ export const BLADE_DOMAIN_CARDS = {
 		forced_in_loadout: false,
 		forced_in_vault: false,
 		options: [],
-		tokens_enabled: true,
-		token_max: 1,
-		token_label: 'Used',
+		tokens_enabled: false,
 		features: [
 			{
 				weapon_modifiers: [],
 				title: '',
 				description_html:
 					"Once per long rest, when you compliment someone or ask them about something they're good at, you can both gain 3 Hope.",
-				character_modifiers: []
+				character_modifiers: [],
+				usage: { id: 'soldiers_bond', max_uses: 1, reset: 'long_rest' }
 			}
 		]
 	},
@@ -147,7 +146,8 @@ export const BLADE_DOMAIN_CARDS = {
 				title: '',
 				description_html:
 					'Once per rest, when a creature within Melee range would deal damage to you, you can avoid the attack and safely move out of Melee range of the enemy.',
-				character_modifiers: []
+				character_modifiers: [],
+				usage: { id: 'scramble', max_uses: 1, reset: 'rest' }
 			}
 		]
 	},

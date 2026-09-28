@@ -12,6 +12,11 @@
 	import Shield from '@lucide/svelte/icons/shield';
 	import { cn, level_to_tier } from '$lib/utils';
 	import { toast } from 'svelte-sonner';
+	import {
+		applyUsageResetEvent,
+		type UsageResetEvent,
+		type UsageTracker
+	} from '$lib/state/feature-usage';
 
 	let { open = false }: { open?: boolean } = $props();
 
@@ -64,7 +69,9 @@
 			character?.secondary_subclass_id === 'warrior_call_of_the_slayer'
 	);
 	const SLAYER_CARD_ID = 'warrior_call_of_the_slayer';
-	const LONG_REST_CARD_IDS = ['a_soldiers_bond', 'power_through_pain'] as const;
+	// Manual "Used" tokens that long rests still clear: A Soldier's Bond before v3 (characters pinned
+	// to v2 until they adopt the usage tracker) and power_through_pain until #16 resolves it.
+	const LEGACY_LONG_REST_TOKEN_CARD_IDS = ['a_soldiers_bond', 'power_through_pain'] as const;
 
 	$effect(() => {
 		if (diceCtx.diceOnScreen) return;
@@ -218,48 +225,113 @@
 		});
 	}
 
-	function startNewSession() {
+	function refreshedDescription(refreshed: UsageTracker[]): string {
+		if (refreshed.length === 0) return 'No features to refresh.';
+		const names = refreshed.map((tracker) => tracker.feature_title || tracker.source_title);
+		return `Refreshed ${names.join(', ')}.`;
+	}
+
+	/** Refreshes usage trackers for one confirmed event and returns an undo callback. */
+	function resetFeatureUses(event: UsageResetEvent) {
+		if (!character) return { refreshed: [], undo: () => {} };
+		const previous = character.feature_uses ?? {};
+		const { next, refreshed } = applyUsageResetEvent(
+			previous,
+			derived_character_data?.usage_trackers ?? [],
+			event
+		);
+		character.feature_uses = next;
+		return {
+			refreshed,
+			undo: () => {
+				if (character) character.feature_uses = previous;
+			}
+		};
+	}
+
+	function completeShortRest() {
 		if (!character || !characterCtx.canEdit) return;
 
-		const previousHope = character.marked_hope;
-		const previousTokens = character.card_tokens[SLAYER_CARD_ID] ?? 0;
-		character.marked_hope = Math.min(maxHope, previousHope + previousTokens);
-		character.card_tokens = { ...character.card_tokens, [SLAYER_CARD_ID]: 0 };
+		const previousNoMercyBonus = endNoMercy();
+		const usage = resetFeatureUses('short_rest');
 
-		const gainedHope = character.marked_hope - previousHope;
 		createUndoToast(
-			'Started a new session',
+			'Completed short rest',
 			() => {
-				if (!character) return;
-				character.marked_hope = previousHope;
-				character.card_tokens = {
-					...character.card_tokens,
-					[SLAYER_CARD_ID]: previousTokens
-				};
+				usage.undo();
+				restoreNoMercy(previousNoMercyBonus);
 			},
-			previousTokens > 0
-				? `Cleared ${previousTokens} Slayer Dice and gained ${gainedHope} Hope.`
-				: 'No Slayer Dice were carried over.'
+			refreshedDescription(usage.refreshed)
 		);
 	}
 
 	function completeLongRest() {
 		if (!character || !characterCtx.canEdit) return;
 
-		const previousTokens = Object.fromEntries(
-			LONG_REST_CARD_IDS.map((cardId) => [cardId, character.card_tokens[cardId] ?? 0])
+		const previousLegacyTokens = Object.fromEntries(
+			LEGACY_LONG_REST_TOKEN_CARD_IDS.flatMap((cardId) =>
+				character.card_tokens[cardId] === undefined ? [] : [[cardId, character.card_tokens[cardId]]]
+			)
 		);
 		const previousNoMercyBonus = endNoMercy();
+		const usage = resetFeatureUses('long_rest');
 		character.card_tokens = {
 			...character.card_tokens,
-			...Object.fromEntries(LONG_REST_CARD_IDS.map((cardId) => [cardId, 0]))
+			...Object.fromEntries(Object.keys(previousLegacyTokens).map((cardId) => [cardId, 0]))
 		};
 
-		createUndoToast('Completed long rest', () => {
-			if (!character) return;
-			character.card_tokens = { ...character.card_tokens, ...previousTokens };
-			restoreNoMercy(previousNoMercyBonus);
-		}, "Restored A Soldier's Bond, cleared long-rest card tokens, and ended No Mercy.");
+		createUndoToast(
+			'Completed long rest',
+			() => {
+				if (!character) return;
+				usage.undo();
+				character.card_tokens = { ...character.card_tokens, ...previousLegacyTokens };
+				restoreNoMercy(previousNoMercyBonus);
+			},
+			refreshedDescription(usage.refreshed)
+		);
+	}
+
+	function endScene() {
+		if (!character || !characterCtx.canEdit) return;
+
+		const usage = resetFeatureUses('scene');
+		createUndoToast('Ended scene', usage.undo, refreshedDescription(usage.refreshed));
+	}
+
+	function endSession() {
+		if (!character || !characterCtx.canEdit) return;
+
+		const usage = resetFeatureUses('session');
+		const descriptions = [refreshedDescription(usage.refreshed)];
+		const previousHope = character.marked_hope;
+		const previousSlayerDice = character.card_tokens[SLAYER_CARD_ID] ?? 0;
+		if (hasSlayerDice) {
+			character.marked_hope = Math.min(maxHope, previousHope + previousSlayerDice);
+			character.card_tokens = { ...character.card_tokens, [SLAYER_CARD_ID]: 0 };
+			const gainedHope = character.marked_hope - previousHope;
+			descriptions.push(
+				previousSlayerDice > 0
+					? `Cleared ${previousSlayerDice} Slayer Dice and gained ${gainedHope} Hope.`
+					: 'No Slayer Dice were carried over.'
+			);
+		}
+
+		createUndoToast(
+			'Ended session',
+			() => {
+				if (!character) return;
+				usage.undo();
+				if (hasSlayerDice) {
+					character.marked_hope = previousHope;
+					character.card_tokens = {
+						...character.card_tokens,
+						[SLAYER_CARD_ID]: previousSlayerDice
+					};
+				}
+			},
+			descriptions.join(' ')
+		);
 	}
 
 	function endNoMercy(): string | undefined {
@@ -395,27 +467,45 @@
 </div> -->
 
 <div class="flex flex-col overflow-y-auto px-4 pb-6">
-	{#if hasSlayerDice}
-		<div class="mb-6 flex items-center justify-between gap-3 rounded-md border border-primary/40 bg-primary/10 p-3">
+	<div class="mb-6 flex flex-col gap-3 rounded-md border border-primary/40 bg-primary/10 p-3">
+		<div class="flex items-center justify-between gap-3">
 			<div>
-				<p class="font-semibold text-foreground">New Session</p>
-				<p class="text-xs text-muted-foreground">Convert unspent Slayer Dice to Hope.</p>
+				<p class="font-semibold text-foreground">Scene</p>
+				<p class="text-xs text-muted-foreground">Refresh once-per-scene features.</p>
 			</div>
-			<Button
-				variant="outline"
-				size="sm"
-				disabled={!characterCtx.canEdit}
-				onclick={startNewSession}
-			>
-				Start New Session
+			<Button variant="outline" size="sm" disabled={!characterCtx.canEdit} onclick={endScene}>
+				End Scene
 			</Button>
 		</div>
-	{/if}
+		<div class="flex items-center justify-between gap-3">
+			<div>
+				<p class="font-semibold text-foreground">Session</p>
+				<p class="text-xs text-muted-foreground">
+					Refresh once-per-session features{hasSlayerDice
+						? ' and convert unspent Slayer Dice to Hope'
+						: ''}.
+				</p>
+			</div>
+			<Button variant="outline" size="sm" disabled={!characterCtx.canEdit} onclick={endSession}>
+				End Session
+			</Button>
+		</div>
+	</div>
 
-	<p class="mb-2 border-b pb-2 font-bold">
-		Short Rest
-		<span class="ml-1 text-xs text-muted-foreground">({maxShortActions} available)</span>
-	</p>
+	<div class="mb-2 flex items-center justify-between gap-3 border-b pb-2">
+		<p class="font-bold">
+			Short Rest
+			<span class="ml-1 text-xs text-muted-foreground">({maxShortActions} available)</span>
+		</p>
+		<Button
+			variant="outline"
+			size="sm"
+			disabled={!characterCtx.canEdit}
+			onclick={completeShortRest}
+		>
+			Complete Short Rest
+		</Button>
+	</div>
 
 	<div class="gap- flex flex-col text-xs text-muted-foreground">
 		{#each shortRestRows as row (row.title)}

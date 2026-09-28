@@ -246,6 +246,7 @@
 			choiceSourceId={itemId}
 			allowChoiceConditions={true}
 			allowExperienceTargets={true}
+			allowUsage
 			{errorSummary}
 		/>
 	{/if}

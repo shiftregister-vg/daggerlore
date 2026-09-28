@@ -526,6 +526,7 @@
 				choiceSourceId={itemId}
 				allowChoiceConditions={true}
 				allowExperienceTargets={true}
+				allowUsage
 				allowAddRemove
 				featureLabel="Feature"
 				path={['foundation_card', 'features']}
@@ -679,6 +680,7 @@
 				choiceSourceId={itemId}
 				allowChoiceConditions={true}
 				allowExperienceTargets={true}
+				allowUsage
 				allowAddRemove
 				featureLabel="Feature"
 				path={['specialization_card', 'features']}
@@ -827,6 +829,7 @@
 				choiceSourceId={itemId}
 				allowChoiceConditions={true}
 				allowExperienceTargets={true}
+				allowUsage
 				allowAddRemove
 				featureLabel="Feature"
 				path={['mastery_card', 'features']}

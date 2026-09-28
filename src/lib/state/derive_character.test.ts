@@ -200,3 +200,76 @@ describe('companion Experience normalization', () => {
 		]);
 	});
 });
+
+describe('feature usage trackers', () => {
+	const bondKey = 'domain_cards:a_soldiers_bond:soldiers_bond';
+
+	function bondCharacter(): Character {
+		const character = legacyCharacter();
+		character.additional_domain_card_ids = [{ domain_id: 'blade', card_id: 'a_soldiers_bond' }];
+		return character;
+	}
+
+	it('exposes trackers for owned configured features', () => {
+		const result = derive_character_state(bondCharacter(), compendium);
+		const bond = result.derived.usage_trackers.find((tracker) => tracker.key === bondKey);
+
+		expect(bond).toMatchObject({ max_uses: 1, reset: 'long_rest' });
+		expect(bond?.label).toBeUndefined();
+	});
+
+	it('applies an empty usage map while parsing legacy API data', () => {
+		const character = legacyCharacter() as Character & { feature_uses?: unknown };
+		Reflect.deleteProperty(character, 'feature_uses');
+		expect(CharacterSchema.parse(character).feature_uses).toEqual({});
+	});
+
+	it('carries a legacy Used token over to the usage tracker once', () => {
+		const character = bondCharacter();
+		character.card_tokens = { a_soldiers_bond: 1 };
+
+		const result = derive_character_state(character, compendium);
+
+		expect(result.character.card_tokens.a_soldiers_bond).toBeUndefined();
+		expect(result.character.feature_uses[bondKey]).toBe(1);
+	});
+
+	it('does not overwrite tracker state with a stale legacy token', () => {
+		const character = bondCharacter();
+		character.card_tokens = { a_soldiers_bond: 1 };
+		character.feature_uses = { [bondKey]: 0 };
+
+		const result = derive_character_state(character, compendium);
+
+		expect(result.character.card_tokens.a_soldiers_bond).toBeUndefined();
+		expect(result.character.feature_uses[bondKey]).toBeUndefined();
+	});
+
+	it('keeps the legacy token while the pinned version still uses tokens', () => {
+		const character = bondCharacter();
+		character.card_tokens = { a_soldiers_bond: 1 };
+		const pinnedCompendium = structuredClone(compendium);
+		const bond = pinnedCompendium.domain_cards.a_soldiers_bond;
+		bond.tokens_enabled = true;
+		bond.token_max = 1;
+		delete bond.features[0].usage;
+
+		const result = derive_character_state(character, pinnedCompendium);
+
+		expect(result.character.card_tokens.a_soldiers_bond).toBe(1);
+		expect(result.character.feature_uses).toEqual({});
+	});
+
+	it('keeps spent uses through vault moves and discards them when the card is removed', () => {
+		const character = bondCharacter();
+		character.feature_uses = { [bondKey]: 1 };
+		character.loadout_domain_card_ids = [];
+
+		expect(derive_character_state(character, compendium).character.feature_uses).toEqual({
+			[bondKey]: 1
+		});
+
+		character.additional_domain_card_ids = [];
+		expect(derive_character_state(character, compendium).character.feature_uses).toEqual({});
+	});
+});

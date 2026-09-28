@@ -1,9 +1,12 @@
 <script lang="ts">
-	import type { CardOption, Feature } from '@domain/schemas/rules';
+	import type { CardOption, Feature, FeatureUsage, UsageReset } from '@domain/schemas/rules';
 	import Input from '$lib/components/ui/input/input.svelte';
 	import Textarea from '$lib/components/ui/textarea/textarea.svelte';
 	import Button from '$lib/components/ui/button/button.svelte';
 	import Dropdown from '$lib/components/utility/dropdown.svelte';
+	import Checkbox from '$lib/components/ui/checkbox/checkbox.svelte';
+	import * as Select from '$lib/components/ui/select';
+	import { USAGE_RESET_CAPTIONS, generateUsageId } from '$lib/state/feature-usage';
 	import CharacterModifierForm from '../character-modifier/form.svelte';
 	import WeaponModifierForm from '../weapon-modifier/form.svelte';
 	import Plus from '@lucide/svelte/icons/plus';
@@ -26,7 +29,8 @@
 		featureLabel = 'Feature',
 		staticTitles = undefined,
 		allowChoiceConditions = false,
-		allowExperienceTargets = false
+		allowExperienceTargets = false,
+		allowUsage = false
 	}: {
 		features: Feature[];
 		choiceOptions?: CardOption[];
@@ -38,7 +42,11 @@
 		staticTitles?: string[];
 		allowChoiceConditions?: boolean;
 		allowExperienceTargets?: boolean;
+		/** Shows the limited-uses tracker settings; only sheet cards and class features read them. */
+		allowUsage?: boolean;
 	} = $props();
+
+	const USAGE_RESETS: UsageReset[] = ['rest', 'long_rest', 'scene', 'session', 'never'];
 
 	function featurePath(featureIndex: number, ...suffix: HomebrewErrorPath): HomebrewErrorPath {
 		return [...path, featureIndex, ...suffix];
@@ -134,6 +142,30 @@
 		);
 	}
 
+	function toggleUsage(featureIndex: number, enabled: boolean) {
+		features = features.map((feature, index) => {
+			if (index !== featureIndex) return feature;
+			if (!enabled) {
+				const { usage: _usage, ...rest } = feature;
+				return rest;
+			}
+			const id = generateUsageId(
+				feature.title,
+				features.flatMap((other) => (other !== feature && other.usage ? [other.usage.id] : [])),
+				`use_${featureIndex + 1}`
+			);
+			return { ...feature, usage: { id, max_uses: 1, reset: 'rest' } };
+		});
+	}
+
+	function updateUsage(featureIndex: number, patch: Partial<FeatureUsage>) {
+		features = features.map((feature, index) =>
+			index === featureIndex && feature.usage
+				? { ...feature, usage: { ...feature.usage, ...patch } }
+				: feature
+		);
+	}
+
 	function addFeature() {
 		features = [...features, emptyFeature()];
 	}
@@ -211,6 +243,94 @@
 								updateFeatureField(featureIndex, 'description_html', event.currentTarget.value)}
 						/>
 					</div>
+
+					{#if allowUsage}
+						{@const usageErrors = homebrewHasErrorsBelow(
+							errorSummary,
+							featurePath(featureIndex, 'usage')
+						)}
+						<div
+							class={cn(
+								'flex flex-col gap-2 rounded-md border p-2',
+								usageErrors && 'border-destructive'
+							)}
+						>
+							<label
+								class="flex items-center gap-2 text-xs font-medium text-muted-foreground"
+								for={`feature-usage-${featureIndex}`}
+							>
+								<Checkbox
+									id={`feature-usage-${featureIndex}`}
+									checked={!!feature.usage}
+									onCheckedChange={(checked) => toggleUsage(featureIndex, checked === true)}
+								/>
+								Limited uses
+							</label>
+							{#if feature.usage}
+								<div class="grid gap-2 sm:grid-cols-3">
+									<div class="flex flex-col gap-1">
+										<label
+											for={`feature-usage-label-${featureIndex}`}
+											class="text-xs font-medium text-muted-foreground"
+										>
+											Label
+										</label>
+										<Input
+											id={`feature-usage-label-${featureIndex}`}
+											value={feature.usage.label ?? ''}
+											placeholder="Optional, e.g. Relaxing Song"
+											oninput={(event) =>
+												updateUsage(featureIndex, {
+													label: event.currentTarget.value.trim()
+														? event.currentTarget.value
+														: undefined
+												})}
+										/>
+									</div>
+									<div class="flex flex-col gap-1">
+										<label
+											for={`feature-usage-max-${featureIndex}`}
+											class="text-xs font-medium text-muted-foreground"
+										>
+											Uses
+										</label>
+										<Input
+											id={`feature-usage-max-${featureIndex}`}
+											type="number"
+											min={1}
+											max={20}
+											value={feature.usage.max_uses}
+											oninput={(event) =>
+												updateUsage(featureIndex, {
+													max_uses: Math.max(
+														1,
+														Math.min(20, Math.trunc(Number(event.currentTarget.value) || 1))
+													)
+												})}
+										/>
+									</div>
+									<div class="flex flex-col gap-1">
+										<p class="text-xs font-medium text-muted-foreground">Refreshes</p>
+										<Select.Root
+											type="single"
+											value={feature.usage.reset}
+											onValueChange={(value) =>
+												value && updateUsage(featureIndex, { reset: value as UsageReset })}
+										>
+											<Select.Trigger class="w-full">
+												<p class="truncate">{USAGE_RESET_CAPTIONS[feature.usage.reset]}</p>
+											</Select.Trigger>
+											<Select.Content>
+												{#each USAGE_RESETS as reset (reset)}
+													<Select.Item value={reset}>{USAGE_RESET_CAPTIONS[reset]}</Select.Item>
+												{/each}
+											</Select.Content>
+										</Select.Root>
+									</div>
+								</div>
+							{/if}
+						</div>
+					{/if}
 
 					<div class="flex flex-col gap-2">
 						<Button

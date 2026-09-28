@@ -768,12 +768,14 @@
 			}
 		}
 		staticTitles={['Hope Feature']}
+		allowUsage
 		errorSummary={hopeFeatureErrorSummary}
 		path={['hope_feature']}
 	/>
 	<FeaturesForm
 		bind:features={$form.class_features}
 		allowAddRemove
+		allowUsage
 		featureLabel="Feature"
 		{errorSummary}
 		path={['class_features']}

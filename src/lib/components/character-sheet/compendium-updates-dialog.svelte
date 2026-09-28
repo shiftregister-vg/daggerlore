@@ -3,6 +3,8 @@
 	import { Button } from '$lib/components/ui/button';
 	import { getApi, postApi } from '$lib/api/client';
 	import { getCharacterContext } from '$lib/state/character.svelte';
+	import { usageLimitCaption } from '$lib/state/feature-usage';
+	import { UsageResetSchema } from '@domain/schemas/rules';
 
 	type CompendiumUpdate = {
 		key: string;
@@ -37,6 +39,8 @@
 		afterText: string;
 		beforeTokens: DiffToken[];
 		afterTokens: DiffToken[];
+		beforeUsage: string;
+		afterUsage: string;
 		status: 'changed' | 'added' | 'removed';
 	};
 
@@ -149,6 +153,19 @@
 		return typeof feature.description_html === 'string' ? feature.description_html : '';
 	}
 
+	function featureUsage(feature: Record<string, unknown> | undefined) {
+		const usage = feature?.usage;
+		if (!isRecord(usage)) return '';
+		const reset = UsageResetSchema.safeParse(usage.reset);
+		const maxUses = typeof usage.max_uses === 'number' ? usage.max_uses : 1;
+		const caption = usageLimitCaption({
+			max_uses: maxUses,
+			reset: reset.success ? reset.data : 'rest'
+		});
+		const label = typeof usage.label === 'string' && usage.label ? ` (${usage.label})` : '';
+		return `Usage tracker${label}: ${caption}`;
+	}
+
 	function featureTitle(feature: Record<string, unknown>, index: number) {
 		return typeof feature.title === 'string' && feature.title.trim()
 			? feature.title
@@ -174,6 +191,8 @@
 				afterText,
 				beforeTokens: tokens.before,
 				afterTokens: tokens.after,
+				beforeUsage: featureUsage(beforeFeature),
+				afterUsage: featureUsage(afterFeature),
 				status: !beforeFeature ? 'added' : !afterFeature ? 'removed' : 'changed'
 			});
 		}
@@ -429,6 +448,11 @@
 																		{:else}
 																			<p class="text-sm text-muted-foreground">No feature text.</p>
 																		{/if}
+																		{#if featureDiff.status !== 'added' && featureDiff.beforeUsage}
+																			<p class="mt-2 text-xs">
+																				<span class={tokenClass(featureDiff.beforeUsage === featureDiff.afterUsage ? 'same' : 'removed')}>{featureDiff.beforeUsage}</span>
+																			</p>
+																		{/if}
 																	</div>
 																{/each}
 															</div>
@@ -475,6 +499,11 @@
 																			</p>
 																		{:else}
 																			<p class="text-sm text-muted-foreground">No feature text.</p>
+																		{/if}
+																		{#if featureDiff.status !== 'removed' && featureDiff.afterUsage}
+																			<p class="mt-2 text-xs">
+																				<span class={tokenClass(featureDiff.beforeUsage === featureDiff.afterUsage ? 'same' : 'added')}>{featureDiff.afterUsage}</span>
+																			</p>
 																		{/if}
 																	</div>
 																{/each}

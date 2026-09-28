@@ -7,6 +7,8 @@
 	import SeraphFeatures from './seraph-features.svelte';
 	import WizardFeatures from './wizard-features.svelte';
 	import FeatureTokens from './feature-tokens.svelte';
+	import UsageTracker from '$lib/components/character-sheet/features/usage-tracker.svelte';
+	import { usageKey } from '$lib/state/feature-usage';
 
 	const characterCtx = getCharacterContext();
 	const derived_character_data = $derived(characterCtx.derived_character_data);
@@ -80,6 +82,17 @@
 									max={feature.token_max ?? 0}
 								/>
 							{/if}
+							{#if feature.usage && characterCtx.character?.primary_class_id}
+								<UsageTracker
+									usage={feature.usage}
+									tracker_key={usageKey(
+										'classes',
+										characterCtx.character.primary_class_id,
+										feature.usage.id
+									)}
+									tone="sheet"
+								/>
+							{/if}
 						</div>
 						<div class="flex flex-col gap-2 pl-2 text-xs leading-relaxed text-muted-foreground">
 							{@html renderMarkdown(feature.description_html)}
@@ -95,6 +108,17 @@
 								<FeatureTokens
 									tokenKey={tokenKey(characterCtx.character.secondary_class_id, index)}
 									max={feature.token_max ?? 0}
+								/>
+							{/if}
+							{#if feature.usage && characterCtx.character?.secondary_class_id}
+								<UsageTracker
+									usage={feature.usage}
+									tracker_key={usageKey(
+										'classes',
+										characterCtx.character.secondary_class_id,
+										feature.usage.id
+									)}
+									tone="sheet"
 								/>
 							{/if}
 						</div>

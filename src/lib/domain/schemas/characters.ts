@@ -305,6 +305,7 @@ export const CharacterSchema = z.object({
 	card_choices: z.record(z.string(), CardChoicesSchema), // only for cards (inventory and other compendium choices are stored elsewhere)
 	card_tokens: z.record(z.string(), z.number().int().min(0)),
 	card_fields: z.record(z.string(), z.array(z.string())).default({}),
+	feature_uses: z.record(z.string(), z.number().int().min(0)).default({}), // spent uses keyed by `${item_type}:${item_id}:${usage.id}`
 	card_layout: CharacterCardLayoutSchema.optional(),
 	feature_choices: z.record(z.string(), z.array(z.string())), // used by specific feature flags
 	unarmed_attack_choices: z.record(z.string(), z.array(z.string())),

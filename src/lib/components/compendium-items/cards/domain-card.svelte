@@ -6,6 +6,8 @@
 	import DomainBanner from '$lib/components/decorations/domain-banner.svelte';
 	import type { CardChoices } from '@domain/schemas/rules';
 	import CardOptions from './card-options.svelte';
+	import UsageTracker from '$lib/components/character-sheet/features/usage-tracker.svelte';
+	import { usageKey } from '$lib/state/feature-usage';
 
 	let {
 		card,
@@ -14,6 +16,7 @@
 		tokens = $bindable(),
 		enable_choices = false,
 		enable_tokens = false,
+		usage_item_id,
 		experiences = [],
 		disabled = false,
 		class: className = '',
@@ -26,6 +29,8 @@
 		tokens?: number;
 		enable_choices?: boolean;
 		enable_tokens?: boolean;
+		/** Id of the owning item on the character's sheet; enables usage trackers. */
+		usage_item_id?: string;
 		disabled?: boolean;
 		experiences?: string[];
 		variant?: 'responsive' | 'card';
@@ -110,6 +115,15 @@
 				<div class="flex flex-col gap-2 text-xs">
 					{@html renderMarkdown(feature.description_html)}
 				</div>
+				{#if feature.usage}
+					<UsageTracker
+						usage={feature.usage}
+						{disabled}
+						tracker_key={usage_item_id
+							? usageKey('domain_cards', usage_item_id, feature.usage.id)
+							: undefined}
+					/>
+				{/if}
 			{/each}
 
 			<!-- options & tokens -->
@@ -206,6 +220,15 @@
 					<div class="flex flex-col gap-[12px] text-[12px] text-black">
 						{@html renderMarkdown(feature.description_html)}
 					</div>
+					{#if feature.usage}
+						<UsageTracker
+							usage={feature.usage}
+							{disabled}
+							tracker_key={usage_item_id
+								? usageKey('domain_cards', usage_item_id, feature.usage.id)
+								: undefined}
+						/>
+					{/if}
 				{/each}
 
 				<!-- options & tokens -->

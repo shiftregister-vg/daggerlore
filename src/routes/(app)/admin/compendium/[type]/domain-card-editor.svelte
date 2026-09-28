@@ -5,6 +5,7 @@
 	import { Button } from '$lib/components/ui/button';
 	import * as Dialog from '$lib/components/ui/dialog';
 	import MarkdownTextarea from './markdown-textarea.svelte';
+	import FeatureUsageEditor from './feature-usage-editor.svelte';
 	import type { CompendiumContent, Domain, DomainCard } from '@domain/schemas/compendium';
 	import type { SourceMetadata } from '@domain/schemas/sources';
 	import type { SourceKey } from '@domain/schemas/rules';
@@ -61,7 +62,8 @@
 							: [],
 						weapon_modifiers: Array.isArray(feature.weapon_modifiers)
 							? feature.weapon_modifiers
-							: []
+							: [],
+						usage: feature.usage
 					}))
 				: [{ title: '', description_html: '', character_modifiers: [], weapon_modifiers: [] }];
 
@@ -348,6 +350,11 @@
 						<Button size="sm" variant="outline" onclick={() => removeFeature(index)}>Remove</Button>
 					</div>
 					<MarkdownTextarea placeholder="Feature text" bind:value={feature.description_html} />
+					<FeatureUsageEditor
+						bind:feature={item.features[index]}
+						siblings={item.features}
+						fallbackId={`use_${index + 1}`}
+					/>
 				</div>
 			{/each}
 		</div>

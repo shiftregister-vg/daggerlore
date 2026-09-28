@@ -258,13 +258,30 @@ export const WeaponModifierSchema = z
 	);
 export type WeaponModifier = z.infer<typeof WeaponModifierSchema>;
 
+// 'rest' refreshes on a short or long rest; 'never' only refreshes manually (one-time use).
+export const UsageResetSchema = z.enum(['rest', 'long_rest', 'scene', 'session', 'never']);
+export type UsageReset = z.infer<typeof UsageResetSchema>;
+
+export const FeatureUsageSchema = z.object({
+	// stable across versions; character state is keyed by it
+	id: z
+		.string()
+		.trim()
+		.regex(/^[a-z0-9_-]+$/i, 'Use letters, numbers, dashes and underscores only'),
+	label: z.string().trim().min(1).optional(),
+	max_uses: z.number().int().min(1).max(20),
+	reset: UsageResetSchema
+});
+export type FeatureUsage = z.infer<typeof FeatureUsageSchema>;
+
 export const FeatureSchema = z.object({
 	title: z.string(),
 	description_html: z.string(),
 	character_modifiers: z.array(CharacterModifierSchema),
 	weapon_modifiers: z.array(WeaponModifierSchema),
 	tokens_enabled: z.boolean().optional(),
-	token_max: z.number().int().min(0).optional()
+	token_max: z.number().int().min(0).optional(),
+	usage: FeatureUsageSchema.optional()
 });
 export type Feature = z.infer<typeof FeatureSchema>;
 

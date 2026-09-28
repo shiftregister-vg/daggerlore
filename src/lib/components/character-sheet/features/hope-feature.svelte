@@ -6,6 +6,8 @@
 	import { TRAITS } from '@domain/constants/rules';
 	import type { TraitId } from '@domain/schemas/rules';
 	import Button from '$lib/components/ui/button/button.svelte';
+	import UsageTracker from '$lib/components/character-sheet/features/usage-tracker.svelte';
+	import { usageKey } from '$lib/state/feature-usage';
 
 	const characterCtx = getCharacterContext();
 	const character = $derived(characterCtx.character);
@@ -34,6 +36,17 @@
 					derived_character_data.primary_class.hope_feature.description_html
 			)}
 		</p>
+		{#if derived_character_data.primary_class.hope_feature.usage && characterCtx.character?.primary_class_id}
+			<UsageTracker
+				usage={derived_character_data.primary_class.hope_feature.usage}
+				tracker_key={usageKey(
+					'classes',
+					characterCtx.character.primary_class_id,
+					derived_character_data.primary_class.hope_feature.usage.id
+				)}
+				tone="sheet"
+			/>
+		{/if}
 		{#if derived_character_data.hasEvolutionHopeFeature && characterCtx.canEdit}
 			<Select.Root
 				type="single"

@@ -37,6 +37,9 @@
 	import * as Dialog from '$lib/components/ui/dialog';
 	import Stress from '$lib/components/character-sheet/standalone/stress.svelte';
 	import { getCharacterContext } from '$lib/state/character.svelte';
+	import UsageTracker from '$lib/components/character-sheet/features/usage-tracker.svelte';
+	import { USAGE_ITEM_TYPES, usageKey } from '$lib/state/feature-usage';
+	import type { FeatureUsage } from '@domain/schemas/rules';
 	import { cn, renderMarkdown } from '$lib/utils';
 	import type { Card, DomainCardId } from '@domain/schemas/rules';
 	import type { CharacterCardLayout } from '@domain/schemas/characters';
@@ -290,6 +293,8 @@
 				text: string;
 				tokenKey?: string;
 				tokenMax?: number;
+				usage?: FeatureUsage;
+				usageKey?: string;
 			}[];
 		}[] = [];
 
@@ -310,7 +315,9 @@
 					tokenKey: feature.tokens_enabled
 						? `class_feature_tokens:${classId}:${index}`
 						: undefined,
-					tokenMax: feature.token_max ?? 0
+					tokenMax: feature.token_max ?? 0,
+					usage: feature.usage,
+					usageKey: feature.usage ? usageKey('classes', classId, feature.usage.id) : undefined
 				}))
 			});
 		};
@@ -601,6 +608,7 @@
 				experiences={character?.experiences ?? []}
 				bind:choices={character!.card_choices[card.id]}
 				bind:tokens={character!.card_tokens[card.id]}
+				usage_item_id={card.id}
 			/>
 		{:else if card.type === 'ancestry_card'}
 			<AncestryCardComponent
@@ -615,6 +623,7 @@
 				bind:mixed_ancestry_choices={character!.mixed_ancestry_choices[card.id]}
 				bind:choices={character!.card_choices[card.id]}
 				bind:tokens={character!.card_tokens[card.id]}
+				usage_item_id={card.id}
 			/>
 		{:else if card.type === 'community_card'}
 			<CommunityCardComponent
@@ -627,6 +636,7 @@
 				experiences={character?.experiences ?? []}
 				bind:choices={character!.card_choices[card.id]}
 				bind:tokens={character!.card_tokens[card.id]}
+				usage_item_id={card.id}
 				field_values={character!.card_fields[card.id] ?? []}
 				on_field_values_change={(values) => setCardFieldValues(card.id, values)}
 			/>
@@ -642,6 +652,7 @@
 				experiences={character?.experiences ?? []}
 				bind:choices={character!.card_choices[card.id]}
 				bind:tokens={character!.card_tokens[card.id]}
+				usage_item_id={card.id}
 			/>
 		{/if}
 	</div>
@@ -763,6 +774,14 @@
 													<FeatureTokens tokenKey={feature.tokenKey} max={feature.tokenMax} />
 												</div>
 											{/if}
+											{#if feature.usage}
+												<UsageTracker
+													usage={feature.usage}
+													tracker_key={feature.usageKey}
+													tone="sheet"
+													class="mt-1"
+												/>
+											{/if}
 										</div>
 										<div class="prose prose-invert max-w-none text-sm leading-snug">
 											{@html renderMarkdown(feature.text)}
@@ -876,6 +895,7 @@
 										experiences={character.experiences}
 										bind:choices={character.card_choices[vaultCard.id]}
 										bind:tokens={character.card_tokens[vaultCard.id]}
+										usage_item_id={vaultCard.id}
 									/>
 									{#if characterCtx.canEdit && !vaultCard.card.forced_in_vault}
 										<Button
@@ -1004,6 +1024,19 @@
 													bind:tokens={character.card_tokens[group.card.id]}
 												/>
 											{/if}
+											{#each group.card.card.features as feature}
+												{#if feature.usage}
+													<UsageTracker
+														usage={feature.usage}
+														tracker_key={usageKey(
+															USAGE_ITEM_TYPES[group.card.type],
+															group.card.id,
+															feature.usage.id
+														)}
+														tone="sheet"
+													/>
+												{/if}
+											{/each}
 											{#if group.card.type === 'community_card' && group.card.card.field_group}
 												<CommunityCardFields
 													label={group.card.card.field_group.name}

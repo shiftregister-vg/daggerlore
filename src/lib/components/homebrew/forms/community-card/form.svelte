@@ -266,6 +266,7 @@
 		choiceSourceId={itemId}
 		allowChoiceConditions={true}
 		allowExperienceTargets={true}
+		allowUsage
 		allowAddRemove
 		featureLabel="Feature"
 		{errorSummary}

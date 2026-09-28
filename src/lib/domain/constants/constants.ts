@@ -128,6 +128,7 @@ export const CHARACTER_DEFAULTS: Character = {
 	card_choices: {},
 	card_tokens: {},
 	card_fields: {},
+	feature_uses: {},
 	card_layout: undefined,
 	mixed_ancestry_choices: {},
 	feature_choices: {},
