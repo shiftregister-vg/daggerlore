@@ -18,6 +18,7 @@
 		Transformation
 	} from '@domain/schemas/compendium';
 	import { getHomebrewContext } from '$lib/state/homebrew.svelte';
+	import { getSourcesContext } from '$lib/state/sources.svelte';
 	import { page } from '$app/state';
 	import Button, { buttonVariants } from '$lib/components/ui/button/button.svelte';
 	import { cn } from '$lib/utils';
@@ -169,6 +170,13 @@
 		  };
 
 	const homebrew = getHomebrewContext();
+	const sources = getSourcesContext();
+
+	// Forms and previews merge homebrew with the official compendium (e.g. the Domain list).
+	$effect(() => {
+		sources.ensureCompendium();
+	});
+
 	const typeParam = $derived(page.params.type as EditableHomebrewType | undefined);
 	const uidParam = $derived(page.params.uid);
 	const migratedFormIds = {

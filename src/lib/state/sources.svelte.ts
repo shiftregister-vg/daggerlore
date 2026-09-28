@@ -56,8 +56,18 @@ function createSources() {
 		return merge_compendium_content();
 	}
 
+	// The official compendium is large, so it loads only once a page asks for it.
+	let compendiumRequested = false;
+
 	function loadCompendium() {
+		compendiumRequested = true;
 		return compendiumResource.refresh();
+	}
+
+	/** Loads the official compendium unless it is already loaded or loading. */
+	function ensureCompendium() {
+		if (compendiumRequested) return;
+		void loadCompendium();
 	}
 
 	$effect(() => {
@@ -68,6 +78,14 @@ function createSources() {
 	$effect(() => {
 		sourceKeySignature;
 		untrack(() => void sourceMetadataResource.refresh());
+	});
+
+	// A request made before the source keys arrived resolves to an empty compendium, so reload it
+	// whenever the keys change after it was requested.
+	$effect(() => {
+		sourceKeySignature;
+		if (!compendiumRequested) return;
+		untrack(() => void compendiumResource.refresh());
 	});
 
 	return {
@@ -85,7 +103,8 @@ function createSources() {
 		},
 
 		getCompendiumFromSourceKeys,
-		loadCompendium
+		loadCompendium,
+		ensureCompendium
 	};
 }
 
