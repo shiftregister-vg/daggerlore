@@ -7,6 +7,7 @@
 	import Dropdown from '$lib/components/utility/dropdown.svelte';
 	import ImageUploader from '$lib/components/utility/user-image-uploader.svelte';
 	import ReviveButton from '$lib/components/character-sheet/standalone/revive-button.svelte';
+	import CharacterVersions from './character-versions.svelte';
 	import { getCharacterContext } from '$lib/state/character.svelte';
 	import { cn } from '$lib/utils';
 	import Download from '@lucide/svelte/icons/download';
@@ -402,5 +403,9 @@
 				</div>
 			</Dropdown>
 		</section>
+
+		{#if characterCtx.isOwner}
+			<CharacterVersions />
+		{/if}
 	</div>
 {/if}

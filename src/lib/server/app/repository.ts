@@ -14,6 +14,8 @@ import type { SourceMetadata } from '@domain/schemas/sources';
 import type { HomebrewAccess, HomebrewItem, HomebrewTable } from '@domain/permissions';
 import type { Id } from '@domain/ids';
 import { publish } from './events';
+import { detectDestructiveLoss, UNSAFE_CHANGE } from '@domain/character-safety';
+import { snapshotCharacter } from './character-versions';
 import { databaseDialect, execute, jsonParam, parseJson, queryOne, queryRows } from '$lib/server/db/client';
 import {
 	createEmptyCompendiumContentIds,
@@ -2476,11 +2478,31 @@ export async function updateCharacter(
 ) {
 	const access = await getCharacterAccess(userId, characterId);
 	if (!access?.canEdit) throw new Error('Not authorized');
+	await refuseUnsafeCharacterChange(characterId, access.character, character);
 	await execute('update characters set character = ?, updated_at = ? where id = ?', [
 		jsonParam({ ...character, campaign_id: access.character.campaign_id }),
 		nowIso(),
 		characterId
 	]);
+}
+
+/**
+ * Sheets tidy a character against the compendium they have loaded and save the result. When that
+ * compendium is incomplete the tidy-up strips the character's class, cards and gear. A save that looks
+ * like that is refused and the character is kept as it is; ordinary saves keep a version to go back to.
+ */
+async function refuseUnsafeCharacterChange(
+	characterId: string,
+	current: Character,
+	next: Partial<Character>
+) {
+	const loss = detectDestructiveLoss(current, next);
+	if (loss) {
+		console.warn(`Refused an unsafe save for character ${characterId}: ${loss}`);
+		await snapshotCharacter(characterId, current, 'before a refused save', { force: true });
+		throw new Error(`${UNSAFE_CHANGE}: ${loss}`);
+	}
+	await snapshotCharacter(characterId, current, 'periodic');
 }
 
 export async function updateCharacterInventory(
@@ -2505,6 +2527,7 @@ export async function updateCharacterInventory(
 		active_secondary_weapon_inventory_id: data.active_secondary_weapon_inventory_id
 	};
 
+	await refuseUnsafeCharacterChange(characterId, access.character, nextCharacter);
 	await execute('update characters set character = ?, updated_at = ? where id = ?', [
 		jsonParam(nextCharacter),
 		nowIso(),

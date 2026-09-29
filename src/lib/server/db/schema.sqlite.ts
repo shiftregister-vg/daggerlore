@@ -341,6 +341,24 @@ export const diceHistory = sqliteTable(
 	})
 );
 
+export const characterVersions = sqliteTable(
+	'character_versions',
+	{
+		id: text('id')
+			.primaryKey()
+			.$defaultFn(() => crypto.randomUUID()),
+		characterId: text('character_id')
+			.notNull()
+			.references(() => characters.id, { onDelete: 'cascade' }),
+		character: text('character', { mode: 'json' }).$type<Character>().notNull(),
+		reason: text('reason').default('periodic').notNull(),
+		createdAt: integer('created_at', { mode: 'timestamp_ms' }).default(nowSql).notNull()
+	},
+	(table) => ({
+		characterIdx: index('character_versions_character_idx').on(table.characterId, table.createdAt)
+	})
+);
+
 export const streamOverlays = sqliteTable(
 	'stream_overlays',
 	{

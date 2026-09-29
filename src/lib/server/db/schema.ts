@@ -345,6 +345,22 @@ export const diceHistory = pgTable(
 	})
 );
 
+export const characterVersions = pgTable(
+	'character_versions',
+	{
+		id: uuid('id').defaultRandom().primaryKey(),
+		characterId: uuid('character_id')
+			.notNull()
+			.references(() => characters.id, { onDelete: 'cascade' }),
+		character: jsonb('character').$type<Character>().notNull(),
+		reason: text('reason').default('periodic').notNull(),
+		createdAt: timestamp('created_at', { mode: 'date' }).defaultNow().notNull()
+	},
+	(table) => ({
+		characterIdx: index('character_versions_character_idx').on(table.characterId, table.createdAt)
+	})
+);
+
 export const streamOverlays = pgTable(
 	'stream_overlays',
 	{
