@@ -9,6 +9,7 @@
 	import UsageTracker from '$lib/components/character-sheet/features/usage-tracker.svelte';
 	import PoolTracker from '$lib/components/character-sheet/features/pool-tracker.svelte';
 	import RecordEditor from '$lib/components/character-sheet/features/record-editor.svelte';
+	import EffectDetails from '$lib/components/character-sheet/features/effect-details.svelte';
 	import { usageKey } from '$lib/state/feature-usage';
 
 	const characterCtx = getCharacterContext();
@@ -61,6 +62,12 @@
 				<RecordEditor
 					{record}
 					tracker_key={usageKey('classes', characterCtx.character.primary_class_id, record.id)}
+					class="w-full text-left"
+				/>
+			{/each}
+			{#each derived_character_data.primary_class.hope_feature.effects ?? [] as effect (effect.id)}
+				<EffectDetails
+					tracker_key={usageKey('classes', characterCtx.character.primary_class_id, effect.id)}
 					class="w-full text-left"
 				/>
 			{/each}

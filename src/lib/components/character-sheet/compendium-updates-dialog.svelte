@@ -4,7 +4,12 @@
 	import { getApi, postApi } from '$lib/api/client';
 	import { getCharacterContext } from '$lib/state/character.svelte';
 	import { usageLimitCaption } from '$lib/state/feature-usage';
-	import { UsageResetSchema } from '@domain/schemas/rules';
+	import {
+		describeEffectModifiers,
+		effectCostCaption,
+		effectEndCaption
+	} from '$lib/state/feature-effects';
+	import { FeatureEffectSchema, UsageResetSchema } from '@domain/schemas/rules';
 
 	type CompendiumUpdate = {
 		key: string;
@@ -207,6 +212,26 @@
 			.join('; ');
 	}
 
+	function featureEffects(feature: Record<string, unknown> | undefined) {
+		const effects = Array.isArray(feature?.effects) ? feature.effects : [];
+		return effects
+			.flatMap((value) => {
+				const parsed = FeatureEffectSchema.safeParse(value);
+				if (!parsed.success) return [];
+				const effect = parsed.data;
+				const label = effect.label ? ` (${effect.label})` : '';
+				const details = [
+					effectCostCaption(effect),
+					effect.target ? `target: ${effect.target.label}` : '',
+					describeEffectModifiers(effect).join(', ') +
+						(effect.scope === 'against_target' ? ' against the target' : ''),
+					effectEndCaption(effect).toLocaleLowerCase()
+				].filter(Boolean);
+				return [`Effect${label}: ${details.join('; ')}`];
+			})
+			.join('; ');
+	}
+
 	function quantityText(quantity: Record<string, unknown>) {
 		const minimum = typeof quantity.minimum === 'number' ? ` (min ${quantity.minimum})` : '';
 		if (quantity.source === 'fixed') return `${String(quantity.value ?? 0)}`;
@@ -242,14 +267,16 @@
 				beforeUsage: [
 					featureUsage(beforeFeature),
 					featurePools(beforeFeature),
-					featureRecords(beforeFeature)
+					featureRecords(beforeFeature),
+					featureEffects(beforeFeature)
 				]
 					.filter(Boolean)
 					.join('; '),
 				afterUsage: [
 					featureUsage(afterFeature),
 					featurePools(afterFeature),
-					featureRecords(afterFeature)
+					featureRecords(afterFeature),
+					featureEffects(afterFeature)
 				]
 					.filter(Boolean)
 					.join('; '),

@@ -20,6 +20,7 @@
 
 	// ui components & icons
 	import ConditionChip from '$lib/components/conditions/condition-chip.svelte';
+	import ActiveEffectChips from './features/active-effect-chips.svelte';
 	import ClassBanner from '$lib/components/decorations/class-banner.svelte';
 	import Button from '$lib/components/ui/button/button.svelte';
 	import CharacterPortrait from './standalone/character-portrait.svelte';
@@ -121,7 +122,11 @@
 		(character?.conditions ?? []).filter((condition) => condition.enabled)
 	);
 
-	const hasConditions = $derived(activeConditions.length > 0);
+	const hasActiveEffects = $derived(
+		Object.values(character?.active_effects ?? {}).some((instances) => instances.length > 0)
+	);
+	// Active effects share the conditions row, so they get the same spacing.
+	const hasConditions = $derived(activeConditions.length > 0 || hasActiveEffects);
 
 	function disableCondition(conditionName: string) {
 		if (!character) return;
@@ -316,6 +321,7 @@
 					<ConditionChip {condition} class="hover:bg-primary/50" />
 				</button>
 			{/each}
+			<ActiveEffectChips />
 		</div>
 
 		<!-- downtime (mobile) -->

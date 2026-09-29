@@ -10,6 +10,7 @@
 	import CharacterModifierForm from '../character-modifier/form.svelte';
 	import FeaturePoolsForm from './feature-pools-form.svelte';
 	import FeatureRecordsForm from './feature-records-form.svelte';
+	import FeatureEffectsForm from './feature-effects-form.svelte';
 	import WeaponModifierForm from '../weapon-modifier/form.svelte';
 	import Plus from '@lucide/svelte/icons/plus';
 	import { cn } from '$lib/utils';
@@ -174,6 +175,15 @@
 			if (index !== featureIndex) return feature;
 			if (records) return { ...feature, records };
 			const { records: _records, ...rest } = feature;
+			return rest;
+		});
+	}
+
+	function updateEffects(featureIndex: number, effects: Feature['effects']) {
+		features = features.map((feature, index) => {
+			if (index !== featureIndex) return feature;
+			if (effects) return { ...feature, effects };
+			const { effects: _effects, ...rest } = feature;
 			return rest;
 		});
 	}
@@ -362,6 +372,14 @@
 							bind:records={() => feature.records, (value) => updateRecords(featureIndex, value)}
 							featureTitle={feature.title}
 							idPrefix={`feature-${path.join('-')}-${featureIndex}`}
+						/>
+						<FeatureEffectsForm
+							bind:effects={() => feature.effects, (value) => updateEffects(featureIndex, value)}
+							featureTitle={feature.title}
+							hasUsage={!!feature.usage}
+							idPrefix={`feature-${path.join('-')}-${featureIndex}`}
+							{errorSummary}
+							path={featurePath(featureIndex, 'effects')}
 						/>
 					{/if}
 

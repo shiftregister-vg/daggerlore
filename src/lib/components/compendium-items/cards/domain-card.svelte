@@ -9,6 +9,7 @@
 	import UsageTracker from '$lib/components/character-sheet/features/usage-tracker.svelte';
 	import PoolTracker from '$lib/components/character-sheet/features/pool-tracker.svelte';
 	import RecordSummary from '$lib/components/character-sheet/features/record-summary.svelte';
+	import EffectControl from '$lib/components/character-sheet/features/effect-control.svelte';
 	import { usageKey } from '$lib/state/feature-usage';
 
 	let {
@@ -143,6 +144,14 @@
 							: undefined}
 					/>
 				{/each}
+				{#each feature.effects ?? [] as effect (effect.id)}
+					<EffectControl
+						{effect}
+						tracker_key={usage_item_id
+							? usageKey('domain_cards', usage_item_id, effect.id)
+							: undefined}
+					/>
+				{/each}
 			{/each}
 
 			<!-- options & tokens -->
@@ -262,6 +271,14 @@
 							{record}
 							tracker_key={usage_item_id
 								? usageKey('domain_cards', usage_item_id, record.id)
+								: undefined}
+						/>
+					{/each}
+					{#each feature.effects ?? [] as effect (effect.id)}
+						<EffectControl
+							{effect}
+							tracker_key={usage_item_id
+								? usageKey('domain_cards', usage_item_id, effect.id)
 								: undefined}
 						/>
 					{/each}

@@ -248,7 +248,23 @@ While *Unstoppable*, you gain the following benefits:
 - When you deal damage to them, they must mark a Stress.
 - When you fail an attack against them, you can end your Ranger's Focus feature to reroll your Duality Dice.`,
 				character_modifiers: [],
-				weapon_modifiers: []
+				weapon_modifiers: [],
+				effects: [
+					{
+						id: 'rangers_focus',
+						label: 'Focus',
+						cost: { hope: 1 },
+						requires_success: true,
+						target: { label: 'Focus' },
+						instances: 'replace',
+						character_modifiers: [],
+						weapon_modifiers: [],
+						notes:
+							'You know precisely what direction your Focus is in. When you deal damage to them, they must mark a Stress. When you fail an attack against them, you can end this feature to reroll your Duality Dice.',
+						ends_on: [],
+						ends_when: ['You end it to reroll a failed attack against your Focus']
+					}
+				]
 			}
 		],
 		subclass_ids: ['ranger_wayfinder', 'ranger_beastbound'],
@@ -306,7 +322,25 @@ While *Unstoppable*, you gain the following benefits:
 			description_html:
 				'**Spend 3 Hope** to gain a **+2** bonus to your Evasion until the next time an attack succeeds against you. Otherwise, this bonus lasts until your next rest.',
 			character_modifiers: [],
-			weapon_modifiers: []
+			weapon_modifiers: [],
+			effects: [
+				{
+					id: 'rogues_dodge',
+					label: "Rogue's Dodge",
+					cost: { hope: 3 },
+					character_modifiers: [
+						{
+							behaviour: 'bonus',
+							character_conditions: [],
+							type: 'flat',
+							value: 2,
+							target: 'evasion'
+						}
+					],
+					weapon_modifiers: [],
+					ends_on: ['attacked_successfully', 'short_rest', 'long_rest']
+				}
+			]
 		},
 		primary_domain_id: 'midnight',
 		secondary_domain_id: 'grace',

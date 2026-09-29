@@ -15,6 +15,7 @@
 	import { applyUsageResetEvent, type UsageResetEvent } from '$lib/state/feature-usage';
 	import { applyPoolEvent, setPoolDice, type PoolTracker } from '$lib/state/feature-pools';
 	import { applyRecordEvent } from '$lib/state/feature-records';
+	import { applyEffectEvent, effectLabel, isDowntimeEffectEvent } from '$lib/state/feature-effects';
 	import type { PoolEvent } from '@domain/schemas/rules';
 
 	let { open = false }: { open?: boolean } = $props();
@@ -234,10 +235,15 @@
 		].join(', ');
 	}
 
-	function refreshedDescription(refreshed: RefreshedFeature[], cleared: RefreshedFeature[] = []) {
+	function refreshedDescription(
+		refreshed: RefreshedFeature[],
+		cleared: RefreshedFeature[] = [],
+		ended: RefreshedFeature[] = []
+	) {
 		const parts = [
 			refreshed.length > 0 ? `Refreshed ${featureNames(refreshed)}.` : '',
-			cleared.length > 0 ? `Cleared ${featureNames(cleared)}.` : ''
+			cleared.length > 0 ? `Cleared ${featureNames(cleared)}.` : '',
+			ended.length > 0 ? `Ended ${featureNames(ended)}.` : ''
 		].filter(Boolean);
 		return parts.length > 0 ? parts.join(' ') : 'No features to refresh.';
 	}
@@ -247,11 +253,14 @@
 	 * Dice pools that refill are emptied here and listed in `diceToRoll`.
 	 */
 	function resetFeatures(usageEvent: UsageResetEvent | null, poolEvent: PoolEvent) {
-		if (!character) return { refreshed: [], cleared: [], diceToRoll: [], undo: () => {} };
+		if (!character) {
+			return { refreshed: [], cleared: [], ended: [], diceToRoll: [], undo: () => {} };
+		}
 		const previousUses = character.feature_uses ?? {};
 		const previousTokens = character.feature_pool_tokens ?? {};
 		const previousDice = character.feature_pool_dice ?? {};
 		const previousRecords = character.feature_records ?? {};
+		const previousEffects = character.active_effects ?? {};
 
 		const usage = usageEvent
 			? applyUsageResetEvent(previousUses, derived_character_data?.usage_trackers ?? [], usageEvent)
@@ -270,6 +279,14 @@
 			poolEvent
 		);
 		character.feature_records = records.next;
+		const effects = isDowntimeEffectEvent(poolEvent)
+			? applyEffectEvent(
+					previousEffects,
+					derived_character_data?.effect_trackers ?? [],
+					poolEvent
+				)
+			: { next: previousEffects, ended: [] };
+		character.active_effects = effects.next;
 
 		// A pool the event emptied without refilling was cleared rather than refreshed.
 		const wasCleared = (tracker: PoolTracker) =>
@@ -284,6 +301,7 @@
 				...pools.refreshed.filter((tracker) => !wasCleared(tracker))
 			] as RefreshedFeature[],
 			cleared: [...pools.refreshed.filter(wasCleared), ...records.cleared] as RefreshedFeature[],
+			ended: effects.ended.map((tracker) => ({ ...tracker, label: effectLabel(tracker) })),
 			diceToRoll: pools.diceToRoll,
 			undo: () => {
 				if (!character) return;
@@ -291,6 +309,7 @@
 				character.feature_pool_tokens = previousTokens;
 				character.feature_pool_dice = previousDice;
 				character.feature_records = previousRecords;
+				character.active_effects = previousEffects;
 			}
 		};
 	}
@@ -330,7 +349,7 @@
 				usage.undo();
 				restoreNoMercy(previousNoMercyBonus);
 			},
-			refreshedDescription(usage.refreshed, usage.cleared)
+			refreshedDescription(usage.refreshed, usage.cleared, usage.ended)
 		);
 	}
 
@@ -357,7 +376,7 @@
 				character.card_tokens = { ...character.card_tokens, ...previousLegacyTokens };
 				restoreNoMercy(previousNoMercyBonus);
 			},
-			refreshedDescription(usage.refreshed, usage.cleared)
+			refreshedDescription(usage.refreshed, usage.cleared, usage.ended)
 		);
 	}
 
@@ -365,7 +384,11 @@
 		if (!character || !characterCtx.canEdit) return;
 
 		const usage = resetFeatures('scene', 'scene');
-		createUndoToast('Ended scene', usage.undo, refreshedDescription(usage.refreshed, usage.cleared));
+		createUndoToast(
+			'Ended scene',
+			usage.undo,
+			refreshedDescription(usage.refreshed, usage.cleared, usage.ended)
+		);
 	}
 
 	async function startSession() {
@@ -379,7 +402,7 @@
 				undone = true;
 				features.undo();
 			},
-			refreshedDescription(features.refreshed, features.cleared)
+			refreshedDescription(features.refreshed, features.cleared, features.ended)
 		);
 		await rollPoolDice(features.diceToRoll, () => !undone);
 	}
@@ -388,7 +411,7 @@
 		if (!character || !characterCtx.canEdit) return;
 
 		const usage = resetFeatures('session', 'session_end');
-		const descriptions = [refreshedDescription(usage.refreshed, usage.cleared)];
+		const descriptions = [refreshedDescription(usage.refreshed, usage.cleared, usage.ended)];
 		const previousHope = character.marked_hope;
 		const previousSlayerDice = character.card_tokens[SLAYER_CARD_ID] ?? 0;
 		if (hasSlayerDice) {
