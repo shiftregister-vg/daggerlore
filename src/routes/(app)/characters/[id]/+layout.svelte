@@ -2,6 +2,7 @@
 	import { getCharacterContext, setCharacterContext } from '$lib/state/character.svelte';
 	import { getCampaignContext, setCampaignContext } from '$lib/state/campaign.svelte';
 	import { setDiceContext } from '$lib/state/dice.svelte';
+	import { setRequestsContext } from '$lib/state/character-requests.svelte';
 	import { page } from '$app/state';
 	import LoadError from '$lib/components/utility/load-error.svelte';
 	import Loader from '$lib/components/utility/loader.svelte';
@@ -14,6 +15,7 @@
 	const diceCtx = setDiceContext();
 	setCampaignContext();
 	setCharacterContext();
+	setRequestsContext();
 
 	const characterCtx = getCharacterContext();
 	const campaignCtx = getCampaignContext();

@@ -10,6 +10,13 @@ import {
 import type { AdapterAccountType } from '@auth/core/adapters';
 import type { Campaign, CampaignCharacter, CampaignMember } from '@domain/schemas/campaigns';
 import type { Character } from '@domain/schemas/characters';
+import type {
+	RequestDelta,
+	RequestPayload,
+	RequestSide,
+	RequestSideState,
+	RequestStatus
+} from '@domain/schemas/character-requests';
 import type { CompendiumContentIds } from '@domain/schemas/compendium';
 import type { DiceHistory } from '@domain/schemas/dice';
 import type { Encounter } from '@domain/schemas/encounters';
@@ -356,6 +363,56 @@ export const characterVersions = sqliteTable(
 	},
 	(table) => ({
 		characterIdx: index('character_versions_character_idx').on(table.characterId, table.createdAt)
+	})
+);
+
+export const characterRequests = sqliteTable(
+	'character_requests',
+	{
+		id: text('id')
+			.primaryKey()
+			.$defaultFn(() => crypto.randomUUID()),
+		campaignId: text('campaign_id')
+			.notNull()
+			.references(() => campaigns.id, { onDelete: 'cascade' }),
+		fromCharacterId: text('from_character_id')
+			.notNull()
+			.references(() => characters.id, { onDelete: 'cascade' }),
+		toCharacterId: text('to_character_id')
+			.notNull()
+			.references(() => characters.id, { onDelete: 'cascade' }),
+		fromUserId: text('from_user_id')
+			.notNull()
+			.references(() => users.id, { onDelete: 'cascade' }),
+		toUserId: text('to_user_id')
+			.notNull()
+			.references(() => users.id, { onDelete: 'cascade' }),
+		payload: text('payload', { mode: 'json' }).$type<RequestPayload>().notNull(),
+		status: text('status').$type<RequestStatus>().default('pending').notNull(),
+		revertRequestedBy: text('revert_requested_by').$type<RequestSide>(),
+		senderState: text('sender_state').$type<RequestSideState>().notNull(),
+		recipientState: text('recipient_state').$type<RequestSideState>().notNull(),
+		senderApplied: text('sender_applied', { mode: 'json' })
+			.$type<RequestDelta[]>()
+			.default(sql`'[]'`)
+			.notNull(),
+		recipientApplied: text('recipient_applied', { mode: 'json' })
+			.$type<RequestDelta[]>()
+			.default(sql`'[]'`)
+			.notNull(),
+		createdAt: integer('created_at', { mode: 'timestamp_ms' }).default(nowSql).notNull(),
+		updatedAt: integer('updated_at', { mode: 'timestamp_ms' }).default(nowSql).notNull()
+	},
+	(table) => ({
+		toCharacterIdx: index('character_requests_to_character_idx').on(
+			table.toCharacterId,
+			table.status
+		),
+		fromCharacterIdx: index('character_requests_from_character_idx').on(
+			table.fromCharacterId,
+			table.status
+		),
+		campaignIdx: index('character_requests_campaign_idx').on(table.campaignId)
 	})
 );
 

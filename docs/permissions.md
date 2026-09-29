@@ -45,6 +45,16 @@ Character owners can manage their characters. Campaign members can read characte
 
 Character assignment inside a campaign and character ownership are related but not identical. Claiming an unclaimed campaign character can transfer real ownership of that character. Unassigning a character from a campaign does not imply ownership should transfer back.
 
+## Shared-character requests
+
+Some card and heritage features change more than one character: granting an ally an extra downtime move, passing them a note, or moving Stress, HP or Hope between two characters. These use requests (`character_requests`) so that every change to a character has its player's consent.
+
+- A request is sent by the player of a character to another active character in the same campaign. The player is the character's owner, and both characters must belong to campaign members. A GM has no say over another player's character here: a GM can read the requests on a character but cannot send, accept, decline or undo them.
+- The server tracks consent and progress only. It never edits a character, because every sheet saves its whole character and would overwrite the change. When a request is accepted, each player's own sheet applies its own side through the normal character save, then reports what it applied so the change can be undone exactly.
+- Nothing changes until the recipient accepts. If either side cannot apply its change (for example it would mark more Stress than the maximum), the request fails and any side that already applied undoes it.
+- Undo needs the other player's confirmation when the request changed their character. A player can undo alone when the other player's character was not touched.
+- A player may only act as themselves: the server checks the actor against the request's sender and recipient users on every action, and only for players still in the campaign.
+
 ## Homebrew
 
 Homebrew items are owned by one user.

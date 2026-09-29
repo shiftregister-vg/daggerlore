@@ -12,6 +12,13 @@ import {
 } from 'drizzle-orm/pg-core';
 import type { AdapterAccountType } from '@auth/core/adapters';
 import type { Character } from '@domain/schemas/characters';
+import type {
+	RequestDelta,
+	RequestPayload,
+	RequestSide,
+	RequestSideState,
+	RequestStatus
+} from '@domain/schemas/character-requests';
 import type { Campaign, CampaignCharacter, CampaignMember } from '@domain/schemas/campaigns';
 import type { CompendiumContentIds } from '@domain/schemas/compendium';
 import type { DiceHistory } from '@domain/schemas/dice';
@@ -358,6 +365,48 @@ export const characterVersions = pgTable(
 	},
 	(table) => ({
 		characterIdx: index('character_versions_character_idx').on(table.characterId, table.createdAt)
+	})
+);
+
+export const characterRequests = pgTable(
+	'character_requests',
+	{
+		id: uuid('id').defaultRandom().primaryKey(),
+		campaignId: uuid('campaign_id')
+			.notNull()
+			.references(() => campaigns.id, { onDelete: 'cascade' }),
+		fromCharacterId: uuid('from_character_id')
+			.notNull()
+			.references(() => characters.id, { onDelete: 'cascade' }),
+		toCharacterId: uuid('to_character_id')
+			.notNull()
+			.references(() => characters.id, { onDelete: 'cascade' }),
+		fromUserId: uuid('from_user_id')
+			.notNull()
+			.references(() => users.id, { onDelete: 'cascade' }),
+		toUserId: uuid('to_user_id')
+			.notNull()
+			.references(() => users.id, { onDelete: 'cascade' }),
+		payload: jsonb('payload').$type<RequestPayload>().notNull(),
+		status: text('status').$type<RequestStatus>().default('pending').notNull(),
+		revertRequestedBy: text('revert_requested_by').$type<RequestSide>(),
+		senderState: text('sender_state').$type<RequestSideState>().notNull(),
+		recipientState: text('recipient_state').$type<RequestSideState>().notNull(),
+		senderApplied: jsonb('sender_applied').$type<RequestDelta[]>().default([]).notNull(),
+		recipientApplied: jsonb('recipient_applied').$type<RequestDelta[]>().default([]).notNull(),
+		createdAt: timestamp('created_at', { mode: 'date' }).defaultNow().notNull(),
+		updatedAt: timestamp('updated_at', { mode: 'date' }).defaultNow().notNull()
+	},
+	(table) => ({
+		toCharacterIdx: index('character_requests_to_character_idx').on(
+			table.toCharacterId,
+			table.status
+		),
+		fromCharacterIdx: index('character_requests_from_character_idx').on(
+			table.fromCharacterId,
+			table.status
+		),
+		campaignIdx: index('character_requests_campaign_idx').on(table.campaignId)
 	})
 );
 

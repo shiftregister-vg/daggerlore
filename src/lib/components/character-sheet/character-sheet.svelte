@@ -2,6 +2,7 @@
 	import type { TraitId } from '@domain/schemas/rules';
 	import { cn } from '$lib/utils';
 	import { getCharacterContext } from '$lib/state/character.svelte';
+	import { getRequestsContext } from '$lib/state/character-requests.svelte';
 
 	// character sheet components
 	import CardTabletop from './cards/card-tabletop.svelte';
@@ -90,6 +91,11 @@
 		sheetOpen = true;
 	}
 
+	function openPartySheet() {
+		sheetContent = { type: 'party' };
+		sheetOpen = true;
+	}
+
 	function openScarsSheet() {
 		sheetContent = { type: 'scars-content' };
 		sheetOpen = true;
@@ -113,6 +119,7 @@
 	let { class: className = '' }: { class?: string } = $props();
 
 	const characterCtx = getCharacterContext();
+	const requests = getRequestsContext();
 	const canEdit = $derived(characterCtx.canEdit);
 	const character_id = $derived(characterCtx.id);
 	const character = $derived(characterCtx.character);
@@ -198,6 +205,20 @@
 
 	let experiencesHeight = $state(0);
 </script>
+
+{#snippet partyButton(widthClass: string)}
+	<Button variant="outline" size="sm" onclick={openPartySheet} class={cn('relative', widthClass)}>
+		Party
+		{#if requests.needsAttention.length > 0}
+			<span
+				class="absolute -top-1.5 -right-1.5 flex size-4 items-center justify-center rounded-full bg-primary text-[10px] font-bold text-primary-foreground"
+				aria-label="{requests.needsAttention.length} waiting for you"
+			>
+				{requests.needsAttention.length}
+			</span>
+		{/if}
+	</Button>
+{/snippet}
 
 {#if character_id && character && derived_character_data}
 	<div
@@ -291,6 +312,9 @@
 					<Button variant="outline" size="sm" onclick={openConditionsSheet} class="w-full"
 						>Conditions</Button
 					>
+					{#if requests.inCampaign}
+						{@render partyButton('w-full')}
+					{/if}
 				</div>
 
 				<!-- class banner -->
@@ -336,6 +360,9 @@
 		>
 			<Button variant="outline" onclick={openDowntimeSheet} class="w-min">Downtime</Button>
 			<Button variant="outline" onclick={openConditionsSheet} class="w-min">Conditions</Button>
+			{#if requests.inCampaign}
+				{@render partyButton('w-min')}
+			{/if}
 		</div>
 
 		<TransformationStatus />

@@ -13,6 +13,7 @@ const KEYS = [
 	'feature_records',
 	'active_effects',
 	'rest_moves',
+	'received_grants',
 	'companion'
 ] as const satisfies readonly (keyof Character)[];
 
