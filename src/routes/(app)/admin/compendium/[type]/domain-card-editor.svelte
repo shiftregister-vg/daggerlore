@@ -71,7 +71,8 @@
 						pools: feature.pools,
 						records: feature.records,
 						effects: feature.effects,
-						roll_options: feature.roll_options
+						roll_options: feature.roll_options,
+						downtime_allowances: feature.downtime_allowances
 					}))
 				: [{ title: '', description_html: '', character_modifiers: [], weapon_modifiers: [] }];
 

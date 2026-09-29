@@ -5,12 +5,14 @@
 	import { getCharacterContext } from '$lib/state/character.svelte';
 	import { usageLimitCaption } from '$lib/state/feature-usage';
 	import { describeRollOption } from '$lib/state/roll-options';
+	import { describeDowntimeAllowance } from '$lib/state/downtime-moves';
 	import {
 		describeEffectModifiers,
 		effectCostCaption,
 		effectEndCaption
 	} from '$lib/state/feature-effects';
 	import {
+		DowntimeAllowanceSchema,
 		FeatureEffectSchema,
 		FeatureRollOptionSchema,
 		UsageResetSchema
@@ -247,6 +249,20 @@
 			.join('; ');
 	}
 
+	function featureDowntimeAllowances(feature: Record<string, unknown> | undefined) {
+		const allowances = Array.isArray(feature?.downtime_allowances)
+			? feature.downtime_allowances
+			: [];
+		return allowances
+			.flatMap((value) => {
+				const parsed = DowntimeAllowanceSchema.safeParse(value);
+				if (!parsed.success) return [];
+				const label = parsed.data.label ? ` (${parsed.data.label})` : '';
+				return [`Downtime allowance${label}: ${describeDowntimeAllowance(parsed.data)}`];
+			})
+			.join('; ');
+	}
+
 	function quantityText(quantity: Record<string, unknown>) {
 		const minimum = typeof quantity.minimum === 'number' ? ` (min ${quantity.minimum})` : '';
 		if (quantity.source === 'fixed') return `${String(quantity.value ?? 0)}`;
@@ -284,7 +300,8 @@
 					featurePools(beforeFeature),
 					featureRecords(beforeFeature),
 					featureEffects(beforeFeature),
-					featureRollOptions(beforeFeature)
+					featureRollOptions(beforeFeature),
+					featureDowntimeAllowances(beforeFeature)
 				]
 					.filter(Boolean)
 					.join('; '),
@@ -293,7 +310,8 @@
 					featurePools(afterFeature),
 					featureRecords(afterFeature),
 					featureEffects(afterFeature),
-					featureRollOptions(afterFeature)
+					featureRollOptions(afterFeature),
+					featureDowntimeAllowances(afterFeature)
 				]
 					.filter(Boolean)
 					.join('; '),

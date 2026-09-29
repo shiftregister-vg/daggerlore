@@ -151,6 +151,7 @@ export const BASE_COMPANION: Companion = {
 	marked_stress: 0,
 	max_hope: 0,
 	marked_hope: 0,
+	away: false,
 	evasion: 10,
 	level_up_choices: [],
 	experiences: ['', ''],

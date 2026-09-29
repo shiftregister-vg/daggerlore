@@ -32,6 +32,8 @@ export type PoolTracker = {
 	refill?: number;
 	refill_on: PoolEvent[];
 	clear_on: PoolEvent[];
+	/** Tokens only: what remains when the pool clears turns into this resource. */
+	clear_gain?: 'hope';
 };
 
 export type PoolState = {
@@ -107,7 +109,8 @@ export function collectPoolTrackers(sources: PoolSource[]): PoolTracker[] {
 							: undefined,
 					refill: pool.refill ? resolvePoolQuantity(pool.refill, source.context) : undefined,
 					refill_on: pool.refill_on ?? [],
-					clear_on: pool.clear_on ?? []
+					clear_on: pool.clear_on ?? [],
+					clear_gain: pool.kind === 'tokens' ? pool.clear_gain : undefined
 				});
 			}
 		}
@@ -195,11 +198,14 @@ export function applyPoolEvent(
 ): PoolState & {
 	refreshed: PoolTracker[];
 	diceToRoll: { tracker: PoolTracker; count: number }[];
+	/** Tokens that turned into a resource because the pool cleared. */
+	converted: { tracker: PoolTracker; amount: number }[];
 } {
 	let tokens = { ...state.tokens };
 	let dice = { ...state.dice };
 	const refreshed: PoolTracker[] = [];
 	const diceToRoll: { tracker: PoolTracker; count: number }[] = [];
+	const converted: { tracker: PoolTracker; amount: number }[] = [];
 
 	for (const tracker of trackers) {
 		const clears = tracker.clear_on.includes(event);
@@ -208,6 +214,9 @@ export function applyPoolEvent(
 
 		if (tracker.kind === 'tokens') {
 			const before = poolTokens(tokens, tracker);
+			if (clears && tracker.clear_gain && before > 0) {
+				converted.push({ tracker, amount: before });
+			}
 			if (clears) tokens = setPoolTokens(tokens, tracker, 0);
 			if (refills) tokens = refillPoolTokens(tokens, tracker);
 			if (poolTokens(tokens, tracker) !== before) refreshed.push(tracker);
@@ -221,7 +230,7 @@ export function applyPoolEvent(
 		if (hadDice || count > 0) refreshed.push(tracker);
 	}
 
-	return { tokens, dice, refreshed, diceToRoll };
+	return { tokens, dice, refreshed, diceToRoll, converted };
 }
 
 /** Drops pool state for items the character no longer possesses. */
@@ -265,7 +274,9 @@ export function poolCaption(tracker: PoolTracker): string {
 	}
 	const refill = poolRefillAmount(tracker);
 	if (refillOn && refill !== undefined) parts.push(`Refills to ${refill} ${refillOn}`);
-	if (clearOn) parts.push(`Clears ${clearOn}`);
+	if (clearOn) {
+		parts.push(tracker.clear_gain ? `Turns into Hope ${clearOn}` : `Clears ${clearOn}`);
+	}
 	if (tracker.capacity !== undefined) parts.push(`Up to ${tracker.capacity}`);
 	return parts.join(' · ');
 }

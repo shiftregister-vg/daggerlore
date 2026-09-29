@@ -16,6 +16,27 @@
 	import { applyPoolEvent, setPoolDice, type PoolTracker } from '$lib/state/feature-pools';
 	import { applyRecordEvent } from '$lib/state/feature-records';
 	import { applyEffectEvent, effectLabel, isDowntimeEffectEvent } from '$lib/state/feature-effects';
+	import { restoreDowntime, snapshotDowntime } from '$lib/state/downtime-snapshot';
+	import {
+		allowanceBreakdown,
+		applyMoves,
+		clearRestMoves,
+		describeMove,
+		moveWarning,
+		recordMove,
+		summarizeRest,
+		undoMove,
+		type AllowanceSummary,
+		type MoveEntry,
+		type RestKind
+	} from '$lib/state/downtime-moves';
+	import {
+		canMirrorStressClear,
+		mirrorStressClear,
+		returnAfterLongRest
+	} from '$lib/state/companion-recovery';
+	import Checkbox from '$lib/components/ui/checkbox/checkbox.svelte';
+	import X from '@lucide/svelte/icons/x';
 	import type { PoolEvent } from '@domain/schemas/rules';
 
 	let { open = false }: { open?: boolean } = $props();
@@ -30,6 +51,7 @@
 		hopeCount?: HopeCount;
 	};
 	type RestRow = {
+		category: RestKind;
 		title: string;
 		description: string;
 		actions: InlineAction[];
@@ -51,9 +73,16 @@
 		clearStress: 'Clear Stress',
 		repairArmor: 'Repair Armor'
 	};
+	const shortDiceMoveActions: Record<ShortDiceMove, MoveEntry['action']> = {
+		tendToWounds: 'tend_to_wounds',
+		clearStress: 'clear_stress',
+		repairArmor: 'repair_armor'
+	};
 	const DOWNTIME_DICE_Z_INDEX = '60';
 	let moreInfoOpen = $state(false);
 	let rollingShortMove = $state<ShortDiceMove | null>(null);
+	let rollingShortRest = $state<RestKind>('short');
+	let mirrorCompanionStress = $state(true);
 	let hasDowntimeDiceLayerOverride = $state(false);
 
 	let tier = $derived.by(() => {
@@ -61,8 +90,11 @@
 		return level_to_tier(character.level);
 	});
 
-	let maxShortActions = $derived(derived_character_data?.max_short_rest_actions ?? 0);
-	let maxLongActions = $derived(derived_character_data?.max_long_rest_actions ?? 0);
+	const noAllowances = { short: [], long: [] };
+	let allowances = $derived(derived_character_data?.downtime_allowances ?? noAllowances);
+	let shortSummary = $derived(summarizeRest('short', allowances, character?.rest_moves ?? []));
+	let longSummary = $derived(summarizeRest('long', allowances, character?.rest_moves ?? []));
+	let companionCanMirror = $derived(canMirrorStressClear(character?.companion));
 	let maxHope = $derived(derived_character_data?.max_hope ?? 0);
 	let hasSlayerDice = $derived(
 		character?.primary_subclass_id === 'warrior_call_of_the_slayer' ||
@@ -100,12 +132,13 @@
 
 			const rolledDie = roll.dice.find((die) => die.type === 'd4' && die.result !== undefined);
 			const moveId = rollingShortMove;
+			const rest = rollingShortRest;
 			rollingShortMove = null;
 
 			if (!rolledDie?.result) return;
 
 			const resolvedAmount = rolledDie.result + tier;
-			applyShortRoll(moveId, resolvedAmount);
+			chooseRolledMove(moveId, resolvedAmount, rest);
 		});
 
 		return unsubscribe;
@@ -119,110 +152,103 @@
 		rollingShortMove = null;
 	});
 
-	function createUndoToast(message: string, undo: () => void, description?: string) {
+	/**
+	 * Runs one confirmed change and offers a single Undo that restores everything downtime can touch
+	 * (resources, feature state, moves taken, companion), so no handler tracks its own "previous" values.
+	 */
+	function commitWithUndo(
+		message: string,
+		apply: () => string | undefined | void,
+		onUndo?: () => void
+	) {
+		const live = characterCtx.character;
+		if (!live) return;
+		const before = snapshotDowntime(live);
+		const description = apply() || undefined;
 		toast.success(message, {
 			description,
 			action: {
 				label: 'Undo',
-				onClick: () => undo()
+				onClick: () => {
+					const current = characterCtx.character;
+					if (current) restoreDowntime(current, before);
+					onUndo?.();
+				}
 			}
 		});
 	}
 
-	function prepareShortRoll(moveId: ShortDiceMove) {
+	function joinDescription(...parts: (string | undefined)[]) {
+		return parts.filter(Boolean).join(' ');
+	}
+
+	/**
+	 * Chooses a move for the rest. Nothing on the sheet changes until that rest is completed, so a move
+	 * chosen by mistake is removed without any effect. Exceeding the allowances warns; it never blocks.
+	 */
+	function chooseMove(
+		rest: RestKind,
+		category: RestKind,
+		title: string,
+		action: MoveEntry['action'],
+		amount?: number
+	) {
+		if (!character || !characterCtx.canEdit) return;
+		const moves = character.rest_moves ?? [];
+		const warning = moveWarning(summarizeRest(rest, allowances, moves), category);
+		character.rest_moves = recordMove(moves, { move: title, action, amount, rest, category });
+		if (warning) toast.warning(warning);
+	}
+
+	function removeChosenMove(id: string) {
+		if (!character || !characterCtx.canEdit) return;
+		character.rest_moves = undoMove(character.rest_moves ?? [], id);
+	}
+
+	/** A companion clears the same Stress its owner did, when the player confirms it. */
+	function clearCompanionStress(cleared: number): string | undefined {
+		if (!character?.companion || !mirrorCompanionStress || cleared <= 0) return undefined;
+		const before = character.companion.marked_stress;
+		const next = mirrorStressClear(character.companion, cleared);
+		if (next.marked_stress === before) return undefined;
+		character.companion = next;
+		return `Companion cleared ${before - next.marked_stress} Stress.`;
+	}
+
+	function prepareShortRoll(moveId: ShortDiceMove, rest: RestKind) {
 		if (!character || !characterCtx.canEdit) return;
 		if (rollingShortMove !== null) return;
 
 		rollingShortMove = moveId;
+		rollingShortRest = rest;
 		if (!hasDowntimeDiceLayerOverride) {
 			diceCtx.setLayerZIndexOverride(DOWNTIME_DICE_Z_INDEX);
 			hasDowntimeDiceLayerOverride = true;
 		}
 	}
 
-	function applyShortRoll(moveId: ShortDiceMove, amount: number) {
-		if (!character) return;
-		const previousNoMercyBonus = endNoMercy();
-
-		if (moveId === 'tendToWounds') {
-			const previous = character.marked_hp;
-			const next = Math.max(0, previous - amount);
-			character.marked_hp = next;
-			createUndoToast(`${amount} HP cleared`, () => {
-				character.marked_hp = previous;
-				restoreNoMercy(previousNoMercyBonus);
-			});
-			return;
-		}
-
-		if (moveId === 'clearStress') {
-			const previous = character.marked_stress;
-			const next = Math.max(0, previous - amount);
-			character.marked_stress = next;
-			createUndoToast(`${amount} Stress cleared`, () => {
-				character.marked_stress = previous;
-				restoreNoMercy(previousNoMercyBonus);
-			});
-			return;
-		}
-
-		const previous = character.marked_armor;
-		const next = Math.max(0, previous - amount);
-		character.marked_armor = next;
-		createUndoToast(`${amount} Armor Slots cleared`, () => {
-			character.marked_armor = previous;
-			restoreNoMercy(previousNoMercyBonus);
-		});
+	/** The roll is kept with the chosen move; it applies when the rest is completed. */
+	function chooseRolledMove(moveId: ShortDiceMove, amount: number, rest: RestKind) {
+		chooseMove(rest, 'short', shortDiceMoveLabels[moveId], shortDiceMoveActions[moveId], amount);
 	}
 
-	function applyHope(amount: number) {
-		if (!character) return;
-		const previousNoMercyBonus = endNoMercy();
-
-		const previous = character.marked_hope;
-		const next = Math.min(maxHope, previous + amount);
-		character.marked_hope = next;
-
-		createUndoToast(`Gained ${amount} Hope`, () => {
-			character.marked_hope = previous;
-			restoreNoMercy(previousNoMercyBonus);
-		});
-	}
-
-	function clearAllHp() {
-		if (!character) return;
-		const previousNoMercyBonus = endNoMercy();
-
-		const previous = character.marked_hp;
-		character.marked_hp = 0;
-		createUndoToast('Cleared all HP', () => {
-			character.marked_hp = previous;
-			restoreNoMercy(previousNoMercyBonus);
-		});
-	}
-
-	function clearAllStress() {
-		if (!character) return;
-		const previousNoMercyBonus = endNoMercy();
-
-		const previous = character.marked_stress;
-		character.marked_stress = 0;
-		createUndoToast('Cleared all Stress', () => {
-			character.marked_stress = previous;
-			restoreNoMercy(previousNoMercyBonus);
-		});
-	}
-
-	function clearAllArmor() {
-		if (!character) return;
-		const previousNoMercyBonus = endNoMercy();
-
-		const previous = character.marked_armor;
-		character.marked_armor = 0;
-		createUndoToast('Cleared all Armor Slots', () => {
-			character.marked_armor = previous;
-			restoreNoMercy(previousNoMercyBonus);
-		});
+	/**
+	 * Applies the moves chosen for a rest, in the order they were chosen. Call it inside
+	 * `commitWithUndo` so the completion is one undo.
+	 */
+	function applyChosenMoves(rest: RestKind): string | undefined {
+		if (!character) return undefined;
+		const chosen = (character.rest_moves ?? []).filter((move) => move.rest === rest);
+		if (chosen.length === 0) return undefined;
+		const result = applyMoves(character, chosen, maxHope);
+		character.marked_hp = result.resources.marked_hp;
+		character.marked_stress = result.resources.marked_stress;
+		character.marked_hope = result.resources.marked_hope;
+		character.marked_armor = result.resources.marked_armor;
+		return joinDescription(
+			`Took ${chosen.map((move) => move.move).join(', ')}.`,
+			clearCompanionStress(result.stressCleared)
+		);
 	}
 
 	type RefreshedFeature = { feature_title: string; source_title: string; label?: string };
@@ -238,23 +264,25 @@
 	function refreshedDescription(
 		refreshed: RefreshedFeature[],
 		cleared: RefreshedFeature[] = [],
-		ended: RefreshedFeature[] = []
+		ended: RefreshedFeature[] = [],
+		converted = ''
 	) {
 		const parts = [
 			refreshed.length > 0 ? `Refreshed ${featureNames(refreshed)}.` : '',
 			cleared.length > 0 ? `Cleared ${featureNames(cleared)}.` : '',
-			ended.length > 0 ? `Ended ${featureNames(ended)}.` : ''
+			ended.length > 0 ? `Ended ${featureNames(ended)}.` : '',
+			converted
 		].filter(Boolean);
 		return parts.length > 0 ? parts.join(' ') : 'No features to refresh.';
 	}
 
 	/**
-	 * Applies one confirmed event to usage trackers and resource pools and returns an undo callback.
-	 * Dice pools that refill are emptied here and listed in `diceToRoll`.
+	 * Applies one confirmed event to usage trackers, resource pools, records and effects. Call it inside
+	 * `commitWithUndo`. Dice pools that refill are emptied here and listed in `diceToRoll`.
 	 */
 	function resetFeatures(usageEvent: UsageResetEvent | null, poolEvent: PoolEvent) {
 		if (!character) {
-			return { refreshed: [], cleared: [], ended: [], diceToRoll: [], undo: () => {} };
+			return { description: '', diceToRoll: [] as { tracker: PoolTracker; count: number }[] };
 		}
 		const previousUses = character.feature_uses ?? {};
 		const previousTokens = character.feature_pool_tokens ?? {};
@@ -280,15 +308,23 @@
 		);
 		character.feature_records = records.next;
 		const effects = isDowntimeEffectEvent(poolEvent)
-			? applyEffectEvent(
-					previousEffects,
-					derived_character_data?.effect_trackers ?? [],
-					poolEvent
-				)
+			? applyEffectEvent(previousEffects, derived_character_data?.effect_trackers ?? [], poolEvent)
 			: { next: previousEffects, ended: [] };
 		character.active_effects = effects.next;
 
+		// Tokens a clearing pool turns into Hope, up to the character's maximum.
+		const hopePools = pools.converted.filter(({ tracker }) => tracker.clear_gain === 'hope');
+		let converted = '';
+		if (hopePools.length > 0) {
+			const previousHope = character.marked_hope;
+			const amount = hopePools.reduce((sum, { amount }) => sum + amount, 0);
+			character.marked_hope = Math.min(maxHope, previousHope + amount);
+			converted = `Turned ${featureNames(hopePools.map(({ tracker }) => tracker))} into ${character.marked_hope - previousHope} Hope.`;
+		}
+
 		// A pool the event emptied without refilling was cleared rather than refreshed.
+		const wasConverted = (tracker: PoolTracker) =>
+			hopePools.some((entry) => entry.tracker.key === tracker.key);
 		const wasCleared = (tracker: PoolTracker) =>
 			!tracker.refill_on.includes(poolEvent) &&
 			!diceRequested(tracker) &&
@@ -296,21 +332,16 @@
 		const diceRequested = (tracker: PoolTracker) =>
 			pools.diceToRoll.some((request) => request.tracker.key === tracker.key);
 		return {
-			refreshed: [
-				...usage.refreshed,
-				...pools.refreshed.filter((tracker) => !wasCleared(tracker))
-			] as RefreshedFeature[],
-			cleared: [...pools.refreshed.filter(wasCleared), ...records.cleared] as RefreshedFeature[],
-			ended: effects.ended.map((tracker) => ({ ...tracker, label: effectLabel(tracker) })),
-			diceToRoll: pools.diceToRoll,
-			undo: () => {
-				if (!character) return;
-				character.feature_uses = previousUses;
-				character.feature_pool_tokens = previousTokens;
-				character.feature_pool_dice = previousDice;
-				character.feature_records = previousRecords;
-				character.active_effects = previousEffects;
-			}
+			description: refreshedDescription(
+				[...usage.refreshed, ...pools.refreshed.filter((tracker) => !wasCleared(tracker))],
+				[
+					...pools.refreshed.filter((tracker) => wasCleared(tracker) && !wasConverted(tracker)),
+					...records.cleared
+				],
+				effects.ended.map((tracker) => ({ ...tracker, label: effectLabel(tracker) })),
+				converted
+			),
+			diceToRoll: pools.diceToRoll
 		};
 	}
 
@@ -340,194 +371,184 @@
 	function completeShortRest() {
 		if (!character || !characterCtx.canEdit) return;
 
-		const previousNoMercyBonus = endNoMercy();
-		const usage = resetFeatures('short_rest', 'short_rest');
-
-		createUndoToast(
-			'Completed short rest',
-			() => {
-				usage.undo();
-				restoreNoMercy(previousNoMercyBonus);
-			},
-			refreshedDescription(usage.refreshed, usage.cleared, usage.ended)
-		);
+		commitWithUndo('Completed short rest', () => {
+			endNoMercy();
+			const moves = applyChosenMoves('short');
+			const features = resetFeatures('short_rest', 'short_rest');
+			character.rest_moves = clearRestMoves(character.rest_moves ?? [], 'short');
+			return joinDescription(moves, features.description);
+		});
 	}
 
 	function completeLongRest() {
 		if (!character || !characterCtx.canEdit) return;
 
-		const previousLegacyTokens = Object.fromEntries(
-			LEGACY_LONG_REST_TOKEN_CARD_IDS.flatMap((cardId) =>
-				character.card_tokens[cardId] === undefined ? [] : [[cardId, character.card_tokens[cardId]]]
-			)
-		);
-		const previousNoMercyBonus = endNoMercy();
-		const usage = resetFeatures('long_rest', 'long_rest');
-		character.card_tokens = {
-			...character.card_tokens,
-			...Object.fromEntries(Object.keys(previousLegacyTokens).map((cardId) => [cardId, 0]))
-		};
-
-		createUndoToast(
-			'Completed long rest',
-			() => {
-				if (!character) return;
-				usage.undo();
-				character.card_tokens = { ...character.card_tokens, ...previousLegacyTokens };
-				restoreNoMercy(previousNoMercyBonus);
-			},
-			refreshedDescription(usage.refreshed, usage.cleared, usage.ended)
-		);
+		commitWithUndo('Completed long rest', () => {
+			endNoMercy();
+			const moves = applyChosenMoves('long');
+			const features = resetFeatures('long_rest', 'long_rest');
+			character.card_tokens = {
+				...character.card_tokens,
+				...Object.fromEntries(
+					LEGACY_LONG_REST_TOKEN_CARD_IDS.filter(
+						(cardId) => character.card_tokens[cardId] !== undefined
+					).map((cardId) => [cardId, 0])
+				)
+			};
+			character.rest_moves = clearRestMoves(character.rest_moves ?? [], 'long');
+			let companion: string | undefined;
+			if (character.companion?.away) {
+				const before = character.companion.marked_stress;
+				character.companion = returnAfterLongRest(character.companion);
+				companion = `Companion returned with ${before - character.companion.marked_stress} Stress cleared.`;
+			}
+			return joinDescription(moves, features.description, companion);
+		});
 	}
 
 	function endScene() {
 		if (!character || !characterCtx.canEdit) return;
 
-		const usage = resetFeatures('scene', 'scene');
-		createUndoToast(
-			'Ended scene',
-			usage.undo,
-			refreshedDescription(usage.refreshed, usage.cleared, usage.ended)
-		);
+		commitWithUndo('Ended scene', () => resetFeatures('scene', 'scene').description);
 	}
 
 	async function startSession() {
 		if (!character || !characterCtx.canEdit) return;
 
-		const features = resetFeatures(null, 'session_start');
 		let undone = false;
-		createUndoToast(
+		let diceToRoll: { tracker: PoolTracker; count: number }[] = [];
+		commitWithUndo(
 			'Started a new session',
 			() => {
-				undone = true;
-				features.undo();
+				const features = resetFeatures(null, 'session_start');
+				diceToRoll = features.diceToRoll;
+				return features.description;
 			},
-			refreshedDescription(features.refreshed, features.cleared, features.ended)
+			() => {
+				undone = true;
+			}
 		);
-		await rollPoolDice(features.diceToRoll, () => !undone);
+		await rollPoolDice(diceToRoll, () => !undone);
 	}
 
 	function endSession() {
 		if (!character || !characterCtx.canEdit) return;
 
-		const usage = resetFeatures('session', 'session_end');
-		const descriptions = [refreshedDescription(usage.refreshed, usage.cleared, usage.ended)];
-		const previousHope = character.marked_hope;
-		const previousSlayerDice = character.card_tokens[SLAYER_CARD_ID] ?? 0;
-		if (hasSlayerDice) {
-			character.marked_hope = Math.min(maxHope, previousHope + previousSlayerDice);
-			character.card_tokens = { ...character.card_tokens, [SLAYER_CARD_ID]: 0 };
-			const gainedHope = character.marked_hope - previousHope;
-			descriptions.push(
-				previousSlayerDice > 0
-					? `Cleared ${previousSlayerDice} Slayer Dice and gained ${gainedHope} Hope.`
-					: 'No Slayer Dice were carried over.'
-			);
-		}
-
-		createUndoToast(
-			'Ended session',
-			() => {
-				if (!character) return;
-				usage.undo();
-				if (hasSlayerDice) {
-					character.marked_hope = previousHope;
-					character.card_tokens = {
-						...character.card_tokens,
-						[SLAYER_CARD_ID]: previousSlayerDice
-					};
-				}
-			},
-			descriptions.join(' ')
-		);
+		commitWithUndo('Ended session', () => {
+			const descriptions = [resetFeatures('session', 'session_end').description];
+			// Rally is once per session; its manual toggle has no tracker to refresh.
+			if (character.feature_choices.given_out_this_session?.[0] === 'yes') {
+				character.feature_choices.given_out_this_session = ['no'];
+				descriptions.push('Rally is available again.');
+			}
+			if (hasSlayerDice) {
+				const previousHope = character.marked_hope;
+				const previousSlayerDice = character.card_tokens[SLAYER_CARD_ID] ?? 0;
+				character.marked_hope = Math.min(maxHope, previousHope + previousSlayerDice);
+				character.card_tokens = { ...character.card_tokens, [SLAYER_CARD_ID]: 0 };
+				const gainedHope = character.marked_hope - previousHope;
+				descriptions.push(
+					previousSlayerDice > 0
+						? `Cleared ${previousSlayerDice} Slayer Dice and gained ${gainedHope} Hope.`
+						: 'No Slayer Dice were carried over.'
+				);
+			}
+			return descriptions.join(' ');
+		});
 	}
 
-	function endNoMercy(): string | undefined {
-		if (!character || !derived_character_data?.hasNoMercyHopeFeature) return undefined;
-		const previous = character.feature_choices.no_mercy_bonus?.[0] ?? '0';
+	function endNoMercy() {
+		if (!character || !derived_character_data?.hasNoMercyHopeFeature) return;
 		character.feature_choices.no_mercy_bonus = ['0'];
-		return previous;
 	}
 
-	function restoreNoMercy(previous: string | undefined) {
-		if (!character || previous === undefined) return;
-		character.feature_choices.no_mercy_bonus = [previous];
+	/** The moves a rest offers: its own kind, or the other kind where an allowance substitutes it. */
+	function rowsFor(category: RestKind, rest: RestKind): RestRow[] {
+		const prepare = (amount: number) => () =>
+			chooseMove(rest, category, 'Prepare', 'prepare', amount);
+		const hopeActions: InlineAction[] = [
+			{ label: 'Gain 1 Hope', onclick: prepare(1), hopeCount: 1 },
+			{ label: 'Gain 2 Hope', onclick: prepare(2), hopeCount: 2 }
+		];
+		if (category === 'short') {
+			const dice = (
+				moveId: ShortDiceMove,
+				title: string,
+				description: string,
+				icon: ActionIcon
+			): RestRow => ({
+				category,
+				title,
+				description,
+				actions: [],
+				roll: {
+					name: shortDiceMoveLabels[moveId],
+					moveId,
+					diceString: `1d4 + ${tier}`,
+					icon
+				}
+			});
+			return [
+				dice('tendToWounds', 'Tend to Wounds', 'Clear 1d4 + Tier HP', 'heart'),
+				dice('clearStress', 'Clear Stress', 'Clear 1d4 + Tier Stress', 'lightning'),
+				dice('repairArmor', 'Repair Armor', 'Clear 1d4 + Tier Armor Slots', 'shield'),
+				{
+					category,
+					title: 'Prepare',
+					description: 'Gain 1 Hope solo or 2 Hope with party',
+					actions: hopeActions
+				}
+			];
+		}
+		const clearAll = (
+			title: string,
+			description: string,
+			action: MoveEntry['action'],
+			icon: ActionIcon
+		): RestRow => ({
+			category,
+			title,
+			description,
+			actions: [
+				{
+					label: title,
+					onclick: () => chooseMove(rest, category, title, action),
+					icon
+				}
+			]
+		});
+		return [
+			clearAll('Tend to All Wounds', 'Clear all HP', 'clear_all_hp', 'heart'),
+			clearAll('Clear All Stress', 'Clear all Stress', 'clear_all_stress', 'lightning'),
+			clearAll('Repair All Armor', 'Clear all Armor Slots', 'clear_all_armor', 'shield'),
+			{
+				category,
+				title: 'Prepare',
+				description: 'Gain 1 Hope solo or 2 Hope with party',
+				actions: hopeActions
+			},
+			{
+				category,
+				title: 'Work on a Project',
+				description: 'Advance a long-term project',
+				actions: [
+					{
+						label: 'Choose',
+						onclick: () => chooseMove(rest, category, 'Work on a Project', 'project')
+					}
+				]
+			}
+		];
 	}
 
-	let shortRestRows = $derived.by<RestRow[]>(() => [
-		{
-			title: 'Tend to Wounds',
-			description: 'Clear 1d4 + Tier HP',
-			actions: [],
-			roll: {
-				name: shortDiceMoveLabels.tendToWounds,
-				moveId: 'tendToWounds',
-				diceString: `1d4 + ${tier}`,
-				icon: 'heart'
-			}
-		},
-		{
-			title: 'Clear Stress',
-			description: 'Clear 1d4 + Tier Stress',
-			actions: [],
-			roll: {
-				name: shortDiceMoveLabels.clearStress,
-				moveId: 'clearStress',
-				diceString: `1d4 + ${tier}`,
-				icon: 'lightning'
-			}
-		},
-		{
-			title: 'Repair Armor',
-			description: 'Clear 1d4 + Tier Armor Slots',
-			actions: [],
-			roll: {
-				name: shortDiceMoveLabels.repairArmor,
-				moveId: 'repairArmor',
-				diceString: `1d4 + ${tier}`,
-				icon: 'shield'
-			}
-		},
-		{
-			title: 'Prepare',
-			description: 'Gain 1 Hope solo or 2 Hope with party',
-			actions: [
-				{ label: 'Gain 1 Hope', onclick: () => applyHope(1), hopeCount: 1 },
-				{ label: 'Gain 2 Hope', onclick: () => applyHope(2), hopeCount: 2 }
-			]
-		}
-	]);
-
-	const longRestRows: RestRow[] = [
-		{
-			title: 'Tend to All Wounds',
-			description: 'Clear all HP',
-			actions: [{ label: 'Clear HP', onclick: clearAllHp, icon: 'heart' }]
-		},
-		{
-			title: 'Clear All Stress',
-			description: 'Clear all Stress',
-			actions: [{ label: 'Clear Stress', onclick: clearAllStress, icon: 'lightning' }]
-		},
-		{
-			title: 'Repair All Armor',
-			description: 'Clear all Armor Slots',
-			actions: [{ label: 'Clear Armor', onclick: clearAllArmor, icon: 'shield' }]
-		},
-		{
-			title: 'Prepare',
-			description: 'Gain 1 Hope solo or 2 Hope with party',
-			actions: [
-				{ label: 'Gain 1 Hope', onclick: () => applyHope(1), hopeCount: 1 },
-				{ label: 'Gain 2 Hope', onclick: () => applyHope(2), hopeCount: 2 }
-			]
-		},
-		{
-			title: 'Work on a Project',
-			description: 'Advance a long-term project',
-			actions: []
-		}
-	];
+	let shortRows = $derived(rowsFor('short', 'short'));
+	let shortAlternateRows = $derived(
+		shortSummary.alternate_allowed > 0 ? rowsFor('long', 'short') : []
+	);
+	let longRows = $derived(rowsFor('long', 'long'));
+	let longAlternateRows = $derived(
+		longSummary.alternate_allowed > 0 ? rowsFor('short', 'long') : []
+	);
 </script>
 
 {#snippet resourceIcon(icon: ActionIcon)}
@@ -562,6 +583,105 @@
 			{/each}
 		</span>
 	</span>
+{/snippet}
+
+{#snippet allowanceCaption(summary: AllowanceSummary)}
+	<span
+		class={cn(
+			'ml-1 text-xs',
+			summary.over_total > 0 || summary.over_alternate > 0
+				? 'text-destructive'
+				: 'text-muted-foreground'
+		)}
+	>
+		({summary.taken} of {summary.total}
+		{summary.total === 1 ? 'move' : 'moves'} chosen)
+	</span>
+{/snippet}
+
+{#snippet allowanceDetails(summary: AllowanceSummary)}
+	{#if summary.slots.length > 1}
+		<p class="mb-2 text-xs text-muted-foreground">{allowanceBreakdown(summary)}</p>
+	{/if}
+	{#if summary.over_total > 0 || summary.over_alternate > 0}
+		<p class="mb-2 text-xs text-destructive">
+			More moves than your allowances cover. Confirm with your GM.
+		</p>
+	{/if}
+{/snippet}
+
+{#snippet moveLog(rest: RestKind)}
+	{@const moves = (character?.rest_moves ?? []).filter((move) => move.rest === rest)}
+	<p class="mb-2 text-xs text-muted-foreground">
+		Choose your moves below. They take effect when you complete the rest.
+	</p>
+	{#if moves.length > 0}
+		<ul class="mb-2 flex flex-wrap gap-1.5" aria-label="Chosen moves">
+			{#each moves as move (move.id)}
+				<li
+					class="inline-flex items-center gap-1 rounded-full border bg-muted/40 py-0.5 pr-1 pl-2 text-xs"
+				>
+					<span>
+						{move.move}
+						<span class="text-muted-foreground">· {describeMove(move)}</span>
+					</span>
+					<button
+						type="button"
+						class="rounded-full p-0.5 text-muted-foreground hover:bg-muted hover:text-foreground disabled:opacity-50"
+						aria-label="Remove {move.move} from the chosen moves"
+						disabled={!characterCtx.canEdit}
+						onclick={() => removeChosenMove(move.id)}
+					>
+						<X class="size-3" />
+					</button>
+				</li>
+			{/each}
+		</ul>
+	{/if}
+{/snippet}
+
+{#snippet restRows(rows: RestRow[], rest: RestKind)}
+	<div class="flex flex-col text-xs text-muted-foreground">
+		{#each rows as row (row.title)}
+			<p class="flex min-h-10 items-center justify-between gap-3">
+				<span
+					><span class="font-semibold text-foreground">{row.title}:</span> {row.description}</span
+				>
+				{#if row.roll}
+					{@const roll = row.roll}
+					<RollButton
+						type="base"
+						name={roll.name}
+						diceString={roll.diceString}
+						disabled={rollingShortMove !== null || !characterCtx.canEdit}
+						beforeRoll={() => prepareShortRoll(roll.moveId, rest)}
+					>
+						{#if roll.icon}
+							{@render resourceIcon(roll.icon)}
+						{/if}
+					</RollButton>
+				{/if}
+				{#each row.actions as action (action.label)}
+					<Button
+						variant="outline"
+						size="sm"
+						aria-label={action.label}
+						disabled={!characterCtx.canEdit}
+						onclick={action.onclick}
+					>
+						{#if action.hopeCount}
+							{@render hopeDiamonds(action.hopeCount)}
+						{:else if action.icon}
+							Choose
+							{@render resourceIcon(action.icon)}
+						{:else}
+							{action.label}
+						{/if}
+					</Button>
+				{/each}
+			</p>
+		{/each}
+	</div>
 {/snippet}
 
 <Sheet.Header>
@@ -609,10 +729,29 @@
 		</div>
 	</div>
 
+	{#if character?.companion}
+		<div class="mb-6 flex flex-col gap-1 rounded-md border p-3 text-xs">
+			{#if character.companion.away}
+				<p class="font-semibold text-foreground">Companion is away</p>
+				<p class="text-muted-foreground">
+					It returns after your next long rest with 1 Stress cleared.
+				</p>
+			{:else}
+				<label class="flex items-center gap-2 text-foreground">
+					<Checkbox bind:checked={mirrorCompanionStress} disabled={!companionCanMirror} />
+					<span>Companion clears the same Stress when you clear Stress</span>
+				</label>
+				{#if !companionCanMirror}
+					<p class="text-muted-foreground">Your companion has no Stress marked.</p>
+				{/if}
+			{/if}
+		</div>
+	{/if}
+
 	<div class="mb-2 flex items-center justify-between gap-3 border-b pb-2">
 		<p class="font-bold">
 			Short Rest
-			<span class="ml-1 text-xs text-muted-foreground">({maxShortActions} available)</span>
+			{@render allowanceCaption(shortSummary)}
 		</p>
 		<Button
 			variant="outline"
@@ -620,55 +759,24 @@
 			disabled={!characterCtx.canEdit}
 			onclick={completeShortRest}
 		>
-			Complete Short Rest
+			Complete Short Rest{shortSummary.taken > 0 ? ` (${shortSummary.taken})` : ''}
 		</Button>
 	</div>
+	{@render allowanceDetails(shortSummary)}
+	{@render moveLog('short')}
 
-	<div class="gap- flex flex-col text-xs text-muted-foreground">
-		{#each shortRestRows as row (row.title)}
-			<p class="flex min-h-10 items-center justify-between gap-3">
-				<span
-					><span class="font-semibold text-foreground">{row.title}:</span> {row.description}</span
-				>
-				{#if row.roll}
-					<RollButton
-						type="base"
-						name={row.roll.name}
-						diceString={row.roll.diceString}
-						disabled={rollingShortMove !== null || !characterCtx.canEdit}
-						beforeRoll={() => {
-							if (!row.roll) return;
-							prepareShortRoll(row.roll.moveId);
-						}}
-					>
-						{#if row.roll.icon}
-							{@render resourceIcon(row.roll.icon)}
-						{/if}
-					</RollButton>
-				{/if}
-				{#each row.actions as action (action.label)}
-					<Button
-						variant="outline"
-						size="sm"
-						aria-label={action.label}
-						disabled={!characterCtx.canEdit}
-						onclick={action.onclick}
-					>
-						{#if action.hopeCount}
-							{@render hopeDiamonds(action.hopeCount)}
-						{:else}
-							{action.label}
-						{/if}
-					</Button>
-				{/each}
-			</p>
-		{/each}
-	</div>
+	{@render restRows(shortRows, 'short')}
+	{#if shortAlternateRows.length > 0}
+		<p class="mt-3 mb-1 text-xs font-semibold text-foreground">
+			Long rest moves you can take instead
+		</p>
+		{@render restRows(shortAlternateRows, 'short')}
+	{/if}
 
 	<div class="mt-10 mb-2 flex items-center justify-between gap-3 border-b pb-2">
 		<p class="font-bold">
 			Long Rest
-			<span class="ml-1 text-xs text-muted-foreground">({maxLongActions} available)</span>
+			{@render allowanceCaption(longSummary)}
 		</p>
 		<Button
 			variant="outline"
@@ -676,37 +784,19 @@
 			disabled={!characterCtx.canEdit}
 			onclick={completeLongRest}
 		>
-			Complete Long Rest
+			Complete Long Rest{longSummary.taken > 0 ? ` (${longSummary.taken})` : ''}
 		</Button>
 	</div>
+	{@render allowanceDetails(longSummary)}
+	{@render moveLog('long')}
 
-	<div class="gap- flex flex-col text-xs text-muted-foreground">
-		{#each longRestRows as row (row.title)}
-			<p class="py- flex min-h-10 items-center justify-between gap-3">
-				<span
-					><span class="font-semibold text-foreground">{row.title}:</span> {row.description}</span
-				>
-				{#each row.actions as action (action.label)}
-					<Button
-						variant="outline"
-						size="sm"
-						aria-label={action.label}
-						disabled={!characterCtx.canEdit}
-						onclick={action.onclick}
-					>
-						{#if action.hopeCount}
-							{@render hopeDiamonds(action.hopeCount)}
-						{:else if action.icon}
-							Clear
-							{@render resourceIcon(action.icon)}
-						{:else}
-							{action.label}
-						{/if}
-					</Button>
-				{/each}
-			</p>
-		{/each}
-	</div>
+	{@render restRows(longRows, 'long')}
+	{#if longAlternateRows.length > 0}
+		<p class="mt-3 mb-1 text-xs font-semibold text-foreground">
+			Short rest moves you can take instead
+		</p>
+		{@render restRows(longAlternateRows, 'long')}
+	{/if}
 
 	<Collapsible.Root bind:open={moreInfoOpen} class="mt-8">
 		<Collapsible.Trigger class="flex items-center gap-1">

@@ -317,9 +317,25 @@ export const FeaturePoolSchema = z
 		// Tokens: the amount Refill sets. Dice: the number of dice rolled.
 		refill: PoolQuantitySchema.optional(),
 		refill_on: z.array(PoolEventSchema).optional(),
-		clear_on: z.array(PoolEventSchema).optional()
+		clear_on: z.array(PoolEventSchema).optional(),
+		// Tokens only: what remains when the pool clears turns into this resource instead of being lost.
+		clear_gain: z.enum(['hope']).optional()
 	})
 	.superRefine((pool, ctx) => {
+		if (pool.clear_gain && pool.kind !== 'tokens') {
+			ctx.addIssue({
+				code: 'custom',
+				path: ['clear_gain'],
+				message: 'Only token pools can convert what remains'
+			});
+		}
+		if (pool.clear_gain && !pool.clear_on?.length) {
+			ctx.addIssue({
+				code: 'custom',
+				path: ['clear_gain'],
+				message: 'Choose when the pool clears'
+			});
+		}
 		if (pool.kind === 'dice' && !pool.die) {
 			ctx.addIssue({ code: 'custom', path: ['die'], message: 'Choose a die' });
 		}
@@ -507,6 +523,21 @@ const ROLL_OPTION_TIMING_BY_EFFECT: Record<RollOptionEffect['type'], RollOptionT
 	reduce_damage: ['defense']
 };
 
+// An allowance for downtime moves on top of the standard ones. 'extra_move' adds moves of the rest's own
+// kind (Celestial Trance-style); 'alternate_move' allows moves of the other rest's kind (a long rest
+// move during a short rest).
+export const DowntimeAllowanceSchema = z.object({
+	// stable across versions
+	id: FeatureUsageSchema.shape.id,
+	label: z.string().trim().min(1).optional(),
+	rest: z.enum(['short', 'long']),
+	kind: z.enum(['extra_move', 'alternate_move']),
+	count: z.number().int().min(1).max(10),
+	// Only counts while this effect on the same feature is active.
+	requires_active_effect: z.string().optional()
+});
+export type DowntimeAllowance = z.infer<typeof DowntimeAllowanceSchema>;
+
 export const FeatureSchema = z
 	.object({
 		title: z.string(),
@@ -519,9 +550,31 @@ export const FeatureSchema = z
 		pools: z.array(FeaturePoolSchema).optional(),
 		records: z.array(FeatureRecordSchema).optional(),
 		effects: z.array(FeatureEffectSchema).optional(),
-		roll_options: z.array(FeatureRollOptionSchema).optional()
+		roll_options: z.array(FeatureRollOptionSchema).optional(),
+		downtime_allowances: z.array(DowntimeAllowanceSchema).optional()
 	})
 	.superRefine((feature, ctx) => {
+		const allowanceIds = new Set<string>();
+		(feature.downtime_allowances ?? []).forEach((allowance, index) => {
+			if (allowanceIds.has(allowance.id)) {
+				ctx.addIssue({
+					code: 'custom',
+					path: ['downtime_allowances', index, 'id'],
+					message: 'Allowance ids must be unique'
+				});
+			}
+			allowanceIds.add(allowance.id);
+			if (
+				allowance.requires_active_effect &&
+				!(feature.effects ?? []).some((effect) => effect.id === allowance.requires_active_effect)
+			) {
+				ctx.addIssue({
+					code: 'custom',
+					path: ['downtime_allowances', index, 'requires_active_effect'],
+					message: 'Choose an effect on this feature'
+				});
+			}
+		});
 		const ids = new Set<string>();
 		(feature.pools ?? []).forEach((pool, index) => {
 			if (ids.has(pool.id)) {
