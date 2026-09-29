@@ -7,6 +7,7 @@
 	import type { TraitId } from '@domain/schemas/rules';
 	import Button from '$lib/components/ui/button/button.svelte';
 	import UsageTracker from '$lib/components/character-sheet/features/usage-tracker.svelte';
+	import PoolTracker from '$lib/components/character-sheet/features/pool-tracker.svelte';
 	import { usageKey } from '$lib/state/feature-usage';
 
 	const characterCtx = getCharacterContext();
@@ -46,6 +47,15 @@
 				)}
 				tone="sheet"
 			/>
+		{/if}
+		{#if characterCtx.character?.primary_class_id}
+			{#each derived_character_data.primary_class.hope_feature.pools ?? [] as pool (pool.id)}
+				<PoolTracker
+					{pool}
+					tracker_key={usageKey('classes', characterCtx.character.primary_class_id, pool.id)}
+					tone="sheet"
+				/>
+			{/each}
 		{/if}
 		{#if derived_character_data.hasEvolutionHopeFeature && characterCtx.canEdit}
 			<Select.Root

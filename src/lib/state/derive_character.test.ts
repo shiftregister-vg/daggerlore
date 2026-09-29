@@ -4,6 +4,7 @@ import { SRD_COMPENDIUM } from '../../compendium/SRD';
 import { THE_VOID_COMPENDIUM } from '../../compendium/The_Void';
 import { CHARACTER_DEFAULTS } from '$lib/domain/constants/constants';
 import { CharacterSchema, type Character } from '$lib/domain/schemas/characters';
+import { CharacterClassSchema, DomainCardSchema } from '$lib/domain/schemas/compendium';
 import { merge_compendium_content } from '$lib/utils';
 import { derive_character_state } from './derive_character';
 
@@ -271,5 +272,81 @@ describe('feature usage trackers', () => {
 
 		character.additional_domain_card_ids = [];
 		expect(derive_character_state(character, compendium).character.feature_uses).toEqual({});
+	});
+});
+
+describe('feature resource pools', () => {
+	const prayerKey = 'classes:seraph:prayer_dice';
+
+	function seraph(): Character {
+		const character = legacyCharacter();
+		character.level = 5;
+		character.primary_class_id = 'seraph';
+		character.primary_subclass_id = 'seraph_divine_wielder';
+		character.selected_traits = { ...character.selected_traits, strength: 2, presence: 1 };
+		character.additional_domain_card_ids = [
+			{ domain_id: 'grace', card_id: 'inspirational_words' },
+			{ domain_id: 'arcana', card_id: 'unleash_chaos' }
+		];
+		return character;
+	}
+
+	it('publishes valid pool configuration for the proof content', () => {
+		for (const id of ['inspirational_words', 'restoration', 'unleash_chaos']) {
+			expect(() => DomainCardSchema.parse(compendium.domain_cards[id])).not.toThrow();
+		}
+		expect(() => CharacterClassSchema.parse(compendium.classes.seraph)).not.toThrow();
+	});
+
+	it('resolves pools from the character, without capping a starting amount', () => {
+		const result = derive_character_state(seraph(), compendium);
+		const byKey = Object.fromEntries(
+			result.derived.pool_trackers.map((tracker) => [tracker.key, tracker])
+		);
+		const strength = result.derived.traits.strength ?? 0;
+		const presence = result.derived.traits.presence ?? 0;
+
+		expect(byKey[prayerKey]).toMatchObject({ kind: 'dice', die: 'd4', refill: strength });
+		expect(byKey['domain_cards:inspirational_words:inspirational_words']).toMatchObject({
+			refill: presence,
+			capacity: undefined
+		});
+		expect(byKey['domain_cards:unleash_chaos:unleash_chaos']).toMatchObject({
+			refill: strength,
+			capacity: strength
+		});
+	});
+
+	it('carries generic card tokens into the pool that replaced them', () => {
+		const character = seraph();
+		character.card_tokens = { inspirational_words: 2 };
+
+		const result = derive_character_state(character, compendium);
+
+		expect(result.character.card_tokens.inspirational_words).toBeUndefined();
+		expect(
+			result.character.feature_pool_tokens['domain_cards:inspirational_words:inspirational_words']
+		).toBe(2);
+	});
+
+	it('moves stored Prayer Dice into the dice pool', () => {
+		const character = seraph();
+		character.feature_choices = {
+			...character.feature_choices,
+			prayer_dice_values: ['3', '', '9']
+		};
+
+		const result = derive_character_state(character, compendium);
+
+		expect(result.character.feature_choices.prayer_dice_values).toBeUndefined();
+		expect(result.character.feature_pool_dice[prayerKey]).toEqual([3, 0, 0]);
+	});
+
+	it('discards pool state when the item is removed', () => {
+		const character = seraph();
+		character.feature_pool_tokens = { 'domain_cards:inspirational_words:inspirational_words': 2 };
+		character.additional_domain_card_ids = [];
+
+		expect(derive_character_state(character, compendium).character.feature_pool_tokens).toEqual({});
 	});
 });

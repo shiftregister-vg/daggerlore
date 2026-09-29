@@ -140,14 +140,20 @@ export function pruneFeatureUses(
 	featureUses: Record<string, number>,
 	sources: Pick<UsageSource, 'item_type' | 'item_id'>[]
 ): Record<string, number> {
-	const ownedPrefixes = new Set(sources.map((source) => `${source.item_type}:${source.item_id}:`));
+	const isOwned = ownedFeatureKeyFilter(sources);
 	return Object.fromEntries(
-		Object.entries(featureUses).filter(([key, spent]) => {
-			if (!Number.isInteger(spent) || spent <= 0) return false;
-			const prefix = key.slice(0, key.lastIndexOf(':') + 1);
-			return ownedPrefixes.has(prefix);
-		})
+		Object.entries(featureUses).filter(
+			([key, spent]) => Number.isInteger(spent) && spent > 0 && isOwned(key)
+		)
 	);
+}
+
+/** Matches `${item_type}:${item_id}:${id}` keys that belong to an item the character possesses. */
+export function ownedFeatureKeyFilter(
+	sources: Pick<UsageSource, 'item_type' | 'item_id'>[]
+): (key: string) => boolean {
+	const ownedPrefixes = new Set(sources.map((source) => `${source.item_type}:${source.item_id}:`));
+	return (key) => ownedPrefixes.has(key.slice(0, key.lastIndexOf(':') + 1));
 }
 
 export function spentUses(featureUses: Record<string, number>, tracker: UsageTracker): number {

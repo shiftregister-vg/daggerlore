@@ -166,6 +166,32 @@
 		return `Usage tracker${label}: ${caption}`;
 	}
 
+	function featurePools(feature: Record<string, unknown> | undefined) {
+		const pools = Array.isArray(feature?.pools) ? feature.pools.filter(isRecord) : [];
+		return pools
+			.map((pool) => {
+				const kind = pool.kind === 'dice' ? `${String(pool.die ?? '')} dice pool` : 'Token pool';
+				const label = typeof pool.label === 'string' && pool.label ? ` (${pool.label})` : '';
+				const refill = isRecord(pool.refill) ? `, refill ${quantityText(pool.refill)}` : '';
+				const cap = isRecord(pool.capacity) ? `, max ${quantityText(pool.capacity)}` : '';
+				const refillOn = Array.isArray(pool.refill_on) && pool.refill_on.length
+					? ` on ${pool.refill_on.join(', ').replaceAll('_', ' ')}`
+					: '';
+				const clearOn = Array.isArray(pool.clear_on) && pool.clear_on.length
+					? `, clears on ${pool.clear_on.join(', ').replaceAll('_', ' ')}`
+					: '';
+				return `${kind}${label}${refill}${refillOn}${cap}${clearOn}`;
+			})
+			.join('; ');
+	}
+
+	function quantityText(quantity: Record<string, unknown>) {
+		const minimum = typeof quantity.minimum === 'number' ? ` (min ${quantity.minimum})` : '';
+		if (quantity.source === 'fixed') return `${String(quantity.value ?? 0)}`;
+		if (quantity.source === 'trait') return `${String(quantity.trait ?? 'trait')}${minimum}`;
+		return `${String(quantity.source).replaceAll('_', ' ')}${minimum}`;
+	}
+
 	function featureTitle(feature: Record<string, unknown>, index: number) {
 		return typeof feature.title === 'string' && feature.title.trim()
 			? feature.title
@@ -191,8 +217,12 @@
 				afterText,
 				beforeTokens: tokens.before,
 				afterTokens: tokens.after,
-				beforeUsage: featureUsage(beforeFeature),
-				afterUsage: featureUsage(afterFeature),
+				beforeUsage: [featureUsage(beforeFeature), featurePools(beforeFeature)]
+					.filter(Boolean)
+					.join('; '),
+				afterUsage: [featureUsage(afterFeature), featurePools(afterFeature)]
+					.filter(Boolean)
+					.join('; '),
 				status: !beforeFeature ? 'added' : !afterFeature ? 'removed' : 'changed'
 			});
 		}

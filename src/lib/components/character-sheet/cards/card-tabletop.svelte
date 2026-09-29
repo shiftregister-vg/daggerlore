@@ -38,8 +38,9 @@
 	import Stress from '$lib/components/character-sheet/standalone/stress.svelte';
 	import { getCharacterContext } from '$lib/state/character.svelte';
 	import UsageTracker from '$lib/components/character-sheet/features/usage-tracker.svelte';
+	import PoolTracker from '$lib/components/character-sheet/features/pool-tracker.svelte';
 	import { USAGE_ITEM_TYPES, usageKey } from '$lib/state/feature-usage';
-	import type { FeatureUsage } from '@domain/schemas/rules';
+	import type { FeaturePool, FeatureUsage } from '@domain/schemas/rules';
 	import { cn, renderMarkdown } from '$lib/utils';
 	import type { Card, DomainCardId } from '@domain/schemas/rules';
 	import type { CharacterCardLayout } from '@domain/schemas/characters';
@@ -295,6 +296,7 @@
 				tokenMax?: number;
 				usage?: FeatureUsage;
 				usageKey?: string;
+				pools?: { pool: FeaturePool; key: string }[];
 			}[];
 		}[] = [];
 
@@ -317,7 +319,11 @@
 						: undefined,
 					tokenMax: feature.token_max ?? 0,
 					usage: feature.usage,
-					usageKey: feature.usage ? usageKey('classes', classId, feature.usage.id) : undefined
+					usageKey: feature.usage ? usageKey('classes', classId, feature.usage.id) : undefined,
+					pools: (feature.pools ?? []).map((pool) => ({
+						pool,
+						key: usageKey('classes', classId, pool.id)
+					}))
 				}))
 			});
 		};
@@ -782,6 +788,9 @@
 													class="mt-1"
 												/>
 											{/if}
+											{#each feature.pools ?? [] as { pool, key } (key)}
+												<PoolTracker {pool} tracker_key={key} tone="sheet" class="mt-1" />
+											{/each}
 										</div>
 										<div class="prose prose-invert max-w-none text-sm leading-snug">
 											{@html renderMarkdown(feature.text)}
@@ -1036,6 +1045,17 @@
 														tone="sheet"
 													/>
 												{/if}
+												{#each feature.pools ?? [] as pool (pool.id)}
+													<PoolTracker
+														{pool}
+														tracker_key={usageKey(
+															USAGE_ITEM_TYPES[group.card.type],
+															group.card.id,
+															pool.id
+														)}
+														tone="sheet"
+													/>
+												{/each}
 											{/each}
 											{#if group.card.type === 'community_card' && group.card.card.field_group}
 												<CommunityCardFields

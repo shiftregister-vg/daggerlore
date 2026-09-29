@@ -6,6 +6,7 @@
 	import * as Dialog from '$lib/components/ui/dialog';
 	import MarkdownTextarea from './markdown-textarea.svelte';
 	import FeatureUsageEditor from './feature-usage-editor.svelte';
+	import FeaturePoolsForm from '$lib/components/homebrew/forms/shared/features/feature-pools-form.svelte';
 	import type { CompendiumContent, Domain, DomainCard } from '@domain/schemas/compendium';
 	import type { SourceMetadata } from '@domain/schemas/sources';
 	import type { SourceKey } from '@domain/schemas/rules';
@@ -63,7 +64,8 @@
 						weapon_modifiers: Array.isArray(feature.weapon_modifiers)
 							? feature.weapon_modifiers
 							: [],
-						usage: feature.usage
+						usage: feature.usage,
+						pools: feature.pools
 					}))
 				: [{ title: '', description_html: '', character_modifiers: [], weapon_modifiers: [] }];
 
@@ -355,6 +357,13 @@
 						siblings={item.features}
 						fallbackId={`use_${index + 1}`}
 					/>
+					<div class="mt-3">
+						<FeaturePoolsForm
+							bind:pools={item.features[index].pools}
+							featureTitle={item.features[index].title ?? ''}
+							idPrefix={`admin-use_${index + 1}`}
+						/>
+					</div>
 				</div>
 			{/each}
 		</div>

@@ -391,7 +391,18 @@ While *Unstoppable*, you gain the following benefits:
 				title: 'Prayer Dice',
 				description_html: `At the beginning of each session, roll a number of **d4s** equal to your subclass's Spellcast trait and place them on your character sheet in the space provided. These are your Prayer Dice. You can spend any number of Prayer Dice to aid yourself or an ally within Far range. You can use a spent die's value to reduce incoming damage, add to a roll's result after the roll is made, or gain Hope equal to the result. At the end of each session, clear all unspent Prayer Dice.`,
 				character_modifiers: [],
-				weapon_modifiers: []
+				weapon_modifiers: [],
+				pools: [
+					{
+						id: 'prayer_dice',
+						label: 'Prayer Dice',
+						kind: 'dice',
+						die: 'd4',
+						refill: { source: 'spellcast_trait' },
+						refill_on: ['session_start'],
+						clear_on: ['session_end']
+					}
+				]
 			}
 		],
 		subclass_ids: ['seraph_divine_wielder', 'seraph_winged_sentinel'],

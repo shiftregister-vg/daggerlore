@@ -51,6 +51,12 @@ import {
 	type UsageSource,
 	type UsageTracker
 } from './feature-usage';
+import {
+	collectPoolTrackers,
+	prunePoolState,
+	type PoolSource,
+	type PoolTracker
+} from './feature-pools';
 
 type InventoryPrimaryWeapon = PrimaryWeapon & { inventory_id: string };
 type InventorySecondaryWeapon = SecondaryWeapon & { inventory_id: string };
@@ -153,6 +159,7 @@ export type DerivedCharacterData = {
 	spellcast_roll_bonus: number;
 	no_mercy_bonus: number;
 	usage_trackers: UsageTracker[];
+	pool_trackers: PoolTracker[];
 
 	// feature flags
 	hasBeastformClassFeature: boolean;
@@ -408,7 +415,7 @@ function getLevelChoiceOption(optionId?: AllTierLevelUpOptionId): LevelUpOption 
 	return optionId ? ALL_LEVEL_UP_OPTIONS[optionId] : undefined;
 }
 
-function deriveUsageSources(
+function deriveFeatureSources(
 	character: Character,
 	refs: DirectRefs,
 	vault: VaultDomainCard[],
@@ -477,6 +484,41 @@ function deriveUsageSources(
 		});
 	}
 	return sources;
+}
+
+/**
+ * Adds the numbers pool quantities read. A class or subclass feature uses the Spellcast trait of
+ * its own side; everything else uses the primary side's. Which Spellcast trait a multiclassed
+ * character's domain cards should use is not settled by the book, so the primary one is assumed.
+ */
+function derivePoolSources(
+	sources: UsageSource[],
+	character: Character,
+	refs: DirectRefs,
+	traits: Traits,
+	proficiency: number
+): PoolSource[] {
+	const spellcastFor = (side: SubclassSide) => {
+		const trait =
+			side === 'primary'
+				? (refs.primary_subclass?.spellcast_trait ?? refs.primary_class?.spellcast_trait)
+				: (refs.secondary_subclass?.spellcast_trait ?? refs.secondary_class?.spellcast_trait);
+		return trait ? (traits[trait] ?? 0) : 0;
+	};
+	return sources.map((source) => {
+		const isSecondary =
+			(source.item_type === 'classes' && source.item_id === character.secondary_class_id) ||
+			(source.item_type === 'subclasses' && source.item_id === character.secondary_subclass_id);
+		return {
+			...source,
+			context: {
+				traits,
+				proficiency,
+				level: character.level,
+				spellcast: spellcastFor(isSecondary ? 'secondary' : 'primary')
+			}
+		};
+	});
 }
 
 function getSubclassCard(subclass: Subclass | undefined, type: SubclassCardType): Feature[] {
@@ -1028,10 +1070,12 @@ function deriveBaseFeatureFlags(refs: DirectRefs): FeatureFlags {
 			refs.secondary_class,
 			'Unstoppable'
 		),
-		hasPrayerDiceClassFeature: baseFlagFromClasses(
-			refs.primary_class,
-			refs.secondary_class,
-			'Prayer Dice'
+		// Only the legacy Prayer Dice controls; Seraph versions with a dice pool use the pool tracker.
+		hasPrayerDiceClassFeature: [refs.primary_class, refs.secondary_class].some(
+			(characterClass) =>
+				characterClass?.class_features.some(
+					(feature) => feature.title === 'Prayer Dice' && !feature.pools?.length
+				) === true
 		),
 		hasStrangePatternsClassFeature: baseFlagFromClasses(
 			refs.primary_class,
@@ -2253,6 +2297,13 @@ export function derive_character_data(
 	);
 
 	const finalFlags = deriveFinalFlags(refs, loop, baseFlags);
+	const featureSources = deriveFeatureSources(
+		character,
+		refs,
+		domain_card_vault,
+		loop.primary_mastery,
+		loop.secondary_mastery
+	);
 	const noMercyBonus = finalFlags.hasNoMercyHopeFeature
 		? Math.max(0, Number.parseInt(character.feature_choices.no_mercy_bonus?.[0] ?? '0', 10) || 0)
 		: 0;
@@ -2432,14 +2483,9 @@ export function derive_character_data(
 		secondary_class_mastery_level: loop.secondary_mastery,
 		spellcast_roll_bonus,
 		no_mercy_bonus: noMercyBonus,
-		usage_trackers: collectUsageTrackers(
-			deriveUsageSources(
-				character,
-				refs,
-				domain_card_vault,
-				loop.primary_mastery,
-				loop.secondary_mastery
-			)
+		usage_trackers: collectUsageTrackers(featureSources),
+		pool_trackers: collectPoolTrackers(
+			derivePoolSources(featureSources, character, refs, loop.traits, loop.proficiency)
 		),
 		...finalFlags
 	};
@@ -2987,11 +3033,13 @@ function normalizeReferencesAndChoices(
 		Object.entries(character.card_tokens).filter(([cardId]) => validCardIds.has(cardId))
 	);
 	// Every subclass stage counts as owned so locked stages keep their spent uses.
-	const usageSources = deriveUsageSources(character, refs, domainCardVault, 3, 3);
+	const usageSources = deriveFeatureSources(character, refs, domainCardVault, 3, 3);
 	const nextFeatureUses = { ...(character.feature_uses ?? {}) };
 
-	// Cards that replaced a manual "Used" token with a single usage tracker (e.g. A Soldier's Bond v3)
-	// carry the old token over once, then drop it.
+	const nextPoolTokens = { ...(character.feature_pool_tokens ?? {}) };
+
+	// Cards that replaced their generic token with a single usage tracker (e.g. A Soldier's Bond v3)
+	// or a single token pool carry the old count over once, then drop it.
 	for (const source of usageSources) {
 		const legacyTokens = nextCardTokens[source.item_id];
 		if (legacyTokens === undefined) continue;
@@ -3005,10 +3053,21 @@ function normalizeReferencesAndChoices(
 						: undefined;
 		if (!card || card.tokens_enabled) continue;
 		const usages = card.features.flatMap((feature) => (feature.usage ? [feature.usage] : []));
-		if (usages.length !== 1) continue;
-		const key = usageKey(source.item_type, source.item_id, usages[0].id);
-		if (legacyTokens > 0 && nextFeatureUses[key] === undefined) {
-			nextFeatureUses[key] = Math.min(legacyTokens, usages[0].max_uses);
+		const tokenPools = card.features.flatMap((feature) =>
+			(feature.pools ?? []).filter((pool) => pool.kind === 'tokens')
+		);
+		if (usages.length === 1 && tokenPools.length === 0) {
+			const key = usageKey(source.item_type, source.item_id, usages[0].id);
+			if (legacyTokens > 0 && nextFeatureUses[key] === undefined) {
+				nextFeatureUses[key] = Math.min(legacyTokens, usages[0].max_uses);
+			}
+		} else if (tokenPools.length === 1 && usages.length === 0) {
+			const key = usageKey(source.item_type, source.item_id, tokenPools[0].id);
+			if (legacyTokens > 0 && nextPoolTokens[key] === undefined) {
+				nextPoolTokens[key] = legacyTokens;
+			}
+		} else {
+			continue;
 		}
 		delete nextCardTokens[source.item_id];
 	}
@@ -3021,6 +3080,19 @@ function normalizeReferencesAndChoices(
 	const prunedFeatureUses = pruneFeatureUses(nextFeatureUses, usageSources);
 	if (JSON.stringify(prunedFeatureUses) !== JSON.stringify(character.feature_uses)) {
 		character.feature_uses = prunedFeatureUses;
+		changed = true;
+	}
+
+	const prunedPools = prunePoolState(
+		{ tokens: nextPoolTokens, dice: { ...(character.feature_pool_dice ?? {}) } },
+		usageSources
+	);
+	if (JSON.stringify(prunedPools.tokens) !== JSON.stringify(character.feature_pool_tokens)) {
+		character.feature_pool_tokens = prunedPools.tokens;
+		changed = true;
+	}
+	if (JSON.stringify(prunedPools.dice) !== JSON.stringify(character.feature_pool_dice)) {
+		character.feature_pool_dice = prunedPools.dice;
 		changed = true;
 	}
 
@@ -3445,7 +3517,29 @@ function normalizeDerivedLimits(character: Character, compendium: CompendiumCont
 		delete nextFeatureChoices.strange_pattern;
 	}
 
-	if (derived.hasPrayerDiceClassFeature) {
+	// Seraph versions that model Prayer Dice as a dice pool take over the old stored values once.
+	const prayerDicePool = derived.pool_trackers.find(
+		(tracker) =>
+			tracker.item_type === 'classes' &&
+			tracker.kind === 'dice' &&
+			tracker.key.endsWith(':prayer_dice')
+	);
+	if (prayerDicePool) {
+		const legacyValues = (nextFeatureChoices.prayer_dice_values ?? [])
+			.map((value) => Number.parseInt(value, 10))
+			.map((value) => (Number.isInteger(value) && value >= 1 && value <= 4 ? value : 0));
+		if (
+			legacyValues.some((value) => value > 0) &&
+			character.feature_pool_dice?.[prayerDicePool.key] === undefined
+		) {
+			character.feature_pool_dice = {
+				...(character.feature_pool_dice ?? {}),
+				[prayerDicePool.key]: legacyValues
+			};
+			changed = true;
+		}
+		delete nextFeatureChoices.prayer_dice_values;
+	} else if (derived.hasPrayerDiceClassFeature) {
 		const maxPrayerDice = Math.max(0, derived.traits.strength ?? 0);
 		const rawValues = nextFeatureChoices.prayer_dice_values ?? [];
 		const normalizedPrayerDiceValues = rawValues.slice(0, maxPrayerDice).map((value) => {

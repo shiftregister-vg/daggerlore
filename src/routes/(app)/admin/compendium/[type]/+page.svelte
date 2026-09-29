@@ -14,6 +14,7 @@
 	import DomainCardEditor from './domain-card-editor.svelte';
 	import MarkdownTextarea from './markdown-textarea.svelte';
 	import FeatureUsageEditor from './feature-usage-editor.svelte';
+	import FeaturePoolsForm from '$lib/components/homebrew/forms/shared/features/feature-pools-form.svelte';
 	import type { HomebrewTable } from '@domain/permissions';
 	import type { SourceKey } from '@domain/schemas/rules';
 	import type { SourceMetadata } from '@domain/schemas/sources';
@@ -2168,6 +2169,13 @@
 																siblings={editorItem[card.key].features}
 																fallbackId={`${card.key}_use_${index + 1}`}
 															/>
+															<div class="mt-3">
+																<FeaturePoolsForm
+																	bind:pools={editorItem[card.key].features[index].pools}
+																	featureTitle={editorItem[card.key].features[index].title ?? ''}
+																	idPrefix={`admin-${card.key}_use_${index + 1}`}
+																/>
+															</div>
 														</div>
 													{/each}
 												{/if}
@@ -2714,6 +2722,13 @@
 													siblings={editorItem.features}
 													fallbackId={`use_${index + 1}`}
 												/>
+												<div class="mt-3">
+													<FeaturePoolsForm
+														bind:pools={editorItem.features[index].pools}
+														featureTitle={editorItem.features[index].title ?? ''}
+														idPrefix={`admin-use_${index + 1}`}
+													/>
+												</div>
 											{/if}
 										</div>
 									{/each}
@@ -2802,6 +2817,13 @@
 									<MarkdownTextarea bind:value={editorItem.hope_feature.description_html} />
 								</label>
 								<FeatureUsageEditor bind:feature={editorItem.hope_feature} fallbackId="hope_feature" />
+								<div class="mt-3">
+									<FeaturePoolsForm
+										bind:pools={editorItem.hope_feature.pools}
+										featureTitle={editorItem.hope_feature.title ?? ''}
+										idPrefix="admin-hope_feature"
+									/>
+								</div>
 								<div class="grid gap-3">
 									<div class="flex items-center justify-between">
 										<p class="text-sm font-medium text-foreground">Class Features</p>
@@ -2845,6 +2867,13 @@
 													siblings={editorItem.class_features}
 													fallbackId={`use_${index + 1}`}
 												/>
+												<div class="mt-3">
+													<FeaturePoolsForm
+														bind:pools={editorItem.class_features[index].pools}
+														featureTitle={editorItem.class_features[index].title ?? ''}
+														idPrefix={`admin-use_${index + 1}`}
+													/>
+												</div>
 											</div>
 										{/each}
 									{/if}

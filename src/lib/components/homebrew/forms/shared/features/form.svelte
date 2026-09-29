@@ -8,6 +8,7 @@
 	import * as Select from '$lib/components/ui/select';
 	import { USAGE_RESET_CAPTIONS, generateUsageId } from '$lib/state/feature-usage';
 	import CharacterModifierForm from '../character-modifier/form.svelte';
+	import FeaturePoolsForm from './feature-pools-form.svelte';
 	import WeaponModifierForm from '../weapon-modifier/form.svelte';
 	import Plus from '@lucide/svelte/icons/plus';
 	import { cn } from '$lib/utils';
@@ -155,6 +156,15 @@
 				`use_${featureIndex + 1}`
 			);
 			return { ...feature, usage: { id, max_uses: 1, reset: 'rest' } };
+		});
+	}
+
+	function updatePools(featureIndex: number, pools: Feature['pools']) {
+		features = features.map((feature, index) => {
+			if (index !== featureIndex) return feature;
+			if (pools) return { ...feature, pools };
+			const { pools: _pools, ...rest } = feature;
+			return rest;
 		});
 	}
 
@@ -330,6 +340,14 @@
 								</div>
 							{/if}
 						</div>
+					{/if}
+
+					{#if allowUsage}
+						<FeaturePoolsForm
+							bind:pools={() => feature.pools, (value) => updatePools(featureIndex, value)}
+							featureTitle={feature.title}
+							idPrefix={`feature-${path.join('-')}-${featureIndex}`}
+						/>
 					{/if}
 
 					<div class="flex flex-col gap-2">

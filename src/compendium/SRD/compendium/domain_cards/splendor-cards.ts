@@ -309,7 +309,7 @@ For example, you can form a rudimentary tool or create a door. You can only affe
 		forced_in_loadout: false,
 		forced_in_vault: false,
 		options: [],
-		tokens_enabled: true,
+		tokens_enabled: false,
 		features: [
 			{
 				weapon_modifiers: [],
@@ -321,7 +321,15 @@ Touch a creature and spend any number of tokens to clear **2 Hit Points or 2 Str
 You can also spend a token from this card when touching a creature to clear the *Vulnerable* condition or heal a physical or magical ailment (the GM might require additional tokens depending on the strength of the ailment).
 
 When you take a long rest, clear all unspent tokens.`,
-				character_modifiers: []
+				character_modifiers: [],
+				pools: [
+					{
+						id: 'restoration',
+						kind: 'tokens',
+						refill: { source: 'spellcast_trait' },
+						refill_on: ['long_rest']
+					}
+				]
 			}
 		]
 	},

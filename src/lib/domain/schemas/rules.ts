@@ -274,15 +274,84 @@ export const FeatureUsageSchema = z.object({
 });
 export type FeatureUsage = z.infer<typeof FeatureUsageSchema>;
 
-export const FeatureSchema = z.object({
-	title: z.string(),
-	description_html: z.string(),
-	character_modifiers: z.array(CharacterModifierSchema),
-	weapon_modifiers: z.array(WeaponModifierSchema),
-	tokens_enabled: z.boolean().optional(),
-	token_max: z.number().int().min(0).optional(),
-	usage: FeatureUsageSchema.optional()
-});
+// A number that comes from the character, e.g. "equal to your Spellcast trait" or "max(1, Agility)".
+export const PoolQuantitySchema = z
+	.object({
+		source: z.enum(['fixed', 'proficiency', 'level', 'tier', 'trait', 'spellcast_trait']),
+		value: z.number().int().min(0).max(99).optional(),
+		trait: TraitIdSchema.optional(),
+		minimum: z.number().int().min(0).max(99).optional()
+	})
+	.superRefine((quantity, ctx) => {
+		if (quantity.source === 'fixed' && quantity.value === undefined) {
+			ctx.addIssue({ code: 'custom', path: ['value'], message: 'Enter a number' });
+		}
+		if (quantity.source === 'trait' && !quantity.trait) {
+			ctx.addIssue({ code: 'custom', path: ['trait'], message: 'Choose a trait' });
+		}
+	});
+export type PoolQuantity = z.infer<typeof PoolQuantitySchema>;
+
+export const PoolEventSchema = z.enum([
+	'short_rest',
+	'long_rest',
+	'scene',
+	'session_start',
+	'session_end'
+]);
+export type PoolEvent = z.infer<typeof PoolEventSchema>;
+
+export const PoolDieSchema = z.enum(['d4', 'd6', 'd8', 'd10', 'd12', 'd20']);
+export type PoolDie = z.infer<typeof PoolDieSchema>;
+
+export const FeaturePoolSchema = z
+	.object({
+		// stable across versions; character state is keyed by it
+		id: FeatureUsageSchema.shape.id,
+		label: z.string().trim().min(1).optional(),
+		kind: z.enum(['tokens', 'dice']),
+		die: PoolDieSchema.optional(),
+		// Tokens only. Without a capacity the pool is uncapped: a starting amount is not a maximum.
+		capacity: PoolQuantitySchema.optional(),
+		// Tokens: the amount Refill sets. Dice: the number of dice rolled.
+		refill: PoolQuantitySchema.optional(),
+		refill_on: z.array(PoolEventSchema).optional(),
+		clear_on: z.array(PoolEventSchema).optional()
+	})
+	.superRefine((pool, ctx) => {
+		if (pool.kind === 'dice' && !pool.die) {
+			ctx.addIssue({ code: 'custom', path: ['die'], message: 'Choose a die' });
+		}
+		if (pool.kind === 'dice' && !pool.refill) {
+			ctx.addIssue({ code: 'custom', path: ['refill'], message: 'Set how many dice are rolled' });
+		}
+	});
+export type FeaturePool = z.infer<typeof FeaturePoolSchema>;
+
+export const FeatureSchema = z
+	.object({
+		title: z.string(),
+		description_html: z.string(),
+		character_modifiers: z.array(CharacterModifierSchema),
+		weapon_modifiers: z.array(WeaponModifierSchema),
+		tokens_enabled: z.boolean().optional(),
+		token_max: z.number().int().min(0).optional(),
+		usage: FeatureUsageSchema.optional(),
+		pools: z.array(FeaturePoolSchema).optional()
+	})
+	.superRefine((feature, ctx) => {
+		const ids = new Set<string>();
+		(feature.pools ?? []).forEach((pool, index) => {
+			if (ids.has(pool.id)) {
+				ctx.addIssue({
+					code: 'custom',
+					path: ['pools', index, 'id'],
+					message: 'Pool ids must be unique'
+				});
+			}
+			ids.add(pool.id);
+		});
+	});
 export type Feature = z.infer<typeof FeatureSchema>;
 
 export const CountdownSchema = z.object({

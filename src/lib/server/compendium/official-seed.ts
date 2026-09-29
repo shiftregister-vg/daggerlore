@@ -83,6 +83,30 @@ const SEED_ITEM_RELEASES: Record<
 		changelog:
 			'Adds a once-per-long-rest usage tracker that refreshes when you complete a long rest.'
 	},
+	'SRD:domain_cards:inspirational_words': {
+		version: 2,
+		label: 'Inspirational Words Token Pool',
+		changelog:
+			'Replaces the generic tokens with a pool that refills to your Presence after a long rest.'
+	},
+	'SRD:domain_cards:restoration': {
+		version: 2,
+		label: 'Restoration Token Pool',
+		changelog:
+			'Replaces the generic tokens with a pool that refills to your Spellcast trait after a long rest.'
+	},
+	'SRD:domain_cards:unleash_chaos': {
+		version: 2,
+		label: 'Unleash Chaos Token Pool',
+		changelog:
+			'Replaces the generic tokens with a pool capped at your Spellcast trait that refills at the start of a session and clears at the end of one.'
+	},
+	'SRD:classes:seraph': {
+		version: 2,
+		label: 'Prayer Dice Pool',
+		changelog:
+			"Prayer Dice use your subclass's Spellcast trait, are rolled when you start a session and clear when it ends."
+	},
 	'SRD:community_cards:orderborne': {
 		version: 2,
 		label: 'Orderborne Sayings or Values',

@@ -8,6 +8,7 @@
 	import type { CardChoices } from '@domain/schemas/rules';
 	import CardOptions from './card-options.svelte';
 	import UsageTracker from '$lib/components/character-sheet/features/usage-tracker.svelte';
+	import PoolTracker from '$lib/components/character-sheet/features/pool-tracker.svelte';
 	import { usageKey } from '$lib/state/feature-usage';
 
 	let {
@@ -114,6 +115,13 @@
 							: undefined}
 					/>
 				{/if}
+				{#each feature.pools ?? [] as pool (pool.id)}
+					<PoolTracker
+						{pool}
+						{disabled}
+						tracker_key={usage_item_id ? usageKey('subclasses', usage_item_id, pool.id) : undefined}
+					/>
+				{/each}
 			{/each}
 
 			<!-- options & tokens -->
@@ -210,6 +218,15 @@
 								: undefined}
 						/>
 					{/if}
+					{#each feature.pools ?? [] as pool (pool.id)}
+						<PoolTracker
+							{pool}
+							{disabled}
+							tracker_key={usage_item_id
+								? usageKey('subclasses', usage_item_id, pool.id)
+								: undefined}
+						/>
+					{/each}
 				{/each}
 
 				<!-- options & tokens -->

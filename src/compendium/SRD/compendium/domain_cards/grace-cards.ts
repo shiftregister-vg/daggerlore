@@ -66,7 +66,7 @@ Once per rest on a success, you can **mark a Stress** to force the Enraptured ta
 		forced_in_loadout: false,
 		forced_in_vault: false,
 		options: [],
-		tokens_enabled: true,
+		tokens_enabled: false,
 		features: [
 			{
 				weapon_modifiers: [],
@@ -78,7 +78,15 @@ Once per rest on a success, you can **mark a Stress** to force the Enraptured ta
 - Your ally gains a Hope.
 
 When you take a long rest, clear all unspent tokens.`,
-				character_modifiers: []
+				character_modifiers: [],
+				pools: [
+					{
+						id: 'inspirational_words',
+						kind: 'tokens',
+						refill: { source: 'trait', trait: 'presence' },
+						refill_on: ['long_rest']
+					}
+				]
 			}
 		]
 	},

@@ -306,6 +306,8 @@ export const CharacterSchema = z.object({
 	card_tokens: z.record(z.string(), z.number().int().min(0)),
 	card_fields: z.record(z.string(), z.array(z.string())).default({}),
 	feature_uses: z.record(z.string(), z.number().int().min(0)).default({}), // spent uses keyed by `${item_type}:${item_id}:${usage.id}`
+	feature_pool_tokens: z.record(z.string(), z.number().int().min(0)).default({}), // keyed by `${item_type}:${item_id}:${pool.id}`
+	feature_pool_dice: z.record(z.string(), z.array(z.number().int().min(0))).default({}), // die results per slot; 0 = empty
 	card_layout: CharacterCardLayoutSchema.optional(),
 	feature_choices: z.record(z.string(), z.array(z.string())), // used by specific feature flags
 	unarmed_attack_choices: z.record(z.string(), z.array(z.string())),

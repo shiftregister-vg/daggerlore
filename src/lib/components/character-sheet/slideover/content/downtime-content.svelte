@@ -12,11 +12,9 @@
 	import Shield from '@lucide/svelte/icons/shield';
 	import { cn, level_to_tier } from '$lib/utils';
 	import { toast } from 'svelte-sonner';
-	import {
-		applyUsageResetEvent,
-		type UsageResetEvent,
-		type UsageTracker
-	} from '$lib/state/feature-usage';
+	import { applyUsageResetEvent, type UsageResetEvent } from '$lib/state/feature-usage';
+	import { applyPoolEvent, setPoolDice, type PoolTracker } from '$lib/state/feature-pools';
+	import type { PoolEvent } from '@domain/schemas/rules';
 
 	let { open = false }: { open?: boolean } = $props();
 
@@ -225,35 +223,97 @@
 		});
 	}
 
-	function refreshedDescription(refreshed: UsageTracker[]): string {
-		if (refreshed.length === 0) return 'No features to refresh.';
-		const names = refreshed.map((tracker) => tracker.feature_title || tracker.source_title);
-		return `Refreshed ${names.join(', ')}.`;
+	type RefreshedFeature = { feature_title: string; source_title: string; label?: string };
+
+	function featureNames(features: RefreshedFeature[]): string {
+		return [
+			...new Set(
+				features.map((tracker) => tracker.label || tracker.feature_title || tracker.source_title)
+			)
+		].join(', ');
 	}
 
-	/** Refreshes usage trackers for one confirmed event and returns an undo callback. */
-	function resetFeatureUses(event: UsageResetEvent) {
-		if (!character) return { refreshed: [], undo: () => {} };
-		const previous = character.feature_uses ?? {};
-		const { next, refreshed } = applyUsageResetEvent(
-			previous,
-			derived_character_data?.usage_trackers ?? [],
-			event
+	function refreshedDescription(refreshed: RefreshedFeature[], cleared: RefreshedFeature[] = []) {
+		const parts = [
+			refreshed.length > 0 ? `Refreshed ${featureNames(refreshed)}.` : '',
+			cleared.length > 0 ? `Cleared ${featureNames(cleared)}.` : ''
+		].filter(Boolean);
+		return parts.length > 0 ? parts.join(' ') : 'No features to refresh.';
+	}
+
+	/**
+	 * Applies one confirmed event to usage trackers and resource pools and returns an undo callback.
+	 * Dice pools that refill are emptied here and listed in `diceToRoll`.
+	 */
+	function resetFeatures(usageEvent: UsageResetEvent | null, poolEvent: PoolEvent) {
+		if (!character) return { refreshed: [], cleared: [], diceToRoll: [], undo: () => {} };
+		const previousUses = character.feature_uses ?? {};
+		const previousTokens = character.feature_pool_tokens ?? {};
+		const previousDice = character.feature_pool_dice ?? {};
+
+		const usage = usageEvent
+			? applyUsageResetEvent(previousUses, derived_character_data?.usage_trackers ?? [], usageEvent)
+			: { next: previousUses, refreshed: [] };
+		const pools = applyPoolEvent(
+			{ tokens: previousTokens, dice: previousDice },
+			derived_character_data?.pool_trackers ?? [],
+			poolEvent
 		);
-		character.feature_uses = next;
+		character.feature_uses = usage.next;
+		character.feature_pool_tokens = pools.tokens;
+		character.feature_pool_dice = pools.dice;
+
+		// A pool the event emptied without refilling was cleared rather than refreshed.
+		const wasCleared = (tracker: PoolTracker) =>
+			!tracker.refill_on.includes(poolEvent) &&
+			!diceRequested(tracker) &&
+			(pools.tokens[tracker.key] ?? 0) === 0;
+		const diceRequested = (tracker: PoolTracker) =>
+			pools.diceToRoll.some((request) => request.tracker.key === tracker.key);
 		return {
-			refreshed,
+			refreshed: [
+				...usage.refreshed,
+				...pools.refreshed.filter((tracker) => !wasCleared(tracker))
+			] as RefreshedFeature[],
+			cleared: pools.refreshed.filter(wasCleared) as RefreshedFeature[],
+			diceToRoll: pools.diceToRoll,
 			undo: () => {
-				if (character) character.feature_uses = previous;
+				if (!character) return;
+				character.feature_uses = previousUses;
+				character.feature_pool_tokens = previousTokens;
+				character.feature_pool_dice = previousDice;
 			}
 		};
+	}
+
+	async function rollPoolDice(
+		requests: { tracker: PoolTracker; count: number }[],
+		isCurrent: () => boolean
+	) {
+		if (requests.length === 0) return;
+		if (!hasDowntimeDiceLayerOverride) {
+			diceCtx.setLayerZIndexOverride(DOWNTIME_DICE_Z_INDEX);
+			hasDowntimeDiceLayerOverride = true;
+		}
+		for (const { tracker, count } of requests) {
+			const results = await diceCtx.roll({
+				name: tracker.label || tracker.feature_title || tracker.source_title,
+				dice: Array.from({ length: count }, () => ({ type: tracker.die ?? 'd6' }))
+			});
+			if (!character || !isCurrent() || results.length === 0) continue;
+			character.feature_pool_dice = setPoolDice(
+				character.feature_pool_dice ?? {},
+				tracker,
+				results.map((result) => result.value)
+			);
+		}
 	}
 
 	function completeShortRest() {
 		if (!character || !characterCtx.canEdit) return;
 
 		const previousNoMercyBonus = endNoMercy();
-		const usage = resetFeatureUses('short_rest');
+		const usage = resetFeatures('short_rest', 'short_rest');
 
 		createUndoToast(
 			'Completed short rest',
@@ -261,7 +321,7 @@
 				usage.undo();
 				restoreNoMercy(previousNoMercyBonus);
 			},
-			refreshedDescription(usage.refreshed)
+			refreshedDescription(usage.refreshed, usage.cleared)
 		);
 	}
 
@@ -274,7 +334,7 @@
 			)
 		);
 		const previousNoMercyBonus = endNoMercy();
-		const usage = resetFeatureUses('long_rest');
+		const usage = resetFeatures('long_rest', 'long_rest');
 		character.card_tokens = {
 			...character.card_tokens,
 			...Object.fromEntries(Object.keys(previousLegacyTokens).map((cardId) => [cardId, 0]))
@@ -288,22 +348,38 @@
 				character.card_tokens = { ...character.card_tokens, ...previousLegacyTokens };
 				restoreNoMercy(previousNoMercyBonus);
 			},
-			refreshedDescription(usage.refreshed)
+			refreshedDescription(usage.refreshed, usage.cleared)
 		);
 	}
 
 	function endScene() {
 		if (!character || !characterCtx.canEdit) return;
 
-		const usage = resetFeatureUses('scene');
-		createUndoToast('Ended scene', usage.undo, refreshedDescription(usage.refreshed));
+		const usage = resetFeatures('scene', 'scene');
+		createUndoToast('Ended scene', usage.undo, refreshedDescription(usage.refreshed, usage.cleared));
+	}
+
+	async function startSession() {
+		if (!character || !characterCtx.canEdit) return;
+
+		const features = resetFeatures(null, 'session_start');
+		let undone = false;
+		createUndoToast(
+			'Started a new session',
+			() => {
+				undone = true;
+				features.undo();
+			},
+			refreshedDescription(features.refreshed, features.cleared)
+		);
+		await rollPoolDice(features.diceToRoll, () => !undone);
 	}
 
 	function endSession() {
 		if (!character || !characterCtx.canEdit) return;
 
-		const usage = resetFeatureUses('session');
-		const descriptions = [refreshedDescription(usage.refreshed)];
+		const usage = resetFeatures('session', 'session_end');
+		const descriptions = [refreshedDescription(usage.refreshed, usage.cleared)];
 		const previousHope = character.marked_hope;
 		const previousSlayerDice = character.card_tokens[SLAYER_CARD_ID] ?? 0;
 		if (hasSlayerDice) {
@@ -481,14 +557,23 @@
 			<div>
 				<p class="font-semibold text-foreground">Session</p>
 				<p class="text-xs text-muted-foreground">
-					Refresh once-per-session features{hasSlayerDice
-						? ' and convert unspent Slayer Dice to Hope'
-						: ''}.
+					Start: refill and roll session resources. End: clear them and refresh once-per-session
+					features{hasSlayerDice ? ', converting unspent Slayer Dice to Hope' : ''}.
 				</p>
 			</div>
-			<Button variant="outline" size="sm" disabled={!characterCtx.canEdit} onclick={endSession}>
-				End Session
-			</Button>
+			<div class="flex shrink-0 gap-2">
+				<Button
+					variant="outline"
+					size="sm"
+					disabled={!characterCtx.canEdit || diceCtx.isRolling}
+					onclick={startSession}
+				>
+					Start
+				</Button>
+				<Button variant="outline" size="sm" disabled={!characterCtx.canEdit} onclick={endSession}>
+					End
+				</Button>
+			</div>
 		</div>
 	</div>
 

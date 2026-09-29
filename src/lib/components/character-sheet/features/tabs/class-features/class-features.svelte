@@ -8,6 +8,7 @@
 	import WizardFeatures from './wizard-features.svelte';
 	import FeatureTokens from './feature-tokens.svelte';
 	import UsageTracker from '$lib/components/character-sheet/features/usage-tracker.svelte';
+	import PoolTracker from '$lib/components/character-sheet/features/pool-tracker.svelte';
 	import { usageKey } from '$lib/state/feature-usage';
 
 	const characterCtx = getCharacterContext();
@@ -97,6 +98,16 @@
 						<div class="flex flex-col gap-2 pl-2 text-xs leading-relaxed text-muted-foreground">
 							{@html renderMarkdown(feature.description_html)}
 						</div>
+						{#if characterCtx.character?.primary_class_id}
+							{#each feature.pools ?? [] as pool (pool.id)}
+								<PoolTracker
+									{pool}
+									tracker_key={usageKey('classes', characterCtx.character.primary_class_id, pool.id)}
+									tone="sheet"
+									class="pt-2 pl-2"
+								/>
+							{/each}
+						{/if}
 					</div>
 				{/each}
 
@@ -125,6 +136,16 @@
 						<div class="flex flex-col gap-2 pl-2 text-xs leading-relaxed text-muted-foreground">
 							{@html renderMarkdown(feature.description_html)}
 						</div>
+						{#if characterCtx.character?.secondary_class_id}
+							{#each feature.pools ?? [] as pool (pool.id)}
+								<PoolTracker
+									{pool}
+									tracker_key={usageKey('classes', characterCtx.character.secondary_class_id, pool.id)}
+									tone="sheet"
+									class="pt-2 pl-2"
+								/>
+							{/each}
+						{/if}
 					</div>
 				{/each}
 

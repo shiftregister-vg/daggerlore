@@ -40,14 +40,24 @@ export const ARCANA_DOMAIN_CARDS = {
 		forced_in_loadout: false,
 		forced_in_vault: false,
 		options: [],
-		tokens_enabled: true,
+		tokens_enabled: false,
 		features: [
 			{
 				weapon_modifiers: [],
 				title: '',
 				description_html:
 					'At the beginning of a session, place a number of tokens equal to your Spellcast trait on this card.\n\nMake a **Spellcast Roll** against a target within Far range and spend any number of tokens to channel raw energy from within yourself to unleash against them.\n\nOn a success, roll a number of **d10s** equal to the tokens you spent and deal that much magic damage to the target. **Mark Stress** to replenish this card with tokens (up to your Spellcast trait). At the end of each session, clear all unspent tokens.',
-				character_modifiers: []
+				character_modifiers: [],
+				pools: [
+					{
+						id: 'unleash_chaos',
+						kind: 'tokens',
+						capacity: { source: 'spellcast_trait' },
+						refill: { source: 'spellcast_trait' },
+						refill_on: ['session_start'],
+						clear_on: ['session_end']
+					}
+				]
 			}
 		]
 	},
