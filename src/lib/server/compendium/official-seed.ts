@@ -96,16 +96,16 @@ const SEED_ITEM_RELEASES: Record<
 			'Replaces the generic tokens with a pool that refills to your Spellcast trait after a long rest.'
 	},
 	'SRD:domain_cards:unleash_chaos': {
-		version: 2,
-		label: 'Unleash Chaos Token Pool',
+		version: 3,
+		label: 'Unleash Chaos Damage Dice',
 		changelog:
-			'Replaces the generic tokens with a pool capped at your Spellcast trait that refills at the start of a session and clears at the end of one.'
+			'After a successful Spellcast Roll you can spend tokens to roll that many d10s as magic damage.'
 	},
 	'SRD:classes:seraph': {
-		version: 2,
-		label: 'Prayer Dice Pool',
+		version: 3,
+		label: 'Prayer Dice on Rolls and Damage',
 		changelog:
-			"Prayer Dice use your subclass's Spellcast trait, are rolled when you start a session and clear when it ends."
+			'Spend a Prayer Die to add its value to a roll after it is made, or to reduce incoming damage.'
 	},
 	'SRD:classes:rogue': {
 		version: 2,
@@ -114,10 +114,10 @@ const SEED_ITEM_RELEASES: Record<
 			"Rogue's Dodge can be activated for 3 Hope: +2 Evasion until an attack succeeds against you or your next rest."
 	},
 	'SRD:classes:ranger': {
-		version: 2,
-		label: "Ranger's Focus Target",
+		version: 3,
+		label: "Ranger's Focus Reroll",
 		changelog:
-			"Ranger's Focus spends a Hope on the attack and, on a success, tracks your Focus; a new Focus replaces the old one."
+			"After failing an attack against your Focus you can end Ranger's Focus to reroll your Duality Dice."
 	},
 	'SRD:subclasses:guardian_vengeance': {
 		version: 2,
@@ -144,10 +144,16 @@ const SEED_ITEM_RELEASES: Record<
 			'Moves the three sayings or values into a record on the Dedicated feature; existing values carry over.'
 	},
 	'SRD:domain_cards:signature_move': {
-		version: 2,
-		label: 'Signature Move Record and Usage Tracker',
+		version: 3,
+		label: 'Signature Move d20 Hope Die',
 		changelog:
-			'Adds a record for naming and describing your signature move and a once-per-rest usage tracker.'
+			'Performing your signature move can replace your Hope Die with a d20, spending the once-per-rest use.'
+	},
+	'SRD:domain_cards:arcana_touched': {
+		version: 2,
+		label: 'Arcana-Touched Result Swap',
+		changelog:
+			'With 4 Arcana cards in your loadout, once per rest you can switch the results of your Hope and Fear Dice.'
 	},
 	'SRD:domain_cards:know_thy_enemy': {
 		version: 2,

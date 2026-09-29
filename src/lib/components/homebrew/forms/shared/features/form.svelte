@@ -11,6 +11,7 @@
 	import FeaturePoolsForm from './feature-pools-form.svelte';
 	import FeatureRecordsForm from './feature-records-form.svelte';
 	import FeatureEffectsForm from './feature-effects-form.svelte';
+	import FeatureRollOptionsForm from './feature-roll-options-form.svelte';
 	import WeaponModifierForm from '../weapon-modifier/form.svelte';
 	import Plus from '@lucide/svelte/icons/plus';
 	import { cn } from '$lib/utils';
@@ -184,6 +185,15 @@
 			if (index !== featureIndex) return feature;
 			if (effects) return { ...feature, effects };
 			const { effects: _effects, ...rest } = feature;
+			return rest;
+		});
+	}
+
+	function updateRollOptions(featureIndex: number, roll_options: Feature['roll_options']) {
+		features = features.map((feature, index) => {
+			if (index !== featureIndex) return feature;
+			if (roll_options) return { ...feature, roll_options };
+			const { roll_options: _roll_options, ...rest } = feature;
 			return rest;
 		});
 	}
@@ -380,6 +390,13 @@
 							idPrefix={`feature-${path.join('-')}-${featureIndex}`}
 							{errorSummary}
 							path={featurePath(featureIndex, 'effects')}
+						/>
+						<FeatureRollOptionsForm
+							bind:options={
+								() => feature.roll_options, (value) => updateRollOptions(featureIndex, value)
+							}
+							{feature}
+							idPrefix={`feature-${path.join('-')}-${featureIndex}`}
 						/>
 					{/if}
 

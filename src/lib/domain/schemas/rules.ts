@@ -7,6 +7,7 @@ import type {
 	Transformation
 } from './compendium';
 import type { TableNames } from '../ids';
+import { RollKindSchema } from './dice';
 
 export const SourceKeySchema = z.string().trim().min(1, 'Source key is required');
 export type SourceKey = z.infer<typeof SourceKeySchema>;
@@ -439,6 +440,73 @@ export const FeatureEffectSchema = z.object({
 });
 export type FeatureEffect = z.infer<typeof FeatureEffectSchema>;
 
+export const RollOptionTimingSchema = z.enum(['before', 'after', 'defense']);
+export type RollOptionTiming = z.infer<typeof RollOptionTimingSchema>;
+
+// What a roll option does. 'pool' takes the value of a die spent from one of the feature's dice pools.
+export const RollOptionEffectSchema = z.discriminatedUnion('type', [
+	// before: replaces the Hope Die with a d20
+	z.object({ type: z.literal('hope_die'), die: z.literal('d20') }),
+	// before: adds an advantage die
+	z.object({ type: z.literal('advantage') }),
+	z.object({ type: z.literal('flat_bonus'), value: z.number().int() }),
+	z.object({ type: z.literal('bonus_die'), die: z.union([z.literal('pool'), PoolDieSchema]) }),
+	// after: rolls one die per pool token spent as a separate damage roll
+	z.object({ type: z.literal('extra_damage'), die: PoolDieSchema }),
+	// after: rerolls the chosen Duality Dice
+	z.object({ type: z.literal('reroll'), dice: z.enum(['duality', 'hope', 'fear']) }),
+	// after: switches the Hope and Fear results
+	z.object({ type: z.literal('swap_results') }),
+	// defense: reduces incoming damage
+	z.object({
+		type: z.literal('reduce_damage'),
+		amount: z.union([z.literal('pool'), PoolDieSchema, z.number().int().min(1)])
+	})
+]);
+export type RollOptionEffect = z.infer<typeof RollOptionEffectSchema>;
+
+// A choice a feature offers on a roll or when taking damage. Costs are paid when the player confirms.
+export const FeatureRollOptionSchema = z.object({
+	// stable across versions; character state is keyed by it
+	id: FeatureUsageSchema.shape.id,
+	label: z.string().trim().min(1).optional(),
+	// Which rolls list the option. Not used for defense options.
+	applies_to: z.array(RollKindSchema).optional(),
+	timing: RollOptionTimingSchema,
+	cost: z
+		.object({
+			hope: z.number().int().min(1).max(12).optional(),
+			stress: z.number().int().min(1).max(12).optional(),
+			// Spends a use of the feature's usage tracker.
+			usage: z.boolean().optional(),
+			// Spends tokens (amount) or one die from this feature's pool.
+			pool: z
+				.object({ id: FeatureUsageSchema.shape.id, amount: z.number().int().min(1).optional() })
+				.optional()
+		})
+		.optional(),
+	// Only offered once the player has confirmed the roll succeeded or failed.
+	requires_outcome: z.enum(['success', 'failure']).optional(),
+	// Only offered while this effect (an id on the same feature) is active.
+	requires_active_effect: FeatureUsageSchema.shape.id.optional(),
+	// Pays by ending the required effect.
+	ends_effect: z.boolean().optional(),
+	character_conditions: z.array(CharacterConditionSchema).optional(),
+	effect: RollOptionEffectSchema
+});
+export type FeatureRollOption = z.infer<typeof FeatureRollOptionSchema>;
+
+const ROLL_OPTION_TIMING_BY_EFFECT: Record<RollOptionEffect['type'], RollOptionTiming[]> = {
+	hope_die: ['before'],
+	advantage: ['before'],
+	flat_bonus: ['before', 'after'],
+	bonus_die: ['before', 'after'],
+	extra_damage: ['after'],
+	reroll: ['after'],
+	swap_results: ['after'],
+	reduce_damage: ['defense']
+};
+
 export const FeatureSchema = z
 	.object({
 		title: z.string(),
@@ -450,7 +518,8 @@ export const FeatureSchema = z
 		usage: FeatureUsageSchema.optional(),
 		pools: z.array(FeaturePoolSchema).optional(),
 		records: z.array(FeatureRecordSchema).optional(),
-		effects: z.array(FeatureEffectSchema).optional()
+		effects: z.array(FeatureEffectSchema).optional(),
+		roll_options: z.array(FeatureRollOptionSchema).optional()
 	})
 	.superRefine((feature, ctx) => {
 		const ids = new Set<string>();
@@ -491,6 +560,47 @@ export const FeatureSchema = z
 					path: ['effects', index, 'cost', 'usage'],
 					message: 'Add a usage tracker to spend a use'
 				});
+			}
+		});
+		const optionIds = new Set<string>();
+		const poolIds = new Set((feature.pools ?? []).map((pool) => pool.id));
+		(feature.roll_options ?? []).forEach((option, index) => {
+			const issue = (path: (string | number)[], message: string) =>
+				ctx.addIssue({ code: 'custom', path: ['roll_options', index, ...path], message });
+			if (optionIds.has(option.id)) issue(['id'], 'Roll option ids must be unique');
+			optionIds.add(option.id);
+			if (!ROLL_OPTION_TIMING_BY_EFFECT[option.effect.type].includes(option.timing)) {
+				issue(['timing'], 'This effect does not work at that time');
+			}
+			if (option.timing !== 'defense' && !option.applies_to?.length) {
+				issue(['applies_to'], 'Choose which rolls this applies to');
+			}
+			if (option.cost?.usage && !feature.usage) {
+				issue(['cost', 'usage'], 'Add a usage tracker to spend a use');
+			}
+			if (option.cost?.pool && !poolIds.has(option.cost.pool.id)) {
+				issue(['cost', 'pool', 'id'], 'Choose a pool on this feature');
+			}
+			const usesPoolDie =
+				(option.effect.type === 'bonus_die' && option.effect.die === 'pool') ||
+				(option.effect.type === 'reduce_damage' && option.effect.amount === 'pool');
+			if (usesPoolDie && !option.cost?.pool) {
+				issue(['cost', 'pool'], 'Spend a pool die to use its value');
+			}
+			if (option.effect.type === 'extra_damage' && !option.cost?.pool) {
+				issue(['cost', 'pool'], 'Spend pool tokens to roll damage dice');
+			}
+			if (option.requires_outcome && option.timing !== 'after') {
+				issue(['requires_outcome'], 'A success or failure is only known after the roll');
+			}
+			if (option.ends_effect && !option.requires_active_effect) {
+				issue(['ends_effect'], 'Choose the effect this ends');
+			}
+			if (
+				option.requires_active_effect &&
+				!(feature.effects ?? []).some((effect) => effect.id === option.requires_active_effect)
+			) {
+				issue(['requires_active_effect'], 'Choose an effect on this feature');
 			}
 		});
 	});

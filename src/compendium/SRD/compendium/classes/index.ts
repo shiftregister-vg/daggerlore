@@ -264,6 +264,18 @@ While *Unstoppable*, you gain the following benefits:
 						ends_on: [],
 						ends_when: ['You end it to reroll a failed attack against your Focus']
 					}
+				],
+				roll_options: [
+					{
+						id: 'rangers_focus_reroll',
+						label: "End Ranger's Focus to reroll the Duality Dice",
+						applies_to: ['attack'],
+						timing: 'after',
+						requires_outcome: 'failure',
+						requires_active_effect: 'rangers_focus',
+						ends_effect: true,
+						effect: { type: 'reroll', dice: 'duality' }
+					}
 				]
 			}
 		],
@@ -435,6 +447,23 @@ While *Unstoppable*, you gain the following benefits:
 						refill: { source: 'spellcast_trait' },
 						refill_on: ['session_start'],
 						clear_on: ['session_end']
+					}
+				],
+				roll_options: [
+					{
+						id: 'prayer_die_roll',
+						label: 'Add a Prayer Die to the result',
+						applies_to: ['trait', 'attack', 'spellcast', 'experience', 'damage'],
+						timing: 'after',
+						cost: { pool: { id: 'prayer_dice' } },
+						effect: { type: 'bonus_die', die: 'pool' }
+					},
+					{
+						id: 'prayer_die_damage',
+						label: 'Reduce incoming damage with a Prayer Die',
+						timing: 'defense',
+						cost: { pool: { id: 'prayer_dice' } },
+						effect: { type: 'reduce_damage', amount: 'pool' }
 					}
 				]
 			}

@@ -57,6 +57,17 @@ export const ARCANA_DOMAIN_CARDS = {
 						refill_on: ['session_start'],
 						clear_on: ['session_end']
 					}
+				],
+				roll_options: [
+					{
+						id: 'unleash_chaos_damage',
+						label: 'Unleash tokens as d10 damage',
+						applies_to: ['spellcast'],
+						timing: 'after',
+						requires_outcome: 'success',
+						cost: { pool: { id: 'unleash_chaos' } },
+						effect: { type: 'extra_damage', die: 'd10' }
+					}
 				]
 			}
 		]
@@ -373,6 +384,20 @@ export const ARCANA_DOMAIN_CARDS = {
 								min_cards: 4
 							}
 						]
+					}
+				],
+				usage: { id: 'arcana_touched', max_uses: 1, reset: 'rest' },
+				roll_options: [
+					{
+						id: 'arcana_touched_swap',
+						label: 'Switch the Hope and Fear results',
+						applies_to: ['trait', 'attack', 'spellcast', 'experience'],
+						timing: 'after',
+						cost: { usage: true },
+						character_conditions: [
+							{ type: 'min_loadout_cards_from_domain', domain_id: 'arcana', min_cards: 4 }
+						],
+						effect: { type: 'swap_results' }
 					}
 				]
 			}

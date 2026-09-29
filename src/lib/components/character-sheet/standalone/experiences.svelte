@@ -86,6 +86,7 @@
 							name="Experience"
 							type="duality"
 							modifier={derived_character_data.experience_modifiers[i]}
+							context={{ kind: 'experience' }}
 						/>
 					</td>
 					<td class="py-2 pr-4">

@@ -69,6 +69,7 @@ import {
 	pruneEffects,
 	type EffectTracker
 } from './feature-effects';
+import { collectRollOptionTrackers, type RollOptionTracker } from './roll-options';
 
 type InventoryPrimaryWeapon = PrimaryWeapon & { inventory_id: string };
 type InventorySecondaryWeapon = SecondaryWeapon & { inventory_id: string };
@@ -174,6 +175,7 @@ export type DerivedCharacterData = {
 	pool_trackers: PoolTracker[];
 	record_trackers: RecordTracker[];
 	effect_trackers: EffectTracker[];
+	roll_option_trackers: RollOptionTracker[];
 
 	// feature flags
 	hasBeastformClassFeature: boolean;
@@ -1617,6 +1619,40 @@ function deriveEffectTrackers(
 	});
 }
 
+/** Roll options apply like effects do, and an option's own conditions must hold as well. */
+function deriveRollOptionTrackers(
+	sources: UsageSource[],
+	poolTrackers: PoolTracker[],
+	usageTrackers: UsageTracker[],
+	effectTrackers: EffectTracker[],
+	vault: VaultDomainCard[],
+	loadout: VaultDomainCard[],
+	context: EvaluationContext
+): RollOptionTracker[] {
+	const loadoutIds = new Set(loadout.map((card) => card.id));
+	return collectRollOptionTrackers(
+		sources,
+		poolTrackers,
+		usageTrackers,
+		effectTrackers,
+		(source, option) => {
+			if (
+				source.item_type === 'domain_cards' &&
+				!loadoutIds.has(source.item_id) &&
+				!vault.find((card) => card.id === source.item_id)?.applies_in_vault
+			) {
+				return { eligible: false, reason: 'Inactive while this card is in your vault' };
+			}
+			const unmet = (option.character_conditions ?? []).some(
+				(condition) => !evaluateCharacterCondition(condition, context)
+			);
+			return unmet
+				? { eligible: false, reason: "This card's requirements aren't met" }
+				: { eligible: true };
+		}
+	);
+}
+
 function applyScalarModifiers(
 	target: ScalarTarget,
 	baseValue: number,
@@ -2368,6 +2404,11 @@ export function derive_character_data(
 		secondary_class_mastery_level: loop.secondary_mastery,
 		active_base_equipment
 	};
+	const usage_trackers = collectUsageTrackers(featureSources);
+	const effect_trackers = deriveEffectTrackers(featureSources, domain_card_vault, loop.loadout);
+	const pool_trackers = collectPoolTrackers(
+		derivePoolSources(featureSources, character, refs, loop.traits, loop.proficiency)
+	);
 	const baseEquipment = applyWeaponModifiers(active_base_equipment, loop.modifiers, baseContext);
 	const combatTrainingResults = applyCombatTrainingEffects(
 		character,
@@ -2531,12 +2572,19 @@ export function derive_character_data(
 		secondary_class_mastery_level: loop.secondary_mastery,
 		spellcast_roll_bonus,
 		no_mercy_bonus: noMercyBonus,
-		usage_trackers: collectUsageTrackers(featureSources),
-		effect_trackers: deriveEffectTrackers(featureSources, domain_card_vault, loop.loadout),
-		record_trackers: collectRecordTrackers(featureSources),
-		pool_trackers: collectPoolTrackers(
-			derivePoolSources(featureSources, character, refs, loop.traits, loop.proficiency)
+		usage_trackers,
+		effect_trackers,
+		roll_option_trackers: deriveRollOptionTrackers(
+			featureSources,
+			pool_trackers,
+			usage_trackers,
+			effect_trackers,
+			domain_card_vault,
+			loop.loadout,
+			baseContext
 		),
+		record_trackers: collectRecordTrackers(featureSources),
+		pool_trackers,
 		...finalFlags
 	};
 }

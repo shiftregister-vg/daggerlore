@@ -23,6 +23,7 @@
 		d12: D12,
 		d20: D20,
 		hope: Hope,
+		hope_d20: D20,
 		fear: Fear,
 		advantage: Advantage,
 		disadvantage: Disadvantage
@@ -114,6 +115,15 @@
 					{/if}
 					<span class="font-eveleth text-xl">{Math.abs(roll.modifier)}</span>
 				</div>
+			{/if}
+			{#each roll.adjustments ?? [] as adjustment, adjustmentIndex (adjustmentIndex)}
+				<div class="flex h-9 items-center gap-1" title={adjustment.label}>
+					<span class="font-eveleth text-xl">{adjustment.amount < 0 ? '-' : '+'}</span>
+					<span class="font-eveleth text-xl">{Math.abs(adjustment.amount)}</span>
+				</div>
+			{/each}
+			{#if roll.swapped}
+				<span class="text-xs text-muted-foreground">Hope and Fear swapped</span>
 			{/if}
 		</div>
 	{/if}

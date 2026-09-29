@@ -326,6 +326,16 @@ Additionally on a success, you can **mark a Stress** to remove a Fear from the G
 					"Name and describe your signature combat move. Once per rest, when you perform this signature move as part of an action you're taking, you can roll a **d20** as your Hope Die. On a success, clear a Stress.",
 				character_modifiers: [],
 				usage: { id: 'signature_move', max_uses: 1, reset: 'rest' },
+				roll_options: [
+					{
+						id: 'signature_move_hope_die',
+						label: 'Perform your signature move (d20 Hope Die)',
+						applies_to: ['trait', 'attack', 'spellcast', 'experience'],
+						timing: 'before',
+						cost: { usage: true },
+						effect: { type: 'hope_die', die: 'd20' }
+					}
+				],
 				records: [
 					{
 						id: 'signature_move',

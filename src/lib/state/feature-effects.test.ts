@@ -15,6 +15,8 @@ import {
 	effectCostCaption,
 	effectEndCaption,
 	endEffectInstance,
+	endInstances,
+	endableInstances,
 	pruneEffects,
 	type EffectResources,
 	type EffectTracker
@@ -225,5 +227,25 @@ describe('feature effects', () => {
 		);
 		expect(effectEndCaption(focus.effect)).toBe('Until you attack another creature');
 		expect(describeEffectModifiers(dodge.effect)).toEqual(['+2 Evasion']);
+	});
+
+	it('lists instances an event could end and ends only the confirmed ones', () => {
+		const active = {
+			[reprisal.key]: [
+				{ id: 'a', started_at: at.now, target: 'Troll' },
+				{ id: 'b', started_at: at.now, target: 'Ogre' }
+			],
+			[dodge.key]: [{ id: 'c', started_at: at.now }]
+		};
+		const hit = endableInstances(active, trackers(), ['attack_succeeded']);
+		expect(hit.map((entry) => entry.instance.target)).toEqual(['Troll', 'Ogre']);
+		expect(
+			endableInstances(active, trackers(), ['attacked_successfully']).map(
+				(entry) => entry.tracker.key
+			)
+		).toEqual([dodge.key]);
+		const next = endInstances(active, [hit[0]]);
+		expect(next[reprisal.key]).toEqual([active[reprisal.key][1]]);
+		expect(next[dodge.key]).toEqual(active[dodge.key]);
 	});
 });

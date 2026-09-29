@@ -47,6 +47,7 @@
 		d12: D12,
 		d20: D20,
 		hope: Hope,
+		hope_d20: D20,
 		fear: Fear,
 		advantage: Advantage,
 		disadvantage: Disadvantage
@@ -80,7 +81,8 @@
 			dice: input.dice.map((die) => ({ type: die.type })),
 			modifier: input.modifier ?? 0,
 			status: 'complete',
-			timestamp: Date.now()
+			timestamp: Date.now(),
+			context: input.context
 		};
 		showPicker = true;
 		showCurrentRoll = currentRoll.dice.length > 0;
@@ -109,13 +111,15 @@
 		const diceToRoll = currentRoll.dice.map((d) => ({ type: d.type }));
 		const rollName = currentRoll.name;
 		const rollModifier = currentRoll.modifier;
+		const rollContext = currentRoll.context;
 
 		resetCurrentRoll();
 
 		diceCtx.roll({
 			name: rollName,
 			dice: diceToRoll,
-			modifier: rollModifier
+			modifier: rollModifier,
+			context: rollContext
 		});
 
 		// The effect will handle opening showLastRoll when the new roll appears

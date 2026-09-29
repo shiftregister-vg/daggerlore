@@ -227,6 +227,41 @@ export function applyEffectEvent(
 	return { next, ended };
 }
 
+export type EndableInstance = {
+	event: EffectEndEvent;
+	tracker: EffectTracker;
+	instance: EffectInstance;
+};
+
+/**
+ * Active instances an event could end, one per instance so a per-target effect ends only the target
+ * it happened to. Nothing ends until the player confirms; see `endInstances`.
+ */
+export function endableInstances(
+	active: EffectState,
+	trackers: EffectTracker[],
+	events: EffectEndEvent[]
+): EndableInstance[] {
+	return events.flatMap((event) =>
+		trackers
+			.filter((tracker) => tracker.effect.ends_on.includes(event))
+			.flatMap((tracker) =>
+				effectInstances(active, tracker).map((instance) => ({ event, tracker, instance }))
+			)
+	);
+}
+
+/** Ends the confirmed instances. */
+export function endInstances(
+	active: EffectState,
+	confirmed: Pick<EndableInstance, 'tracker' | 'instance'>[]
+): EffectState {
+	return confirmed.reduce(
+		(state, { tracker, instance }) => endEffectInstance(state, tracker, instance.id),
+		active
+	);
+}
+
 /** Drops effects for items the character no longer possesses. */
 export function pruneEffects(
 	active: EffectState,
