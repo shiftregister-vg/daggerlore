@@ -8,6 +8,7 @@
 	import FeatureUsageEditor from './feature-usage-editor.svelte';
 	import FeaturePoolsForm from '$lib/components/homebrew/forms/shared/features/feature-pools-form.svelte';
 	import FeatureRecordsForm from '$lib/components/homebrew/forms/shared/features/feature-records-form.svelte';
+	import FeatureEffectsForm from '$lib/components/homebrew/forms/shared/features/feature-effects-form.svelte';
 	import type { CompendiumContent, Domain, DomainCard } from '@domain/schemas/compendium';
 	import type { SourceMetadata } from '@domain/schemas/sources';
 	import type { SourceKey } from '@domain/schemas/rules';
@@ -67,7 +68,8 @@
 							: [],
 						usage: feature.usage,
 						pools: feature.pools,
-						records: feature.records
+						records: feature.records,
+						effects: feature.effects
 					}))
 				: [{ title: '', description_html: '', character_modifiers: [], weapon_modifiers: [] }];
 
@@ -370,6 +372,13 @@
 						<FeatureRecordsForm
 							bind:records={item.features[index].records}
 							featureTitle={item.features[index].title ?? ''}
+							idPrefix={`admin-use_${index + 1}`}
+						/>
+						<FeatureEffectsForm
+							bind:effects={item.features[index].effects}
+							featureTitle={item.features[index].title ?? ''}
+							hasUsage={!!item.features[index].usage}
+							class="mt-3"
 							idPrefix={`admin-use_${index + 1}`}
 						/>
 					</div>

@@ -314,6 +314,18 @@ export const CharacterSchema = z.object({
 			z.array(z.object({ id: z.string().min(1), values: z.record(z.string(), z.string()) }))
 		)
 		.default({}), // keyed by `${item_type}:${item_id}:${record.id}`
+	active_effects: z
+		.record(
+			z.string(),
+			z.array(
+				z.object({
+					id: z.string().min(1),
+					target: z.string().optional(),
+					started_at: z.string()
+				})
+			)
+		)
+		.default({}), // keyed by `${item_type}:${item_id}:${effect.id}`
 	card_layout: CharacterCardLayoutSchema.optional(),
 	feature_choices: z.record(z.string(), z.array(z.string())), // used by specific feature flags
 	unarmed_attack_choices: z.record(z.string(), z.array(z.string())),

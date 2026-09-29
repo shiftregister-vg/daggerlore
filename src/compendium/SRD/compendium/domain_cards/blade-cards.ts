@@ -197,7 +197,28 @@ export const BLADE_DOMAIN_CARDS = {
 				title: '',
 				description_html:
 					'Once per rest, you can apply all your focus toward a target of your choice. Until you attack another creature, you defeat the target, or the battle ends, gain a +1 bonus to your Proficiency.',
-				character_modifiers: []
+				character_modifiers: [],
+				usage: { id: 'deadly_focus', max_uses: 1, reset: 'rest' },
+				effects: [
+					{
+						id: 'deadly_focus',
+						label: 'Deadly Focus',
+						cost: { usage: true },
+						target: { label: 'Target' },
+						character_modifiers: [
+							{
+								behaviour: 'bonus',
+								character_conditions: [],
+								type: 'flat',
+								value: 1,
+								target: 'proficiency'
+							}
+						],
+						weapon_modifiers: [],
+						ends_on: [],
+						ends_when: ['You attack another creature', 'You defeat the target', 'The battle ends']
+					}
+				]
 			}
 		]
 	},
@@ -580,7 +601,38 @@ Then place this card in your vault permanently.`,
 				title: '',
 				description_html:
 					"Once per long rest, you can go into a *Frenzy* until there are no more adversaries within sight.\n\nWhile *Frenzied*, you can't use Armor Slots, and you gain a +10 bonus to your damage rolls and a +8 bonus to your Severe damage threshold.",
-				character_modifiers: []
+				character_modifiers: [],
+				usage: { id: 'frenzy', max_uses: 1, reset: 'long_rest' },
+				effects: [
+					{
+						id: 'frenzy',
+						label: 'Frenzy',
+						cost: { usage: true },
+						character_modifiers: [
+							{
+								behaviour: 'bonus',
+								character_conditions: [],
+								type: 'flat',
+								value: 8,
+								target: 'severe_damage_threshold'
+							}
+						],
+						weapon_modifiers: [
+							{
+								behaviour: 'bonus',
+								character_conditions: [],
+								weapon_conditions: [],
+								target_weapon: 'all',
+								target_stat: 'damage_bonus',
+								type: 'flat',
+								value: 10
+							}
+						],
+						notes: "You can't use Armor Slots.",
+						ends_on: [],
+						ends_when: ['There are no more adversaries within sight']
+					}
+				]
 			}
 		]
 	},

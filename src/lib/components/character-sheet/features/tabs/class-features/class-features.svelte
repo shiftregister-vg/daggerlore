@@ -10,6 +10,7 @@
 	import UsageTracker from '$lib/components/character-sheet/features/usage-tracker.svelte';
 	import PoolTracker from '$lib/components/character-sheet/features/pool-tracker.svelte';
 	import RecordEditor from '$lib/components/character-sheet/features/record-editor.svelte';
+	import EffectDetails from '$lib/components/character-sheet/features/effect-details.svelte';
 	import { usageKey } from '$lib/state/feature-usage';
 
 	const characterCtx = getCharacterContext();
@@ -115,6 +116,12 @@
 									class="pt-2 pl-2"
 								/>
 							{/each}
+							{#each feature.effects ?? [] as effect (effect.id)}
+								<EffectDetails
+									tracker_key={usageKey('classes', characterCtx.character.primary_class_id, effect.id)}
+									class="pt-2 pl-2"
+								/>
+							{/each}
 						{/if}
 					</div>
 				{/each}
@@ -157,6 +164,12 @@
 								<RecordEditor
 									{record}
 									tracker_key={usageKey('classes', characterCtx.character.secondary_class_id, record.id)}
+									class="pt-2 pl-2"
+								/>
+							{/each}
+							{#each feature.effects ?? [] as effect (effect.id)}
+								<EffectDetails
+									tracker_key={usageKey('classes', characterCtx.character.secondary_class_id, effect.id)}
 									class="pt-2 pl-2"
 								/>
 							{/each}

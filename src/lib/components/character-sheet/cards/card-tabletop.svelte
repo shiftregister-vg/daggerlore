@@ -41,8 +41,15 @@
 	import PoolTracker from '$lib/components/character-sheet/features/pool-tracker.svelte';
 	import RecordSummary from '$lib/components/character-sheet/features/record-summary.svelte';
 	import RecordEditor from '$lib/components/character-sheet/features/record-editor.svelte';
+	import EffectControl from '$lib/components/character-sheet/features/effect-control.svelte';
+	import EffectDetails from '$lib/components/character-sheet/features/effect-details.svelte';
 	import { USAGE_ITEM_TYPES, usageKey } from '$lib/state/feature-usage';
-	import type { FeaturePool, FeatureRecord, FeatureUsage } from '@domain/schemas/rules';
+	import type {
+		FeatureEffect,
+		FeaturePool,
+		FeatureRecord,
+		FeatureUsage
+	} from '@domain/schemas/rules';
 	import { cn, renderMarkdown } from '$lib/utils';
 	import type { Card, DomainCardId } from '@domain/schemas/rules';
 	import type { CharacterCardLayout } from '@domain/schemas/characters';
@@ -300,6 +307,7 @@
 				usageKey?: string;
 				pools?: { pool: FeaturePool; key: string }[];
 				records?: { record: FeatureRecord; key: string }[];
+				effects?: { effect: FeatureEffect; key: string }[];
 			}[];
 		}[] = [];
 
@@ -330,6 +338,10 @@
 					records: (feature.records ?? []).map((record) => ({
 						record,
 						key: usageKey('classes', classId, record.id)
+					})),
+					effects: (feature.effects ?? []).map((effect) => ({
+						effect,
+						key: usageKey('classes', classId, effect.id)
 					}))
 				}))
 			});
@@ -801,6 +813,9 @@
 											{#each feature.records ?? [] as { record, key } (key)}
 												<RecordSummary {record} tracker_key={key} tone="sheet" class="mt-1" />
 											{/each}
+											{#each feature.effects ?? [] as { effect, key } (key)}
+												<EffectControl {effect} tracker_key={key} tone="sheet" class="mt-1" />
+											{/each}
 										</div>
 										<div class="prose prose-invert max-w-none text-sm leading-snug">
 											{@html renderMarkdown(feature.text)}
@@ -1078,6 +1093,17 @@
 														onedit={() => openCardDialog(group.card.key)}
 													/>
 												{/each}
+												{#each feature.effects ?? [] as effect (effect.id)}
+													<EffectControl
+														{effect}
+														tracker_key={usageKey(
+															USAGE_ITEM_TYPES[group.card.type],
+															group.card.id,
+															effect.id
+														)}
+														tone="sheet"
+													/>
+												{/each}
 											{/each}
 											{#if group.card.type === 'community_card' && group.card.card.field_group}
 												<CommunityCardFields
@@ -1125,11 +1151,21 @@
 			{#if selectedDialogKey && allCardsByKey.get(selectedDialogKey)}
 				{@const selectedCard = allCardsByKey.get(selectedDialogKey)!}
 				{@const cardRecords = selectedCard.card.features.flatMap((feature) => feature.records ?? [])}
+				{@const cardEffects = selectedCard.card.features.flatMap((feature) => feature.effects ?? [])}
 				<div class="flex max-h-[90dvh] flex-col gap-3 overflow-y-auto" style="width: min(520px, 92vw);">
 					{@render renderCard(selectedCard, false, false, true)}
-					{#if cardRecords.length > 0 && character}
-						<!-- The card face is fixed-size, so record editing lives in a panel below it. -->
+					{#if (cardRecords.length > 0 || cardEffects.length > 0) && character}
+						<!-- The card face is fixed-size, so record editing and effect details live in a panel below it. -->
 						<div class="flex flex-col gap-4 rounded-lg border border-border bg-card p-4">
+							{#each cardEffects as effect (effect.id)}
+								<EffectDetails
+									tracker_key={usageKey(
+										USAGE_ITEM_TYPES[selectedCard.type],
+										selectedCard.id,
+										effect.id
+									)}
+								/>
+							{/each}
 							{#each cardRecords as record (record.id)}
 								<RecordEditor
 									{record}

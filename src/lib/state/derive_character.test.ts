@@ -8,7 +8,8 @@ import {
 	AncestryCardSchema,
 	CharacterClassSchema,
 	CommunityCardSchema,
-	DomainCardSchema
+	DomainCardSchema,
+	SubclassSchema
 } from '$lib/domain/schemas/compendium';
 import { merge_compendium_content } from '$lib/utils';
 import { derive_character_state } from './derive_character';
@@ -425,5 +426,107 @@ describe('feature records', () => {
 		character.community_card_id = undefined;
 
 		expect(derive_character_state(character, compendium).character.feature_records).toEqual({});
+	});
+});
+
+describe('feature effects', () => {
+	const dodgeKey = 'classes:rogue:rogues_dodge';
+	const focusKey = 'domain_cards:deadly_focus:deadly_focus';
+	const frenzyKey = 'domain_cards:frenzy:frenzy';
+	const reprisalKey = 'subclasses:guardian_vengeance:act_of_reprisal';
+	const started_at = '2026-09-28T00:00:00.000Z';
+
+	function rogue(): Character {
+		const character = legacyCharacter();
+		character.primary_class_id = 'rogue';
+		character.primary_subclass_id = 'rogue_syndicate';
+		const cards = [
+			{ domain_id: 'blade', card_id: 'deadly_focus' },
+			{ domain_id: 'blade', card_id: 'frenzy' }
+		] as Character['additional_domain_card_ids'];
+		character.additional_domain_card_ids = cards;
+		character.loadout_domain_card_ids = cards;
+		return character;
+	}
+
+	it('publishes valid effect configuration for the proof content', () => {
+		for (const id of ['deadly_focus', 'frenzy']) {
+			expect(() => DomainCardSchema.parse(compendium.domain_cards[id])).not.toThrow();
+		}
+		for (const id of ['rogue', 'ranger']) {
+			expect(() => CharacterClassSchema.parse(compendium.classes[id])).not.toThrow();
+		}
+		expect(() => SubclassSchema.parse(compendium.subclasses.guardian_vengeance)).not.toThrow();
+	});
+
+	it("raises Evasion only while Rogue's Dodge is active", () => {
+		const character = rogue();
+		const inactive = derive_character_state(character, compendium).derived;
+		expect(inactive.effect_trackers.map((tracker) => tracker.key)).toEqual(
+			expect.arrayContaining([dodgeKey, focusKey, frenzyKey])
+		);
+
+		character.active_effects = { [dodgeKey]: [{ id: 'a', started_at }] };
+		const active = derive_character_state(character, compendium).derived;
+		expect(active.evasion).toBe(inactive.evasion + 2);
+	});
+
+	it('applies Frenzy to the Severe threshold and weapon damage', () => {
+		const character = rogue();
+		const inactive = derive_character_state(character, compendium).derived;
+		character.active_effects = { [frenzyKey]: [{ id: 'a', started_at }] };
+		const active = derive_character_state(character, compendium).derived;
+
+		expect(active.damage_thresholds.severe).toBe(inactive.damage_thresholds.severe + 8);
+		expect(active.damage_thresholds.major).toBe(inactive.damage_thresholds.major);
+		expect(active.derived_unarmed_attack.damage_bonus).toBe(
+			inactive.derived_unarmed_attack.damage_bonus + 10
+		);
+	});
+
+	it('suspends Deadly Focus while its card is in the vault and drops it when removed', () => {
+		const character = rogue();
+		const base = derive_character_state(character, compendium).derived.proficiency;
+		character.active_effects = { [focusKey]: [{ id: 'a', started_at, target: 'Troll' }] };
+		expect(derive_character_state(character, compendium).derived.proficiency).toBe(base + 1);
+
+		character.loadout_domain_card_ids = [{ domain_id: 'blade', card_id: 'frenzy' }];
+		const vaulted = derive_character_state(character, compendium);
+		expect(vaulted.derived.proficiency).toBe(base);
+		expect(vaulted.character.active_effects[focusKey]).toHaveLength(1);
+		expect(
+			vaulted.derived.effect_trackers.find((tracker) => tracker.key === focusKey)?.eligible
+		).toBe(false);
+
+		character.additional_domain_card_ids = [{ domain_id: 'blade', card_id: 'frenzy' }];
+		expect(derive_character_state(character, compendium).character.active_effects).toEqual({});
+	});
+
+	it('keeps against-target Proficiency off the sheet', () => {
+		const character = legacyCharacter();
+		character.level = 5;
+		character.primary_class_id = 'guardian';
+		character.primary_subclass_id = 'guardian_vengeance';
+		// Act of Reprisal is on the specialization card.
+		character.level_up_choices[5] = {
+			...character.level_up_choices[5],
+			A: {
+				...character.level_up_choices[5]?.A,
+				option_id: 'tier_3_subclass_upgrade',
+				selected_subclass_upgrade: 'primary'
+			}
+		} as Character['level_up_choices'][5];
+		const base = derive_character_state(character, compendium).derived;
+		expect(base.effect_trackers.map((tracker) => tracker.key)).toContain(reprisalKey);
+
+		character.active_effects = {
+			[reprisalKey]: [
+				{ id: 'a', started_at, target: 'Troll' },
+				{ id: 'b', started_at, target: 'Ogre' }
+			]
+		};
+		const result = derive_character_state(character, compendium);
+		expect(result.derived.proficiency).toBe(base.proficiency);
+		expect(result.character.active_effects[reprisalKey]).toHaveLength(2);
 	});
 });

@@ -16,6 +16,7 @@
 	import FeatureUsageEditor from './feature-usage-editor.svelte';
 	import FeaturePoolsForm from '$lib/components/homebrew/forms/shared/features/feature-pools-form.svelte';
 	import FeatureRecordsForm from '$lib/components/homebrew/forms/shared/features/feature-records-form.svelte';
+	import FeatureEffectsForm from '$lib/components/homebrew/forms/shared/features/feature-effects-form.svelte';
 	import type { HomebrewTable } from '@domain/permissions';
 	import type { SourceKey } from '@domain/schemas/rules';
 	import type { SourceMetadata } from '@domain/schemas/sources';
@@ -2183,6 +2184,13 @@
 																	featureTitle={editorItem[card.key].features[index].title ?? ''}
 																	idPrefix={`admin-${card.key}_use_${index + 1}`}
 																/>
+																<FeatureEffectsForm
+																	bind:effects={editorItem[card.key].features[index].effects}
+																	featureTitle={editorItem[card.key].features[index].title ?? ''}
+																	hasUsage={!!editorItem[card.key].features[index].usage}
+																	class="mt-3"
+																	idPrefix={`admin-${card.key}_use_${index + 1}`}
+																/>
 															</div>
 														</div>
 													{/each}
@@ -2743,6 +2751,13 @@
 														featureTitle={editorItem.features[index].title ?? ''}
 														idPrefix={`admin-use_${index + 1}`}
 													/>
+													<FeatureEffectsForm
+														bind:effects={editorItem.features[index].effects}
+														featureTitle={editorItem.features[index].title ?? ''}
+														hasUsage={!!editorItem.features[index].usage}
+														class="mt-3"
+														idPrefix={`admin-use_${index + 1}`}
+													/>
 												</div>
 											{/if}
 										</div>
@@ -2845,6 +2860,13 @@
 										featureTitle={editorItem.hope_feature.title ?? ''}
 										idPrefix="admin-hope_feature"
 									/>
+									<FeatureEffectsForm
+										bind:effects={editorItem.hope_feature.effects}
+										featureTitle={editorItem.hope_feature.title ?? ''}
+										hasUsage={!!editorItem.hope_feature.usage}
+										class="mt-3"
+										idPrefix="admin-hope_feature"
+									/>
 								</div>
 								<div class="grid gap-3">
 									<div class="flex items-center justify-between">
@@ -2900,6 +2922,13 @@
 													<FeatureRecordsForm
 														bind:records={editorItem.class_features[index].records}
 														featureTitle={editorItem.class_features[index].title ?? ''}
+														idPrefix={`admin-use_${index + 1}`}
+													/>
+													<FeatureEffectsForm
+														bind:effects={editorItem.class_features[index].effects}
+														featureTitle={editorItem.class_features[index].title ?? ''}
+														hasUsage={!!editorItem.class_features[index].usage}
+														class="mt-3"
 														idPrefix={`admin-use_${index + 1}`}
 													/>
 												</div>

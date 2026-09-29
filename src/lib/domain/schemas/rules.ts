@@ -391,6 +391,54 @@ export const FeatureRecordSchema = z
 	});
 export type FeatureRecord = z.infer<typeof FeatureRecordSchema>;
 
+// Rest, scene and session events end effects from Downtime; the rest are combat events the player
+// confirms until rolls report them (#8). 'attacked_successfully' is an attack succeeding against you.
+export const EffectEndEventSchema = z.enum([
+	'short_rest',
+	'long_rest',
+	'scene',
+	'session_end',
+	'attack_made',
+	'attack_succeeded',
+	'damage_rolled',
+	'damage_dealt',
+	'hp_marked',
+	'attacked_successfully'
+]);
+export type EffectEndEvent = z.infer<typeof EffectEndEventSchema>;
+
+// A temporary effect a feature switches on: its modifiers apply only while it is active and its
+// source is eligible, and it ends on the listed events or when someone ends it by hand.
+export const FeatureEffectSchema = z.object({
+	// stable across versions; character state is keyed by it
+	id: FeatureUsageSchema.shape.id,
+	label: z.string().trim().min(1).optional(),
+	cost: z
+		.object({
+			hope: z.number().int().min(1).max(12).optional(),
+			stress: z.number().int().min(1).max(12).optional(),
+			// Spends a use of the feature's usage tracker.
+			usage: z.boolean().optional()
+		})
+		.optional(),
+	// Hope and Stress are paid on the attempt; the effect (and any use) only on a success.
+	requires_success: z.boolean().optional(),
+	target: z.object({ label: z.string().trim().min(1, 'Target label is required') }).optional(),
+	// single: can't activate again while active; replace: a new activation ends the old one;
+	// per_target: one instance per target. Defaults to single.
+	instances: z.enum(['single', 'replace', 'per_target']).optional(),
+	// against_target modifiers only apply to rolls against the target, so they don't change the sheet.
+	// Defaults to self.
+	scope: z.enum(['self', 'against_target']).optional(),
+	character_modifiers: z.array(CharacterModifierSchema),
+	weapon_modifiers: z.array(WeaponModifierSchema),
+	notes: z.string().trim().min(1).optional(),
+	ends_on: z.array(EffectEndEventSchema),
+	// Narrative ends the player or GM confirms, e.g. "You attack another creature".
+	ends_when: z.array(z.string().trim().min(1)).optional()
+});
+export type FeatureEffect = z.infer<typeof FeatureEffectSchema>;
+
 export const FeatureSchema = z
 	.object({
 		title: z.string(),
@@ -401,7 +449,8 @@ export const FeatureSchema = z
 		token_max: z.number().int().min(0).optional(),
 		usage: FeatureUsageSchema.optional(),
 		pools: z.array(FeaturePoolSchema).optional(),
-		records: z.array(FeatureRecordSchema).optional()
+		records: z.array(FeatureRecordSchema).optional(),
+		effects: z.array(FeatureEffectSchema).optional()
 	})
 	.superRefine((feature, ctx) => {
 		const ids = new Set<string>();
@@ -425,6 +474,24 @@ export const FeatureSchema = z
 				});
 			}
 			recordIds.add(record.id);
+		});
+		const effectIds = new Set<string>();
+		(feature.effects ?? []).forEach((effect, index) => {
+			if (effectIds.has(effect.id)) {
+				ctx.addIssue({
+					code: 'custom',
+					path: ['effects', index, 'id'],
+					message: 'Effect ids must be unique'
+				});
+			}
+			effectIds.add(effect.id);
+			if (effect.cost?.usage && !feature.usage) {
+				ctx.addIssue({
+					code: 'custom',
+					path: ['effects', index, 'cost', 'usage'],
+					message: 'Add a usage tracker to spend a use'
+				});
+			}
 		});
 	});
 export type Feature = z.infer<typeof FeatureSchema>;

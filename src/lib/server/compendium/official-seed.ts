@@ -107,6 +107,36 @@ const SEED_ITEM_RELEASES: Record<
 		changelog:
 			"Prayer Dice use your subclass's Spellcast trait, are rolled when you start a session and clear when it ends."
 	},
+	'SRD:classes:rogue': {
+		version: 2,
+		label: "Rogue's Dodge Effect",
+		changelog:
+			"Rogue's Dodge can be activated for 3 Hope: +2 Evasion until an attack succeeds against you or your next rest."
+	},
+	'SRD:classes:ranger': {
+		version: 2,
+		label: "Ranger's Focus Target",
+		changelog:
+			"Ranger's Focus spends a Hope on the attack and, on a success, tracks your Focus; a new Focus replaces the old one."
+	},
+	'SRD:subclasses:guardian_vengeance': {
+		version: 2,
+		label: 'Act of Reprisal Targets',
+		changelog:
+			'Act of Reprisal tracks each adversary you can retaliate against, with its +1 Proficiency for your next successful attack against them.'
+	},
+	'SRD:domain_cards:deadly_focus': {
+		version: 2,
+		label: 'Deadly Focus Effect',
+		changelog:
+			'Adds a once-per-rest use; activating Deadly Focus records your target and adds +1 Proficiency until you end it.'
+	},
+	'SRD:domain_cards:frenzy': {
+		version: 2,
+		label: 'Frenzy Effect',
+		changelog:
+			'Adds a once-per-long-rest use; while Frenzied you gain +10 damage and +8 to your Severe threshold.'
+	},
 	'SRD:community_cards:orderborne': {
 		version: 3,
 		label: 'Orderborne Sayings or Values Record',

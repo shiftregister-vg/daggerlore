@@ -63,6 +63,12 @@ import {
 	type RecordState,
 	type RecordTracker
 } from './feature-records';
+import {
+	activeEffectModifiers,
+	collectEffectTrackers,
+	pruneEffects,
+	type EffectTracker
+} from './feature-effects';
 
 type InventoryPrimaryWeapon = PrimaryWeapon & { inventory_id: string };
 type InventorySecondaryWeapon = SecondaryWeapon & { inventory_id: string };
@@ -167,6 +173,7 @@ export type DerivedCharacterData = {
 	usage_trackers: UsageTracker[];
 	pool_trackers: PoolTracker[];
 	record_trackers: RecordTracker[];
+	effect_trackers: EffectTracker[];
 
 	// feature flags
 	hasBeastformClassFeature: boolean;
@@ -1573,7 +1580,41 @@ function collectActiveModifiers(context: EvaluationContext): ModifierBuckets {
 	for (const card of Object.values(context.refs.additional_community_cards)) {
 		collectFeatureModifiers(card.features, buckets);
 	}
+
+	// Active effects only change the sheet while their source applies.
+	const effects = activeEffectModifiers(
+		context.character.active_effects ?? {},
+		deriveEffectTrackers(
+			deriveFeatureSources(
+				context.character,
+				context.refs,
+				context.domain_card_vault,
+				context.primary_class_mastery_level,
+				context.secondary_class_mastery_level
+			),
+			context.domain_card_vault,
+			context.domain_card_loadout
+		)
+	);
+	collectLooseModifiers(effects, buckets);
 	return buckets;
+}
+
+/** Effect trackers; a domain card's effects apply from the loadout, or the vault when it says so. */
+function deriveEffectTrackers(
+	sources: UsageSource[],
+	vault: VaultDomainCard[],
+	loadout: VaultDomainCard[]
+): EffectTracker[] {
+	const loadoutIds = new Set(loadout.map((card) => card.id));
+	return collectEffectTrackers(sources, collectUsageTrackers(sources), (source) => {
+		if (source.item_type !== 'domain_cards' || loadoutIds.has(source.item_id)) {
+			return { eligible: true };
+		}
+		return vault.find((card) => card.id === source.item_id)?.applies_in_vault
+			? { eligible: true }
+			: { eligible: false, reason: 'Inactive while this card is in your vault' };
+	});
 }
 
 function applyScalarModifiers(
@@ -2491,6 +2532,7 @@ export function derive_character_data(
 		spellcast_roll_bonus,
 		no_mercy_bonus: noMercyBonus,
 		usage_trackers: collectUsageTrackers(featureSources),
+		effect_trackers: deriveEffectTrackers(featureSources, domain_card_vault, loop.loadout),
 		record_trackers: collectRecordTrackers(featureSources),
 		pool_trackers: collectPoolTrackers(
 			derivePoolSources(featureSources, character, refs, loop.traits, loop.proficiency)
@@ -3145,6 +3187,12 @@ function normalizeReferencesAndChoices(
 	const prunedRecords = pruneRecords(nextRecords, usageSources);
 	if (JSON.stringify(prunedRecords) !== JSON.stringify(character.feature_records)) {
 		character.feature_records = prunedRecords;
+		changed = true;
+	}
+
+	const prunedEffects = pruneEffects(character.active_effects ?? {}, usageSources);
+	if (JSON.stringify(prunedEffects) !== JSON.stringify(character.active_effects)) {
+		character.active_effects = prunedEffects;
 		changed = true;
 	}
 

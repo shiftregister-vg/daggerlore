@@ -337,7 +337,27 @@ export const SUBCLASSES = {
 					description_html:
 						'When an adversary damages an ally within Melee range, you gain a **+1** bonus to your Proficiency for the next successful attack you make against that adversary.',
 					character_modifiers: [],
-					weapon_modifiers: []
+					weapon_modifiers: [],
+					effects: [
+						{
+							id: 'act_of_reprisal',
+							label: 'Reprisal',
+							target: { label: 'Adversary' },
+							instances: 'per_target',
+							scope: 'against_target',
+							character_modifiers: [
+								{
+									behaviour: 'bonus',
+									character_conditions: [],
+									type: 'flat',
+									value: 1,
+									target: 'proficiency'
+								}
+							],
+							weapon_modifiers: [],
+							ends_on: ['attack_succeeded']
+						}
+					]
 				}
 			],
 			options: []
