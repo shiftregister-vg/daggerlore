@@ -134,6 +134,8 @@ export const CHARACTER_DEFAULTS: Character = {
 	feature_records: {},
 	active_effects: {},
 	rest_moves: [],
+	received_grants: [],
+	request_applications: {},
 	card_layout: undefined,
 	mixed_ancestry_choices: {},
 	feature_choices: {},

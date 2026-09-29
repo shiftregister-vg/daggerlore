@@ -71,6 +71,7 @@ import {
 	type EffectTracker
 } from './feature-effects';
 import { collectDowntimeAllowances, type RestAllowances } from './downtime-moves';
+import type { ReceivedGrant } from '@domain/schemas/character-requests';
 import { collectRollOptionTrackers, type RollOptionTracker } from './roll-options';
 
 type InventoryPrimaryWeapon = PrimaryWeapon & { inventory_id: string };
@@ -1628,11 +1629,13 @@ function deriveDowntimeAllowances(
 	standard: { short: number; long: number },
 	vault: VaultDomainCard[],
 	loadout: VaultDomainCard[],
-	activeEffects: EffectState
+	activeEffects: EffectState,
+	received: ReceivedGrant[]
 ): RestAllowances {
 	const loadoutIds = new Set(loadout.map((card) => card.id));
 	return collectDowntimeAllowances(sources, standard, {
 		activeEffects,
+		received,
 		isEligible: (source) =>
 			source.item_type !== 'domain_cards' ||
 			loadoutIds.has(source.item_id) ||
@@ -2611,7 +2614,8 @@ export function derive_character_data(
 			{ short: max_short_rest_actions, long: max_long_rest_actions },
 			domain_card_vault,
 			loop.loadout,
-			character.active_effects ?? {}
+			character.active_effects ?? {},
+			character.received_grants ?? []
 		),
 		...finalFlags
 	};

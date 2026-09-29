@@ -272,3 +272,60 @@ describe('allowanceBreakdown', () => {
 		);
 	});
 });
+
+describe('received extra moves', () => {
+	const received = (rest: 'short' | 'long' | 'any', label?: string) => ({
+		id: `grant-${rest}`,
+		request_id: 'r',
+		from_name: 'Bram',
+		grant: { kind: 'extra_move' as const, rest, count: 1, label }
+	});
+
+	it('adds a "From" slot to the rest it names, beside the standard moves', () => {
+		const result = collectDowntimeAllowances(
+			[],
+			{ short: 2, long: 2 },
+			{
+				received: [received('long')]
+			}
+		);
+		expect(result.short).toHaveLength(1);
+		expect(result.long.map((slot) => [slot.label, slot.kind, slot.count])).toEqual([
+			['Standard', 'standard', 2],
+			['From Bram', 'extra_move', 1]
+		]);
+		expect(summarizeRest('long', result, []).total).toBe(3);
+	});
+
+	it('counts an "any" grant for whichever rest is taken', () => {
+		const result = collectDowntimeAllowances(
+			[],
+			{ short: 2, long: 2 },
+			{
+				received: [received('any', 'Eloquent')]
+			}
+		);
+		expect(summarizeRest('short', result, []).total).toBe(3);
+		expect(summarizeRest('long', result, []).total).toBe(3);
+		expect(allowanceBreakdown(summarizeRest('short', result, []))).toBe('Standard 2 · Eloquent +1');
+	});
+
+	it('ignores notes', () => {
+		const result = collectDowntimeAllowances(
+			[],
+			{ short: 2, long: 2 },
+			{
+				received: [
+					{
+						id: 'n',
+						request_id: 'r',
+						from_name: 'Bram',
+						grant: { kind: 'note', text: 'x', clear_on: [] }
+					}
+				]
+			}
+		);
+		expect(result.short).toHaveLength(1);
+		expect(result.long).toHaveLength(1);
+	});
+});

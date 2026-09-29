@@ -17,6 +17,7 @@
 	import { applyRecordEvent } from '$lib/state/feature-records';
 	import { applyEffectEvent, effectLabel, isDowntimeEffectEvent } from '$lib/state/feature-effects';
 	import { restoreDowntime, snapshotDowntime } from '$lib/state/downtime-snapshot';
+	import { applyGrantEvent } from '$lib/state/request-effects';
 	import {
 		allowanceBreakdown,
 		applyMoves,
@@ -38,6 +39,7 @@
 	import Checkbox from '$lib/components/ui/checkbox/checkbox.svelte';
 	import X from '@lucide/svelte/icons/x';
 	import type { PoolEvent } from '@domain/schemas/rules';
+	import type { ReceivedGrant } from '@domain/schemas/character-requests';
 
 	let { open = false }: { open?: boolean } = $props();
 
@@ -178,6 +180,11 @@
 		});
 	}
 
+	function describeReceivedGrant({ from_name, grant }: ReceivedGrant) {
+		const from = from_name ? ` from ${from_name}` : '';
+		return grant.kind === 'note' ? `a note${from}` : `an extra move${from}`;
+	}
+
 	function joinDescription(...parts: (string | undefined)[]) {
 		return parts.filter(Boolean).join(' ');
 	}
@@ -312,6 +319,10 @@
 			: { next: previousEffects, ended: [] };
 		character.active_effects = effects.next;
 
+		// Extra moves other players granted leave with their rest; notes leave on their own reset.
+		const grants = applyGrantEvent(character.received_grants ?? [], poolEvent);
+		character.received_grants = grants.next;
+
 		// Tokens a clearing pool turns into Hope, up to the character's maximum.
 		const hopePools = pools.converted.filter(({ tracker }) => tracker.clear_gain === 'hope');
 		let converted = '';
@@ -339,7 +350,12 @@
 					...records.cleared
 				],
 				effects.ended.map((tracker) => ({ ...tracker, label: effectLabel(tracker) })),
-				converted
+				joinDescription(
+					converted,
+					grants.cleared.length > 0
+						? `Cleared ${grants.cleared.map(describeReceivedGrant).join(', ')}.`
+						: undefined
+				)
 			),
 			diceToRoll: pools.diceToRoll
 		};

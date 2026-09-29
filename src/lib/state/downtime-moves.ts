@@ -2,6 +2,8 @@ import type { Character } from '@domain/schemas/characters';
 import type { DowntimeAllowance } from '@domain/schemas/rules';
 import { usageKey, type UsageItemType, type UsageSource } from './feature-usage';
 import type { EffectState } from './feature-effects';
+import { extraMoveGrantsFor } from './request-effects';
+import type { ReceivedGrant } from '@domain/schemas/character-requests';
 
 export type RestKind = 'short' | 'long';
 export type MoveEntry = Character['rest_moves'][number];
@@ -46,6 +48,8 @@ export function collectDowntimeAllowances(
 	options: {
 		isEligible?: (source: UsageSource, allowance: DowntimeAllowance) => boolean;
 		activeEffects?: EffectState;
+		/** Extra moves other players granted, which count toward the rest they name. */
+		received?: readonly ReceivedGrant[];
 	} = {}
 ): RestAllowances {
 	const result: RestAllowances = {
@@ -78,6 +82,18 @@ export function collectDowntimeAllowances(
 					count: allowance.count
 				});
 			}
+		}
+	}
+	for (const rest of ['short', 'long'] as const) {
+		for (const received of extraMoveGrantsFor(options.received ?? [], rest)) {
+			if (received.grant.kind !== 'extra_move') continue;
+			result[rest].push({
+				id: received.id,
+				label: received.grant.label || `From ${received.from_name || 'an ally'}`,
+				source_title: received.from_name,
+				kind: 'extra_move',
+				count: received.grant.count
+			});
 		}
 	}
 	return result;

@@ -13,6 +13,7 @@ import {
 	TraitsSchema
 } from './rules';
 import { AdventuringGearSchema, CompendiumContentIdsSchema } from './compendium';
+import { ReceivedGrantSchema, RequestApplicationSchema } from './character-requests';
 
 export const OfficialSourceVersionsSchema = z.record(SourceKeySchema, z.number().int().min(1));
 export type OfficialSourceVersions = z.infer<typeof OfficialSourceVersionsSchema>;
@@ -328,6 +329,10 @@ export const CharacterSchema = z.object({
 			)
 		)
 		.default({}), // keyed by `${item_type}:${item_id}:${effect.id}`
+	// Changes other players' requests made to this character, until they are used, cleared or dismissed.
+	received_grants: z.array(ReceivedGrantSchema).default([]),
+	// What this sheet applied for each accepted request (newest 50), so undo is exact and a lost reply never applies twice.
+	request_applications: z.record(z.string(), RequestApplicationSchema).default({}),
 	// Downtime moves chosen for a rest. They take effect when that rest is completed, then clear.
 	rest_moves: z
 		.array(

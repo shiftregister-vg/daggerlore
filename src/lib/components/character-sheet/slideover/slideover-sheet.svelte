@@ -20,6 +20,7 @@
 					| 'beastform-catalog'
 					| 'conditions'
 					| 'downtime'
+					| 'party'
 					| 'unarmored'
 					| 'unarmed_attack';
 		  }
@@ -42,6 +43,7 @@
 	import BeastformContent from './content/beastform-content.svelte';
 	import DeathMoveContent from './content/death-move-content.svelte';
 	import DowntimeContent from './content/downtime-content.svelte';
+	import PartyContent from './content/party-content.svelte';
 	import SheetCustomizationContent from './content/sheet-customization-content.svelte';
 	import SecondaryWeaponContent from './content/secondary-weapon-content.svelte';
 	import UnarmedAttackContent from './content/unarmed-attack-content.svelte';
@@ -57,7 +59,8 @@
 </script>
 
 <Sheet.Root bind:open>
-	<Sheet.Content>
+	<!-- Party is a form with cards and steppers, so it gets more room than the other panels. -->
+	<Sheet.Content class={content?.type === 'party' ? 'sm:max-w-lg' : undefined}>
 		{#if content?.type === 'primary_weapon'}
 			<PrimaryWeaponContent weapon_inventory_id={content.inventory_id} />
 		{:else if content?.type === 'secondary_weapon'}
@@ -109,6 +112,8 @@
 			/>
 		{:else if content?.type === 'downtime'}
 			<DowntimeContent {open} />
+		{:else if content?.type === 'party'}
+			<PartyContent />
 		{/if}
 	</Sheet.Content>
 </Sheet.Root>

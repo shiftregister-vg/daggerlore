@@ -6,6 +6,7 @@ import { OFFICIAL_COMPENDIUM_TABLES } from '$lib/server/compendium/official-seed
 import type { HomebrewTable } from '@domain/permissions';
 import type { OfficialItemVersions, OfficialSourceVersions } from '@domain/schemas/characters';
 import * as feedbackGitHub from '$lib/server/app/feedback-github';
+import * as characterRequests from '$lib/server/app/character-requests';
 import * as characterRestore from '$lib/server/app/character-restore';
 import { UNSAFE_CHANGE } from '@domain/character-safety';
 
@@ -162,6 +163,9 @@ export async function GET(event) {
 		if (parts[0] === 'characters' && parts[1] && parts[2] === 'versions') {
 			return ok(await characterRestore.listCharacterVersions(uid, parts[1]));
 		}
+		if (parts[0] === 'characters' && parts[1] && parts[2] === 'requests') {
+			return ok(await characterRequests.listCharacterRequests(uid, parts[1]));
+		}
 		if (parts[0] === 'characters' && parts[2] === 'scope') {
 			return ok(await repo.getCharacterCompendiumScope(uid, parts[1]));
 		}
@@ -216,6 +220,13 @@ export async function POST(event) {
 		) {
 			await characterRestore.restoreCharacterVersion(uid, parts[1], parts[3]);
 			return noContent();
+		}
+		if (parts[0] === 'characters' && parts[1] && parts[2] === 'requests') {
+			return ok(await characterRequests.createCharacterRequest(uid, parts[1], await body(event)));
+		}
+		if (parts[0] === 'character-requests' && parts[1] && parts[2]) {
+			const data = await event.request.json().catch(() => undefined);
+			return ok(await characterRequests.respondToCharacterRequest(uid, parts[1], parts[2], data));
 		}
 		if (parts[0] === 'characters' && parts[1] && parts[2] === 'compendium-updates') {
 			return ok(await repo.updateCharacterCompendiumVersions(uid, parts[1], await body(event)));
