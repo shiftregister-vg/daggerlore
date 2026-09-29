@@ -153,6 +153,7 @@
 				type="duality"
 				modifier={toHit}
 				traitId={currentTrait}
+				context={{ kind: 'attack', trait: currentTrait }}
 				name={weapon.title}
 				class="mx-auto"
 			/>
@@ -166,6 +167,7 @@
 				diceString={weapon.damage_dice}
 				modifier={weapon.damage_bonus}
 				damageType={currentDamageType}
+				context={{ kind: 'damage', damage_type: currentDamageType }}
 			/>
 		</td>
 		<td class="hidden py-2 pr-4 text-right text-xs @lg:table-cell">

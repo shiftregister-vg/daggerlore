@@ -1,8 +1,10 @@
 <script lang="ts">
 	import { cn, applyProficiencyToDice, parseDiceString } from '$lib/utils';
-	import type { RollInput } from '@domain/schemas/dice';
+	import type { RollContext, RollInput } from '@domain/schemas/dice';
 	import type { DamageType, TraitId } from '@domain/schemas/rules';
 	import { getDiceContext } from '$lib/state/dice.svelte';
+	import { getCharacterContext } from '$lib/state/character.svelte';
+	import { startRoll } from './roll-gate';
 	import { TRAITS } from '@domain/constants/rules';
 	import type { Snippet } from 'svelte';
 
@@ -12,6 +14,8 @@
 		name?: string;
 		modifier?: number;
 		beforeRoll?: () => void;
+		/** What the roll is for; lets features offer choices on it. */
+		context?: RollContext;
 		children?: Snippet;
 	} & (
 		| {
@@ -30,12 +34,14 @@
 		name = 'Roll',
 		disabled = false,
 		beforeRoll,
+		context,
 		children,
 		class: className = '',
 		...restProps
 	}: RollButtonProps = $props();
 
 	const diceCtx = getDiceContext();
+	const characterCtx = getCharacterContext();
 	const LONG_PRESS_DELAY_MS = 500;
 	const SUPPRESS_CLICK_AFTER_LONG_PRESS_MS = 200;
 
@@ -64,7 +70,8 @@
 			return {
 				name: name,
 				dice: [...parsed.dice, { type: 'hope' }, { type: 'fear' }],
-				modifier: Modifier
+				modifier: Modifier,
+				context
 			};
 		}
 		if (restProps.type === 'gm') {
@@ -78,7 +85,8 @@
 			return {
 				name: name,
 				dice: [...parsed.dice],
-				modifier: Modifier
+				modifier: Modifier,
+				context
 			};
 		}
 		return null;
@@ -105,7 +113,7 @@
 		const input = getRollInput();
 		if (!input) return;
 		beforeRoll?.();
-		diceCtx.roll(input);
+		startRoll(diceCtx, characterCtx, input);
 	}
 
 	function oncontextmenu(event: MouseEvent) {

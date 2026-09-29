@@ -530,3 +530,71 @@ describe('feature effects', () => {
 		expect(result.character.active_effects[reprisalKey]).toHaveLength(2);
 	});
 });
+
+describe('roll options', () => {
+	const swapKey = 'domain_cards:arcana_touched:arcana_touched_swap';
+	const hopeDieKey = 'domain_cards:signature_move:signature_move_hope_die';
+
+	function caster(cards: { domain_id: string; card_id: string }[]): Character {
+		const character = legacyCharacter();
+		character.level = 8;
+		character.additional_domain_card_ids = cards as Character['additional_domain_card_ids'];
+		character.loadout_domain_card_ids = cards as Character['loadout_domain_card_ids'];
+		return character;
+	}
+
+	it('publishes valid roll option configuration for the proof content', () => {
+		for (const id of ['signature_move', 'arcana_touched', 'unleash_chaos']) {
+			expect(() => DomainCardSchema.parse(compendium.domain_cards[id])).not.toThrow();
+		}
+		for (const id of ['seraph', 'ranger']) {
+			expect(() => CharacterClassSchema.parse(compendium.classes[id])).not.toThrow();
+		}
+	});
+
+	it('exposes options for owned features and gates a card in the vault', () => {
+		const character = caster([{ domain_id: 'bone', card_id: 'signature_move' }]);
+		const loaded = derive_character_state(character, compendium).derived.roll_option_trackers;
+		expect(loaded.find((tracker) => tracker.key === hopeDieKey)?.eligible).toBe(true);
+
+		character.loadout_domain_card_ids = [];
+		const vaulted = derive_character_state(character, compendium).derived.roll_option_trackers;
+		expect(vaulted.find((tracker) => tracker.key === hopeDieKey)).toMatchObject({
+			eligible: false,
+			ineligible_reason: 'Inactive while this card is in your vault'
+		});
+	});
+
+	it("requires four Arcana cards in the loadout for Arcana-Touched's swap", () => {
+		const arcana = ['rune_ward', 'unleash_chaos', 'wall_walk', 'cinder_grasp'].map((card_id) => ({
+			domain_id: 'arcana',
+			card_id
+		}));
+		const three = caster([
+			{ domain_id: 'arcana', card_id: 'arcana_touched' },
+			...arcana.slice(0, 2)
+		]);
+		const tooFew = derive_character_state(three, compendium).derived.roll_option_trackers;
+		expect(tooFew.find((tracker) => tracker.key === swapKey)).toMatchObject({
+			eligible: false,
+			ineligible_reason: "This card's requirements aren't met"
+		});
+
+		const enough = caster([{ domain_id: 'arcana', card_id: 'arcana_touched' }, ...arcana]);
+		const four = derive_character_state(enough, compendium).derived.roll_option_trackers;
+		expect(four.find((tracker) => tracker.key === swapKey)?.eligible).toBe(true);
+	});
+
+	it('links options to their pools, uses and required effects', () => {
+		const character = legacyCharacter();
+		character.level = 5;
+		character.primary_class_id = 'ranger';
+		character.primary_subclass_id = 'ranger_wayfinder';
+		const trackers = derive_character_state(character, compendium).derived.roll_option_trackers;
+		const reroll = trackers.find(
+			(tracker) => tracker.key === 'classes:ranger:rangers_focus_reroll'
+		);
+		expect(reroll?.effect?.key).toBe('classes:ranger:rangers_focus');
+		expect(reroll?.option.ends_effect).toBe(true);
+	});
+});

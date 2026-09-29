@@ -4,12 +4,17 @@
 	import { getApi, postApi } from '$lib/api/client';
 	import { getCharacterContext } from '$lib/state/character.svelte';
 	import { usageLimitCaption } from '$lib/state/feature-usage';
+	import { describeRollOption } from '$lib/state/roll-options';
 	import {
 		describeEffectModifiers,
 		effectCostCaption,
 		effectEndCaption
 	} from '$lib/state/feature-effects';
-	import { FeatureEffectSchema, UsageResetSchema } from '@domain/schemas/rules';
+	import {
+		FeatureEffectSchema,
+		FeatureRollOptionSchema,
+		UsageResetSchema
+	} from '@domain/schemas/rules';
 
 	type CompendiumUpdate = {
 		key: string;
@@ -232,6 +237,16 @@
 			.join('; ');
 	}
 
+	function featureRollOptions(feature: Record<string, unknown> | undefined) {
+		const options = Array.isArray(feature?.roll_options) ? feature.roll_options : [];
+		return options
+			.flatMap((value) => {
+				const parsed = FeatureRollOptionSchema.safeParse(value);
+				return parsed.success ? [`Roll option: ${describeRollOption(parsed.data)}`] : [];
+			})
+			.join('; ');
+	}
+
 	function quantityText(quantity: Record<string, unknown>) {
 		const minimum = typeof quantity.minimum === 'number' ? ` (min ${quantity.minimum})` : '';
 		if (quantity.source === 'fixed') return `${String(quantity.value ?? 0)}`;
@@ -268,7 +283,8 @@
 					featureUsage(beforeFeature),
 					featurePools(beforeFeature),
 					featureRecords(beforeFeature),
-					featureEffects(beforeFeature)
+					featureEffects(beforeFeature),
+					featureRollOptions(beforeFeature)
 				]
 					.filter(Boolean)
 					.join('; '),
@@ -276,7 +292,8 @@
 					featureUsage(afterFeature),
 					featurePools(afterFeature),
 					featureRecords(afterFeature),
-					featureEffects(afterFeature)
+					featureEffects(afterFeature),
+					featureRollOptions(afterFeature)
 				]
 					.filter(Boolean)
 					.join('; '),

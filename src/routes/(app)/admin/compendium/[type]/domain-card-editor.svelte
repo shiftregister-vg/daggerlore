@@ -9,6 +9,7 @@
 	import FeaturePoolsForm from '$lib/components/homebrew/forms/shared/features/feature-pools-form.svelte';
 	import FeatureRecordsForm from '$lib/components/homebrew/forms/shared/features/feature-records-form.svelte';
 	import FeatureEffectsForm from '$lib/components/homebrew/forms/shared/features/feature-effects-form.svelte';
+	import FeatureRollOptionsForm from '$lib/components/homebrew/forms/shared/features/feature-roll-options-form.svelte';
 	import type { CompendiumContent, Domain, DomainCard } from '@domain/schemas/compendium';
 	import type { SourceMetadata } from '@domain/schemas/sources';
 	import type { SourceKey } from '@domain/schemas/rules';
@@ -69,7 +70,8 @@
 						usage: feature.usage,
 						pools: feature.pools,
 						records: feature.records,
-						effects: feature.effects
+						effects: feature.effects,
+						roll_options: feature.roll_options
 					}))
 				: [{ title: '', description_html: '', character_modifiers: [], weapon_modifiers: [] }];
 
@@ -378,6 +380,12 @@
 							bind:effects={item.features[index].effects}
 							featureTitle={item.features[index].title ?? ''}
 							hasUsage={!!item.features[index].usage}
+							class="mt-3"
+							idPrefix={`admin-use_${index + 1}`}
+						/>
+						<FeatureRollOptionsForm
+							bind:options={item.features[index].roll_options}
+							feature={item.features[index]}
 							class="mt-3"
 							idPrefix={`admin-use_${index + 1}`}
 						/>

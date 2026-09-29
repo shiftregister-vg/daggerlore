@@ -7,6 +7,8 @@
 	import DiceLogSheet from '$lib/components/dice/dice-log-sheet.svelte';
 	import DiceRecents from '$lib/components/dice/dice-recents.svelte';
 	import DiceRoller from '$lib/components/dice/dice-roller.svelte';
+	import PreRollDialog from '$lib/components/dice/pre-roll-dialog.svelte';
+	import RollResultPanel from '$lib/components/dice/roll-result-panel.svelte';
 	import { getCampaignContext } from '$lib/state/campaign.svelte';
 	import { getCharacterContext } from '$lib/state/character.svelte';
 
@@ -30,6 +32,8 @@
 
 <SheetTheme id={theme_id}>
 	<DiceRoller />
+	<PreRollDialog />
+	<RollResultPanel />
 	<CompendiumUpdatesDialog />
 	<DiceRecents bind:showDiceLog />
 	<DiceLogSheet

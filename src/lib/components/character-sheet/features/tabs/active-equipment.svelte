@@ -216,6 +216,7 @@
 									type="duality"
 									modifier={beastformToHit}
 									traitId={derivedBeastform.attack.trait}
+									context={{ kind: 'attack', trait: derivedBeastform.attack.trait }}
 								/>
 							</td>
 							<td class="py-2 pr-4 text-right whitespace-nowrap @lg:text-center">
@@ -227,6 +228,7 @@
 									diceString={derivedBeastform.attack.damage_dice}
 									modifier={derivedBeastform.attack.damage_bonus}
 									damageType={derivedBeastform.attack.damage_type}
+									context={{ kind: 'damage', damage_type: derivedBeastform.attack.damage_type }}
 								/>
 							</td>
 							<td class="hidden py-2 pr-4 text-right text-xs @lg:table-cell">
@@ -246,6 +248,7 @@
 					name="Sneak Attack Damage"
 					type="base"
 					diceString={`${level_to_tier(characterCtx.character?.level ?? 0)}d6`}
+					context={{ kind: 'damage' }}
 				/>
 				<p class="text-xs text-nowrap">Sneak Attack Damage</p>
 				<p class="text-xs text-muted-foreground italic">

@@ -21,6 +21,7 @@
 	// ui components & icons
 	import ConditionChip from '$lib/components/conditions/condition-chip.svelte';
 	import ActiveEffectChips from './features/active-effect-chips.svelte';
+	import TakeDamageDialog from './take-damage-dialog.svelte';
 	import ClassBanner from '$lib/components/decorations/class-banner.svelte';
 	import Button from '$lib/components/ui/button/button.svelte';
 	import CharacterPortrait from './standalone/character-portrait.svelte';
@@ -126,6 +127,8 @@
 		Object.values(character?.active_effects ?? {}).some((instances) => instances.length > 0)
 	);
 	// Active effects share the conditions row, so they get the same spacing.
+	let takeDamageOpen = $state(false);
+
 	const hasConditions = $derived(activeConditions.length > 0 || hasActiveEffects);
 
 	function disableCondition(conditionName: string) {
@@ -336,6 +339,7 @@
 		</div>
 
 		<TransformationStatus />
+		<TakeDamageDialog bind:open={takeDamageOpen} />
 
 		<!-- layout grid -->
 		<div
@@ -380,6 +384,17 @@
 						bind:marked={character.marked_hp}
 						class={cn(' justify-start', character.death_state?.is_dead && 'opacity-50')}
 					/>
+					{#if canEdit && derived_character_data.max_hp > character.marked_hp && !character.death_state?.is_dead}
+						<Button
+							onclick={() => (takeDamageOpen = true)}
+							size="sm"
+							variant="ghost"
+							class="absolute -bottom-9 left-1/2 -translate-x-1/2"
+						>
+							<HeartCrack class="size-4" />
+							Take damage
+						</Button>
+					{/if}
 					{#if derived_character_data.max_hp === character.marked_hp && !character.death_state?.is_dead}
 						<Button
 							onclick={() => openDeathMoveSheet(false)}

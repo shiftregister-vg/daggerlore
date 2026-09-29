@@ -3,6 +3,9 @@
 	import type { Traits, TraitId } from '@domain/schemas/rules';
 	import { TRAITS } from '@domain/constants/rules';
 	import { getDiceContext } from '$lib/state/dice.svelte';
+	import { getCharacterContext } from '$lib/state/character.svelte';
+	import { startRoll } from '$lib/components/dice/roll-gate';
+	import type { RollInput } from '@domain/schemas/dice';
 
 	let {
 		class: className = '',
@@ -17,17 +20,19 @@
 	} = $props();
 
 	const diceCtx = getDiceContext();
+	const characterCtx = getCharacterContext();
 	const LONG_PRESS_DELAY_MS = 500;
 	const SUPPRESS_CLICK_AFTER_LONG_PRESS_MS = 200;
 
 	let longPressTimeout: ReturnType<typeof setTimeout> | null = null;
 	let lastLongPressAt = 0;
 
-	function getTraitRollInput(trait: keyof Traits) {
+	function getTraitRollInput(trait: keyof Traits): RollInput {
 		return {
 			name: TRAITS[trait].name,
 			dice: [{ type: 'hope' as const }, { type: 'fear' as const }],
-			modifier: traits[trait] ?? 0
+			modifier: traits[trait] ?? 0,
+			context: { kind: spellcastTraits?.[trait] ? 'spellcast' : 'trait', trait }
 		};
 	}
 
@@ -47,7 +52,7 @@
 		if (Date.now() - lastLongPressAt < SUPPRESS_CLICK_AFTER_LONG_PRESS_MS) {
 			return;
 		}
-		diceCtx.roll(getTraitRollInput(trait));
+		startRoll(diceCtx, characterCtx, getTraitRollInput(trait));
 	}
 
 	function onpointerdown(event: PointerEvent, trait: keyof Traits) {

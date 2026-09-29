@@ -1,4 +1,5 @@
 import type { DiceType, Roll, RollInput } from '@domain/schemas/dice';
+import { rollDescription, rollTotal } from './roll-math';
 import { getContext, setContext } from 'svelte';
 import DiceBox, { type DieResult, type RollGroup } from '@3d-dice/dice-box';
 
@@ -10,10 +11,14 @@ const DICE_CONFIG: Record<DiceType, { sides: number; themeColor: string }> = {
 	d12: { sides: 12, themeColor: '#2a2045' },
 	d20: { sides: 20, themeColor: '#2a2045' },
 	hope: { sides: 12, themeColor: '#fde07d' },
+	hope_d20: { sides: 20, themeColor: '#fde07d' },
 	fear: { sides: 12, themeColor: '#6341b2' },
 	advantage: { sides: 6, themeColor: '#009966' },
 	disadvantage: { sides: 6, themeColor: '#a50036' }
 };
+
+// What a roll carries besides its dice: what it is for and what features added before it.
+type RollMeta = Pick<Roll, 'context' | 'adjustments' | 'applied'>;
 
 function diceContext() {
 	const DEFAULT_DICE_LAYER_Z_INDEX = '40';
@@ -31,10 +36,12 @@ function diceContext() {
 	let diceBox: HTMLDivElement | null = null;
 	let currentRollOrder: Array<{ type: string; themeColor: string; sides: number }> = [];
 	let rollingRollId: string | null = null;
-	let rollingRollData: { name: string; modifier: number } | null = null;
+	let rollingRollData: { name: string; modifier: number; meta: RollMeta } | null = null;
 	let pendingMergedReroll: {
 		sourceRoll: Roll;
 		dieIndices: number[];
+		/** Extra dice were appended to the roll rather than rerolled; this is the roll without them. */
+		original?: Roll;
 	} | null = null;
 	let autoClearTimeout: ReturnType<typeof setTimeout> | null = null;
 	let fadeClearTimeout: ReturnType<typeof setTimeout> | null = null;
@@ -201,7 +208,12 @@ function diceContext() {
 		}
 	}
 
-	function finalizeRoll(rollGroups: RollGroup[], rollName: string, rollModifier: number) {
+	function finalizeRoll(
+		rollGroups: RollGroup[],
+		rollName: string,
+		rollModifier: number,
+		rollMeta: RollMeta = {}
+	) {
 		try {
 			if (!rollGroups || rollGroups.length === 0) {
 				console.warn('No roll results received');
@@ -273,14 +285,11 @@ function diceContext() {
 				});
 
 				finalRoll = {
-					id: activeMergedReroll.sourceRoll.id,
-					name: activeMergedReroll.sourceRoll.name,
-					isReroll: true,
+					...activeMergedReroll.sourceRoll,
+					isReroll: !activeMergedReroll.original,
+					rerollingDieIndices: undefined,
 					dice: mergedDice,
-					modifier: activeMergedReroll.sourceRoll.modifier,
-					status: 'complete',
-					timestamp: activeMergedReroll.sourceRoll.timestamp,
-					rollerName: activeMergedReroll.sourceRoll.rollerName
+					status: 'complete'
 				};
 
 				if (!replaceHistoryRoll(activeMergedReroll.sourceRoll.id, finalRoll)) {
@@ -294,7 +303,8 @@ function diceContext() {
 					dice: diceResults,
 					modifier: rollModifier,
 					status: 'complete',
-					timestamp
+					timestamp,
+					...rollMeta
 				};
 
 				replaceHistoryRoll(activeRollingRollId, finalRoll);
@@ -306,7 +316,8 @@ function diceContext() {
 					dice: diceResults,
 					modifier: rollModifier,
 					status: 'complete',
-					timestamp
+					timestamp,
+					...rollMeta
 				};
 
 				history = [...history, finalRoll];
@@ -336,7 +347,8 @@ function diceContext() {
 	async function handleRoll(
 		dice: Roll['dice'],
 		rollName: string,
-		rollModifier: number
+		rollModifier: number,
+		rollMeta: RollMeta = {}
 	): Promise<DieResult[]> {
 		if (!Box) {
 			console.error('DiceBox is not initialized');
@@ -356,11 +368,12 @@ function diceContext() {
 			dice: dice.map((d) => ({ ...d })),
 			modifier: rollModifier,
 			status: 'rolling',
-			timestamp: Date.now()
+			timestamp: Date.now(),
+			...rollMeta
 		};
 		history = [...history, rollingRoll];
 		rollingRollId = rollId;
-		rollingRollData = { name: rollName, modifier: rollModifier };
+		rollingRollData = { name: rollName, modifier: rollModifier, meta: rollMeta };
 
 		try {
 			isRolling = true;
@@ -415,7 +428,7 @@ function diceContext() {
 
 		replaceHistoryRoll(sourceRoll.id, rollingRoll);
 		rollingRollId = sourceRoll.id;
-		rollingRollData = { name: sourceRoll.name, modifier: sourceRoll.modifier };
+		rollingRollData = { name: sourceRoll.name, modifier: sourceRoll.modifier, meta: {} };
 		pendingMergedReroll = {
 			sourceRoll: {
 				...sourceRoll,
@@ -454,8 +467,9 @@ function diceContext() {
 		clearAutoClearTimers();
 
 		if (pendingMergedReroll) {
-			replaceHistoryRoll(pendingMergedReroll.sourceRoll.id, pendingMergedReroll.sourceRoll);
-			lastRoll = { ...pendingMergedReroll.sourceRoll };
+			const restore = pendingMergedReroll.original ?? pendingMergedReroll.sourceRoll;
+			replaceHistoryRoll(restore.id, restore);
+			lastRoll = { ...restore };
 		} else if (lastRoll) {
 			lastRoll.status = 'complete';
 			lastRoll = { ...lastRoll }; // Trigger reactivity
@@ -473,59 +487,72 @@ function diceContext() {
 		resetRollingState();
 	}
 
+	/** Rolls extra dice and merges them into a finished roll (e.g. a bonus die spent after the roll). */
+	async function rollExtra(sourceRoll: Roll, extraDice: Roll['dice']): Promise<void> {
+		if (!Box) {
+			console.error('DiceBox is not initialized');
+			return;
+		}
+		if (sourceRoll.status !== 'complete' || extraDice.length === 0) return;
+
+		cancelActiveRoll();
+
+		const firstNew = sourceRoll.dice.length;
+		const withExtra: Roll = {
+			...sourceRoll,
+			dice: [
+				...sourceRoll.dice.map((die) => ({ ...die })),
+				...extraDice.map((d) => ({ type: d.type }))
+			]
+		};
+		const dieIndices = extraDice.map((_, index) => firstNew + index);
+		const rollingRoll: Roll = { ...withExtra, status: 'rolling', rerollingDieIndices: dieIndices };
+
+		replaceHistoryRoll(sourceRoll.id, rollingRoll);
+		rollingRollId = sourceRoll.id;
+		rollingRollData = { name: sourceRoll.name, modifier: sourceRoll.modifier, meta: {} };
+		pendingMergedReroll = { sourceRoll: withExtra, dieIndices, original: sourceRoll };
+
+		try {
+			isRolling = true;
+			resetPosition();
+			Box.clear();
+
+			const { rollObjects, rollOrder } = prepareRollObjects(
+				extraDice.map((d) => ({ type: d.type }))
+			);
+			currentRollOrder = rollOrder;
+
+			if (rollObjects.length === 0) {
+				replaceHistoryRoll(sourceRoll.id, sourceRoll);
+				resetRollingState();
+				return;
+			}
+
+			lastRoll = rollingRoll;
+			await Box.roll(rollObjects);
+		} catch (error) {
+			console.error('Error rolling extra dice:', error);
+			replaceHistoryRoll(sourceRoll.id, sourceRoll);
+			resetRollingState();
+			resetPosition();
+		}
+	}
+
+	/** Replaces a finished roll in the history and last-roll slot, e.g. after a spent adjustment. */
+	function updateRoll(next: Roll) {
+		if (!replaceHistoryRoll(next.id, next)) history = [...history, next];
+		lastRoll = next;
+		for (const cb of rollCompleteCallbacks) cb(next);
+	}
+
 	// --- Roll calculations ---
 	function getTotal(roll: Roll): number {
-		// Sum standard dice, hope, and fear
-		const standardSum = roll.dice
-			.filter((d) => d.result !== undefined && d.type !== 'advantage' && d.type !== 'disadvantage')
-			.reduce((sum, d) => sum + (d.result || 0), 0);
-
-		// Add advantage results
-		const advantageSum = roll.dice
-			.filter((d) => d.type === 'advantage' && d.result !== undefined)
-			.reduce((sum, d) => sum + (d.result || 0), 0);
-
-		// Subtract disadvantage results
-		const disadvantageSum = roll.dice
-			.filter((d) => d.type === 'disadvantage' && d.result !== undefined)
-			.reduce((sum, d) => sum + (d.result || 0), 0);
-
-		return standardSum + advantageSum - disadvantageSum + roll.modifier;
+		return rollTotal(roll);
 	}
 
 	function getDescription(roll: Roll): string {
-		// Get all fear dice results
-		const fearDice = roll.dice.filter((d) => d.type === 'fear' && d.result !== undefined);
-		const fearValues = fearDice.map((d) => d.result || 0);
-		const totalFear = fearValues.reduce((sum, v) => sum + v, 0);
-
-		// Get all hope dice results
-		const hopeDice = roll.dice.filter((d) => d.type === 'hope' && d.result !== undefined);
-		const hopeValues = hopeDice.map((d) => d.result || 0);
-		const totalHope = hopeValues.reduce((sum, v) => sum + v, 0);
-
-		// Check if both exist and any fear value equals any hope value (Critical Success)
-		if (fearDice.length > 0 && hopeDice.length > 0) {
-			// Check if any fear value matches any hope value
-			const hasMatchingValue = fearValues.some((fv) => hopeValues.includes(fv));
-
-			if (hasMatchingValue) {
-				return 'Critical Success';
-			}
-		}
-
-		// If fear exists and total fear > total hope (or no hope dice)
-		if (fearDice.length > 0 && totalFear > totalHope) {
-			return 'with Fear';
-		}
-
-		// If hope exists and total hope > total fear (or no fear dice)
-		if (hopeDice.length > 0 && totalHope > totalFear) {
-			return 'with Hope';
-		}
-
-		// Default: no status text
-		return '';
+		return rollDescription(roll);
 	}
 
 	// --- Public API ---
@@ -561,7 +588,7 @@ function diceContext() {
 			onRollComplete: (results) => {
 				const name = rollingRollData?.name ?? 'Roll';
 				const modifier = rollingRollData?.modifier ?? 0;
-				finalizeRoll(results, name, modifier);
+				finalizeRoll(results, name, modifier, rollingRollData?.meta);
 			},
 			onBeforeRoll
 		});
@@ -588,7 +615,11 @@ function diceContext() {
 		const rollModifier = input.modifier ?? 0;
 		const diceToRoll = input.dice.map((d) => ({ type: d.type }));
 
-		return await handleRoll(diceToRoll, rollName, rollModifier);
+		return await handleRoll(diceToRoll, rollName, rollModifier, {
+			context: input.context,
+			adjustments: input.adjustments,
+			applied: input.applied
+		});
 	};
 
 	const openPicker = (input: RollInput) => {
@@ -664,6 +695,8 @@ function diceContext() {
 		roll,
 		openPicker,
 		rerollDie,
+		rollExtra,
+		updateRoll,
 		cancelActiveRoll,
 		getTotal,
 		getDescription,
