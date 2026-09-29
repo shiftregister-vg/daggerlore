@@ -15,6 +15,7 @@
 	import MarkdownTextarea from './markdown-textarea.svelte';
 	import FeatureUsageEditor from './feature-usage-editor.svelte';
 	import FeaturePoolsForm from '$lib/components/homebrew/forms/shared/features/feature-pools-form.svelte';
+	import FeatureRecordsForm from '$lib/components/homebrew/forms/shared/features/feature-records-form.svelte';
 	import type { HomebrewTable } from '@domain/permissions';
 	import type { SourceKey } from '@domain/schemas/rules';
 	import type { SourceMetadata } from '@domain/schemas/sources';
@@ -2176,6 +2177,13 @@
 																	idPrefix={`admin-${card.key}_use_${index + 1}`}
 																/>
 															</div>
+															<div class="mt-3">
+																<FeatureRecordsForm
+																	bind:records={editorItem[card.key].features[index].records}
+																	featureTitle={editorItem[card.key].features[index].title ?? ''}
+																	idPrefix={`admin-${card.key}_use_${index + 1}`}
+																/>
+															</div>
 														</div>
 													{/each}
 												{/if}
@@ -2729,6 +2737,13 @@
 														idPrefix={`admin-use_${index + 1}`}
 													/>
 												</div>
+												<div class="mt-3">
+													<FeatureRecordsForm
+														bind:records={editorItem.features[index].records}
+														featureTitle={editorItem.features[index].title ?? ''}
+														idPrefix={`admin-use_${index + 1}`}
+													/>
+												</div>
 											{/if}
 										</div>
 									{/each}
@@ -2824,6 +2839,13 @@
 										idPrefix="admin-hope_feature"
 									/>
 								</div>
+								<div class="mt-3">
+									<FeatureRecordsForm
+										bind:records={editorItem.hope_feature.records}
+										featureTitle={editorItem.hope_feature.title ?? ''}
+										idPrefix="admin-hope_feature"
+									/>
+								</div>
 								<div class="grid gap-3">
 									<div class="flex items-center justify-between">
 										<p class="text-sm font-medium text-foreground">Class Features</p>
@@ -2870,6 +2892,13 @@
 												<div class="mt-3">
 													<FeaturePoolsForm
 														bind:pools={editorItem.class_features[index].pools}
+														featureTitle={editorItem.class_features[index].title ?? ''}
+														idPrefix={`admin-use_${index + 1}`}
+													/>
+												</div>
+												<div class="mt-3">
+													<FeatureRecordsForm
+														bind:records={editorItem.class_features[index].records}
 														featureTitle={editorItem.class_features[index].title ?? ''}
 														idPrefix={`admin-use_${index + 1}`}
 													/>

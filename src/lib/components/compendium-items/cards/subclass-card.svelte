@@ -9,6 +9,7 @@
 	import CardOptions from './card-options.svelte';
 	import UsageTracker from '$lib/components/character-sheet/features/usage-tracker.svelte';
 	import PoolTracker from '$lib/components/character-sheet/features/pool-tracker.svelte';
+	import RecordSummary from '$lib/components/character-sheet/features/record-summary.svelte';
 	import { usageKey } from '$lib/state/feature-usage';
 
 	let {
@@ -122,6 +123,14 @@
 						tracker_key={usage_item_id ? usageKey('subclasses', usage_item_id, pool.id) : undefined}
 					/>
 				{/each}
+				{#each feature.records ?? [] as record (record.id)}
+					<RecordSummary
+						{record}
+						tracker_key={usage_item_id
+							? usageKey('subclasses', usage_item_id, record.id)
+							: undefined}
+					/>
+				{/each}
 			{/each}
 
 			<!-- options & tokens -->
@@ -224,6 +233,14 @@
 							{disabled}
 							tracker_key={usage_item_id
 								? usageKey('subclasses', usage_item_id, pool.id)
+								: undefined}
+						/>
+					{/each}
+					{#each feature.records ?? [] as record (record.id)}
+						<RecordSummary
+							{record}
+							tracker_key={usage_item_id
+								? usageKey('subclasses', usage_item_id, record.id)
 								: undefined}
 						/>
 					{/each}

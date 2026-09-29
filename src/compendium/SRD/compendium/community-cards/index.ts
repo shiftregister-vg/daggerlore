@@ -46,10 +46,6 @@ export const COMMUNITY_CARDS = {
 		image_url: '',
 		tokens_enabled: false,
 		title: 'Orderborne',
-		field_group: {
-			name: 'Sayings or Values',
-			count: 3
-		},
 		description_html:
 			"Being part of an orderborne community means you're from a collective that focuses on discipline or faith, and you uphold a set of principles that reflect your experience there.",
 		features: [
@@ -58,7 +54,19 @@ export const COMMUNITY_CARDS = {
 				description_html:
 					"Record three sayings or values your upbringing instilled in you. Once per rest, when you describe how you're embodying one of these principles through your current action, you can roll a **d20** as your Hope Die.",
 				character_modifiers: [],
-				weapon_modifiers: []
+				weapon_modifiers: [],
+				records: [
+					{
+						id: 'sayings_or_values',
+						label: 'Sayings or values',
+						kind: 'single',
+						fields: [
+							{ id: 'first', label: 'First', type: 'text' },
+							{ id: 'second', label: 'Second', type: 'text' },
+							{ id: 'third', label: 'Third', type: 'text' }
+						]
+					}
+				]
 			}
 		]
 	},

@@ -133,7 +133,16 @@ The corpse answers truthfully, but it can't impart information it didn't know in
 - On a failure, **mark a Stress** to clear a Hit Point or a Stress on the target.
 
 You can't heal the same target again until your next long rest.`,
-				character_modifiers: []
+				character_modifiers: [],
+				records: [
+					{
+						id: 'healed',
+						label: 'Healed targets',
+						kind: 'ledger',
+						clear_on: ['long_rest'],
+						fields: [{ id: 'target', label: 'Target', type: 'text' }]
+					}
+				]
 			}
 		]
 	},

@@ -328,6 +328,69 @@ export const FeaturePoolSchema = z
 	});
 export type FeaturePool = z.infer<typeof FeaturePoolSchema>;
 
+export const RecordFieldTypeSchema = z.enum([
+	'text',
+	'long_text',
+	'number',
+	'choice',
+	'experience',
+	'trait',
+	'domain_card'
+]);
+export type RecordFieldType = z.infer<typeof RecordFieldTypeSchema>;
+
+export const RecordFieldSchema = z
+	.object({
+		// stable across versions; entry values are keyed by it
+		id: FeatureUsageSchema.shape.id,
+		label: z.string().trim().min(1, 'Field label is required'),
+		placeholder: z.string().trim().min(1).optional(),
+		type: RecordFieldTypeSchema,
+		options: z
+			.array(
+				z.object({
+					id: FeatureUsageSchema.shape.id,
+					label: z.string().trim().min(1, 'Option label is required')
+				})
+			)
+			.optional()
+	})
+	.superRefine((field, ctx) => {
+		if (field.type === 'choice' && !field.options?.length) {
+			ctx.addIssue({ code: 'custom', path: ['options'], message: 'Add at least one option' });
+		}
+	});
+export type RecordField = z.infer<typeof RecordFieldSchema>;
+
+// Things a player records or chooses for a feature: one record (e.g. a signature move) or a
+// ledger of entries (e.g. targets). Records are kept separate from temporary active effects.
+export const FeatureRecordSchema = z
+	.object({
+		// stable across versions; character state is keyed by it
+		id: FeatureUsageSchema.shape.id,
+		label: z.string().trim().min(1).optional(),
+		kind: z.enum(['single', 'ledger']),
+		fields: z.array(RecordFieldSchema).min(1).max(8),
+		// Ledger only; no cap when absent.
+		max_entries: z.number().int().min(1).max(50).optional(),
+		// Ledger only; clears every entry on these confirmed events.
+		clear_on: z.array(PoolEventSchema).optional()
+	})
+	.superRefine((record, ctx) => {
+		const ids = new Set<string>();
+		record.fields.forEach((field, index) => {
+			if (ids.has(field.id)) {
+				ctx.addIssue({
+					code: 'custom',
+					path: ['fields', index, 'id'],
+					message: 'Field ids must be unique'
+				});
+			}
+			ids.add(field.id);
+		});
+	});
+export type FeatureRecord = z.infer<typeof FeatureRecordSchema>;
+
 export const FeatureSchema = z
 	.object({
 		title: z.string(),
@@ -337,7 +400,8 @@ export const FeatureSchema = z
 		tokens_enabled: z.boolean().optional(),
 		token_max: z.number().int().min(0).optional(),
 		usage: FeatureUsageSchema.optional(),
-		pools: z.array(FeaturePoolSchema).optional()
+		pools: z.array(FeaturePoolSchema).optional(),
+		records: z.array(FeatureRecordSchema).optional()
 	})
 	.superRefine((feature, ctx) => {
 		const ids = new Set<string>();
@@ -350,6 +414,17 @@ export const FeatureSchema = z
 				});
 			}
 			ids.add(pool.id);
+		});
+		const recordIds = new Set<string>();
+		(feature.records ?? []).forEach((record, index) => {
+			if (recordIds.has(record.id)) {
+				ctx.addIssue({
+					code: 'custom',
+					path: ['records', index, 'id'],
+					message: 'Record ids must be unique'
+				});
+			}
+			recordIds.add(record.id);
 		});
 	});
 export type Feature = z.infer<typeof FeatureSchema>;

@@ -185,6 +185,28 @@
 			.join('; ');
 	}
 
+	function featureRecords(feature: Record<string, unknown> | undefined) {
+		const records = Array.isArray(feature?.records) ? feature.records.filter(isRecord) : [];
+		return records
+			.map((record) => {
+				const kind = record.kind === 'ledger' ? 'List' : 'Record';
+				const label = typeof record.label === 'string' && record.label ? ` (${record.label})` : '';
+				const fields = Array.isArray(record.fields)
+					? record.fields
+							.filter(isRecord)
+							.map((field) => String(field.label ?? field.id ?? ''))
+							.join(', ')
+					: '';
+				const max = typeof record.max_entries === 'number' ? `, up to ${record.max_entries}` : '';
+				const clearOn =
+					Array.isArray(record.clear_on) && record.clear_on.length
+						? `, clears on ${record.clear_on.join(', ').replaceAll('_', ' ')}`
+						: '';
+				return `${kind}${label}: ${fields}${max}${clearOn}`;
+			})
+			.join('; ');
+	}
+
 	function quantityText(quantity: Record<string, unknown>) {
 		const minimum = typeof quantity.minimum === 'number' ? ` (min ${quantity.minimum})` : '';
 		if (quantity.source === 'fixed') return `${String(quantity.value ?? 0)}`;
@@ -217,10 +239,18 @@
 				afterText,
 				beforeTokens: tokens.before,
 				afterTokens: tokens.after,
-				beforeUsage: [featureUsage(beforeFeature), featurePools(beforeFeature)]
+				beforeUsage: [
+					featureUsage(beforeFeature),
+					featurePools(beforeFeature),
+					featureRecords(beforeFeature)
+				]
 					.filter(Boolean)
 					.join('; '),
-				afterUsage: [featureUsage(afterFeature), featurePools(afterFeature)]
+				afterUsage: [
+					featureUsage(afterFeature),
+					featurePools(afterFeature),
+					featureRecords(afterFeature)
+				]
 					.filter(Boolean)
 					.join('; '),
 				status: !beforeFeature ? 'added' : !afterFeature ? 'removed' : 'changed'

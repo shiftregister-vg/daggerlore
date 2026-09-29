@@ -108,9 +108,33 @@ const SEED_ITEM_RELEASES: Record<
 			"Prayer Dice use your subclass's Spellcast trait, are rolled when you start a session and clear when it ends."
 	},
 	'SRD:community_cards:orderborne': {
+		version: 3,
+		label: 'Orderborne Sayings or Values Record',
+		changelog:
+			'Moves the three sayings or values into a record on the Dedicated feature; existing values carry over.'
+	},
+	'SRD:domain_cards:signature_move': {
 		version: 2,
-		label: 'Orderborne Sayings or Values',
-		changelog: 'Adds three fields for recording the character’s sayings or values.'
+		label: 'Signature Move Record and Usage Tracker',
+		changelog:
+			'Adds a record for naming and describing your signature move and a once-per-rest usage tracker.'
+	},
+	'SRD:domain_cards:know_thy_enemy': {
+		version: 2,
+		label: 'Know Thy Enemy Dossier',
+		changelog:
+			'Adds a dossier for recording each target and the information the GM revealed about it.'
+	},
+	'SRD:domain_cards:healing_hands': {
+		version: 2,
+		label: 'Healing Hands Healed Targets',
+		changelog:
+			'Adds a list of targets you have healed, which clears when you complete a long rest.'
+	},
+	'SRD:ancestry_cards:drakona': {
+		version: 2,
+		label: 'Drakona Breath Element',
+		changelog: 'Adds a field for recording the element of your Elemental Breath.'
 	}
 };
 

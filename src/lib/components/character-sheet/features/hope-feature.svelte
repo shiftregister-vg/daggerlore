@@ -8,6 +8,7 @@
 	import Button from '$lib/components/ui/button/button.svelte';
 	import UsageTracker from '$lib/components/character-sheet/features/usage-tracker.svelte';
 	import PoolTracker from '$lib/components/character-sheet/features/pool-tracker.svelte';
+	import RecordEditor from '$lib/components/character-sheet/features/record-editor.svelte';
 	import { usageKey } from '$lib/state/feature-usage';
 
 	const characterCtx = getCharacterContext();
@@ -54,6 +55,13 @@
 					{pool}
 					tracker_key={usageKey('classes', characterCtx.character.primary_class_id, pool.id)}
 					tone="sheet"
+				/>
+			{/each}
+			{#each derived_character_data.primary_class.hope_feature.records ?? [] as record (record.id)}
+				<RecordEditor
+					{record}
+					tracker_key={usageKey('classes', characterCtx.character.primary_class_id, record.id)}
+					class="w-full text-left"
 				/>
 			{/each}
 		{/if}

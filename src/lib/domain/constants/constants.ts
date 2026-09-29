@@ -131,6 +131,7 @@ export const CHARACTER_DEFAULTS: Character = {
 	feature_uses: {},
 	feature_pool_tokens: {},
 	feature_pool_dice: {},
+	feature_records: {},
 	card_layout: undefined,
 	mixed_ancestry_choices: {},
 	feature_choices: {},
