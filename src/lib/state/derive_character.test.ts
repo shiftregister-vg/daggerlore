@@ -531,6 +531,52 @@ describe('feature effects', () => {
 	});
 });
 
+describe('downtime allowances', () => {
+	const recoveryCard = { domain_id: 'bone', card_id: 'recovery' } as const;
+
+	function withRecovery() {
+		const pinned = structuredClone(compendium);
+		pinned.domain_cards.recovery.features[0].downtime_allowances = [
+			{ id: 'recovery', label: 'Recovery', rest: 'short', kind: 'alternate_move', count: 1 }
+		];
+		const character = legacyCharacter();
+		character.level = 6;
+		character.additional_domain_card_ids = [recoveryCard];
+		character.loadout_domain_card_ids = [recoveryCard];
+		return { pinned, character };
+	}
+
+	it('starts from the standard moves, including always-on bonuses like Celestial Trance', () => {
+		const character = legacyCharacter();
+		const base = derive_character_state(character, compendium).derived;
+		expect(base.downtime_allowances.short).toEqual([
+			{ id: 'standard', label: 'Standard', kind: 'standard', count: 2 }
+		]);
+
+		character.ancestry_card_id = 'elf';
+		const elf = derive_character_state(character, compendium).derived;
+		expect(elf.downtime_allowances.short[0].count).toBe(3);
+		expect(elf.downtime_allowances.long[0].count).toBe(3);
+	});
+
+	it('adds a card allowance beside the standard moves, not into them', () => {
+		const { pinned, character } = withRecovery();
+		const { derived } = derive_character_state(character, pinned);
+		expect(derived.downtime_allowances.short.map((slot) => [slot.label, slot.count])).toEqual([
+			['Standard', 2],
+			['Recovery', 1]
+		]);
+		expect(derived.downtime_allowances.long).toHaveLength(1);
+	});
+
+	it('drops the allowance while the card sits in the vault', () => {
+		const { pinned, character } = withRecovery();
+		character.loadout_domain_card_ids = [];
+		const { derived } = derive_character_state(character, pinned);
+		expect(derived.downtime_allowances.short).toHaveLength(1);
+	});
+});
+
 describe('roll options', () => {
 	const swapKey = 'domain_cards:arcana_touched:arcana_touched_swap';
 	const hopeDieKey = 'domain_cards:signature_move:signature_move_hope_die';

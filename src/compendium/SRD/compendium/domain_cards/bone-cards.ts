@@ -396,7 +396,12 @@ Additionally on a success, you can **mark a Stress** to remove a Fear from the G
 				title: '',
 				description_html:
 					'During a short rest, you can choose a long rest downtime move instead. You can **spend a Hope** to let an ally do the same.',
-				character_modifiers: []
+				character_modifiers: [],
+				// The book allows "a" long rest move in place of a short rest move; the ally option is
+				// shared-character behavior and stays manual until requests can grant it.
+				downtime_allowances: [
+					{ id: 'recovery', label: 'Recovery', rest: 'short', kind: 'alternate_move', count: 1 }
+				]
 			}
 		]
 	},

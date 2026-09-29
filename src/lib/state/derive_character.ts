@@ -67,8 +67,10 @@ import {
 	activeEffectModifiers,
 	collectEffectTrackers,
 	pruneEffects,
+	type EffectState,
 	type EffectTracker
 } from './feature-effects';
+import { collectDowntimeAllowances, type RestAllowances } from './downtime-moves';
 import { collectRollOptionTrackers, type RollOptionTracker } from './roll-options';
 
 type InventoryPrimaryWeapon = PrimaryWeapon & { inventory_id: string };
@@ -176,6 +178,7 @@ export type DerivedCharacterData = {
 	record_trackers: RecordTracker[];
 	effect_trackers: EffectTracker[];
 	roll_option_trackers: RollOptionTracker[];
+	downtime_allowances: RestAllowances;
 
 	// feature flags
 	hasBeastformClassFeature: boolean;
@@ -1619,6 +1622,24 @@ function deriveEffectTrackers(
 	});
 }
 
+/** Downtime allowances apply like effects do: a domain card's from the loadout, or the vault when it says so. */
+function deriveDowntimeAllowances(
+	sources: UsageSource[],
+	standard: { short: number; long: number },
+	vault: VaultDomainCard[],
+	loadout: VaultDomainCard[],
+	activeEffects: EffectState
+): RestAllowances {
+	const loadoutIds = new Set(loadout.map((card) => card.id));
+	return collectDowntimeAllowances(sources, standard, {
+		activeEffects,
+		isEligible: (source) =>
+			source.item_type !== 'domain_cards' ||
+			loadoutIds.has(source.item_id) ||
+			!!vault.find((card) => card.id === source.item_id)?.applies_in_vault
+	});
+}
+
 /** Roll options apply like effects do, and an option's own conditions must hold as well. */
 function deriveRollOptionTrackers(
 	sources: UsageSource[],
@@ -2585,6 +2606,13 @@ export function derive_character_data(
 		),
 		record_trackers: collectRecordTrackers(featureSources),
 		pool_trackers,
+		downtime_allowances: deriveDowntimeAllowances(
+			featureSources,
+			{ short: max_short_rest_actions, long: max_long_rest_actions },
+			domain_card_vault,
+			loop.loadout,
+			character.active_effects ?? {}
+		),
 		...finalFlags
 	};
 }

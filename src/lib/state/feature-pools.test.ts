@@ -174,6 +174,57 @@ describe('applyPoolEvent', () => {
 			applyPoolEvent({ tokens: { [both.key]: 5 }, dice: {} }, [both], 'scene').tokens[both.key]
 		).toBe(2);
 	});
+
+	describe('clear_gain', () => {
+		const [slayer] = collectPoolTrackers([
+			source('slayer', [
+				{
+					id: 'slayer_dice',
+					kind: 'tokens',
+					clear_on: ['session_end'],
+					clear_gain: 'hope'
+				}
+			])
+		]);
+
+		it('reports what the pool held when it clears', () => {
+			const result = applyPoolEvent(
+				{ tokens: { [slayer.key]: 3 }, dice: {} },
+				[slayer],
+				'session_end'
+			);
+			expect(result.tokens[slayer.key]).toBeUndefined();
+			expect(result.converted).toEqual([{ tracker: slayer, amount: 3 }]);
+		});
+
+		it('reports nothing for an empty pool or another event', () => {
+			expect(applyPoolEvent({ tokens: {}, dice: {} }, [slayer], 'session_end').converted).toEqual(
+				[]
+			);
+			expect(
+				applyPoolEvent({ tokens: { [slayer.key]: 3 }, dice: {} }, [slayer], 'long_rest').converted
+			).toEqual([]);
+		});
+
+		it('ignores the conversion on dice pools', () => {
+			const [dice] = collectPoolTrackers([
+				source('dice', [
+					{
+						id: 'd',
+						kind: 'dice',
+						die: 'd6',
+						refill: { source: 'fixed', value: 1 },
+						clear_on: ['scene']
+					}
+				])
+			]);
+			expect(dice.clear_gain).toBeUndefined();
+		});
+
+		it('describes the conversion', () => {
+			expect(poolCaption(slayer)).toBe('Turns into Hope at the end of a session');
+		});
+	});
 });
 
 describe('prunePoolState', () => {

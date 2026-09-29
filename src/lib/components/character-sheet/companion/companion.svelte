@@ -12,6 +12,7 @@
 	import CompanionEvasion from './companion-evasion.svelte';
 	import CompanionStress from './companion-stress.svelte';
 	import CompanionHope from './companion-hope.svelte';
+	import { canLeaveScene, leaveScene, returnEarly } from '$lib/state/companion-recovery';
 	import Square from '@lucide/svelte/icons/square';
 	import SquareCheck from '@lucide/svelte/icons/square-check';
 	import RollButton from '$lib/components/dice/roll-button.svelte';
@@ -556,6 +557,47 @@
 							{/if}
 						</div>
 					</div>
+
+					<!-- Leaving and returning are confirmed by the player or GM, never inferred from marked Stress -->
+					{#if companion?.away}
+						<div
+							class="flex items-center justify-between gap-3 rounded-md border border-dashed p-2 text-xs"
+						>
+							<p class="text-muted-foreground">
+								<span class="font-medium text-foreground">Away from the scene.</span>
+								Returns after your next long rest with 1 Stress cleared.
+							</p>
+							<Button
+								variant="outline"
+								size="sm"
+								disabled={!characterCtx.canEdit}
+								onclick={() => {
+									if (character?.companion) character.companion = returnEarly(character.companion);
+								}}
+							>
+								Return now
+							</Button>
+						</div>
+					{:else if companion && canLeaveScene(companion, derived_companion.max_stress)}
+						<div
+							class="flex items-center justify-between gap-3 rounded-md border border-dashed p-2 text-xs"
+						>
+							<p class="text-muted-foreground">
+								<span class="font-medium text-foreground">Last Stress marked.</span>
+								Your companion leaves the scene until your next long rest.
+							</p>
+							<Button
+								variant="outline"
+								size="sm"
+								disabled={!characterCtx.canEdit}
+								onclick={() => {
+									if (character?.companion) character.companion = leaveScene(character.companion);
+								}}
+							>
+								Leave the scene
+							</Button>
+						</div>
+					{/if}
 
 					<!-- Features from 'creature-comfort', 'armored', and 'bonded' level up choices -->
 					{#if derived_companion.level_up_choices.some( (id) => ['creature-comfort', 'armored', 'bonded'].includes(id) )}

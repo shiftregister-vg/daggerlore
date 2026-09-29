@@ -101,6 +101,12 @@ const SEED_ITEM_RELEASES: Record<
 		changelog:
 			'After a successful Spellcast Roll you can spend tokens to roll that many d10s as magic damage.'
 	},
+	'SRD:domain_cards:recovery': {
+		version: 2,
+		label: 'Recovery Downtime Move',
+		changelog:
+			'Downtime shows the long rest move Recovery lets you take in place of a short rest move, and counts it separately from your standard moves.'
+	},
 	'SRD:classes:seraph': {
 		version: 3,
 		label: 'Prayer Dice on Rolls and Damage',

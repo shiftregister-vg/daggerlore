@@ -136,6 +136,8 @@ export const CompanionSchema = z.object({
 	marked_stress: z.number().int().min(0),
 	max_hope: z.number().int().min(0),
 	marked_hope: z.number().int().min(0),
+	// Out of the scene until the next long rest, after its last Stress was marked.
+	away: z.boolean().default(false),
 	evasion: z.number().int().min(0),
 	level_up_choices: z.array(z.string()),
 	experiences: z.array(z.string()),
@@ -326,6 +328,31 @@ export const CharacterSchema = z.object({
 			)
 		)
 		.default({}), // keyed by `${item_type}:${item_id}:${effect.id}`
+	// Downtime moves chosen for a rest. They take effect when that rest is completed, then clear.
+	rest_moves: z
+		.array(
+			z.object({
+				id: z.string().min(1),
+				move: z.string().min(1),
+				action: z
+					.enum([
+						'tend_to_wounds',
+						'clear_stress',
+						'repair_armor',
+						'prepare',
+						'clear_all_hp',
+						'clear_all_stress',
+						'clear_all_armor',
+						'project'
+					])
+					.default('project'),
+				amount: z.number().int().min(0).optional(), // rolled amount, or Hope gained by Prepare
+				rest: z.enum(['short', 'long']), // the rest it was taken during
+				category: z.enum(['short', 'long']), // the kind of move it is
+				at: z.string()
+			})
+		)
+		.default([]),
 	card_layout: CharacterCardLayoutSchema.optional(),
 	feature_choices: z.record(z.string(), z.array(z.string())), // used by specific feature flags
 	unarmed_attack_choices: z.record(z.string(), z.array(z.string())),
