@@ -9,6 +9,7 @@
 	import { USAGE_RESET_CAPTIONS, generateUsageId } from '$lib/state/feature-usage';
 	import CharacterModifierForm from '../character-modifier/form.svelte';
 	import FeaturePoolsForm from './feature-pools-form.svelte';
+	import FeatureRecordsForm from './feature-records-form.svelte';
 	import WeaponModifierForm from '../weapon-modifier/form.svelte';
 	import Plus from '@lucide/svelte/icons/plus';
 	import { cn } from '$lib/utils';
@@ -164,6 +165,15 @@
 			if (index !== featureIndex) return feature;
 			if (pools) return { ...feature, pools };
 			const { pools: _pools, ...rest } = feature;
+			return rest;
+		});
+	}
+
+	function updateRecords(featureIndex: number, records: Feature['records']) {
+		features = features.map((feature, index) => {
+			if (index !== featureIndex) return feature;
+			if (records) return { ...feature, records };
+			const { records: _records, ...rest } = feature;
 			return rest;
 		});
 	}
@@ -345,6 +355,11 @@
 					{#if allowUsage}
 						<FeaturePoolsForm
 							bind:pools={() => feature.pools, (value) => updatePools(featureIndex, value)}
+							featureTitle={feature.title}
+							idPrefix={`feature-${path.join('-')}-${featureIndex}`}
+						/>
+						<FeatureRecordsForm
+							bind:records={() => feature.records, (value) => updateRecords(featureIndex, value)}
 							featureTitle={feature.title}
 							idPrefix={`feature-${path.join('-')}-${featureIndex}`}
 						/>

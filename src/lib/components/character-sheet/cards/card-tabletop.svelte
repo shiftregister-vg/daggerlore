@@ -39,8 +39,10 @@
 	import { getCharacterContext } from '$lib/state/character.svelte';
 	import UsageTracker from '$lib/components/character-sheet/features/usage-tracker.svelte';
 	import PoolTracker from '$lib/components/character-sheet/features/pool-tracker.svelte';
+	import RecordSummary from '$lib/components/character-sheet/features/record-summary.svelte';
+	import RecordEditor from '$lib/components/character-sheet/features/record-editor.svelte';
 	import { USAGE_ITEM_TYPES, usageKey } from '$lib/state/feature-usage';
-	import type { FeaturePool, FeatureUsage } from '@domain/schemas/rules';
+	import type { FeaturePool, FeatureRecord, FeatureUsage } from '@domain/schemas/rules';
 	import { cn, renderMarkdown } from '$lib/utils';
 	import type { Card, DomainCardId } from '@domain/schemas/rules';
 	import type { CharacterCardLayout } from '@domain/schemas/characters';
@@ -297,6 +299,7 @@
 				usage?: FeatureUsage;
 				usageKey?: string;
 				pools?: { pool: FeaturePool; key: string }[];
+				records?: { record: FeatureRecord; key: string }[];
 			}[];
 		}[] = [];
 
@@ -323,6 +326,10 @@
 					pools: (feature.pools ?? []).map((pool) => ({
 						pool,
 						key: usageKey('classes', classId, pool.id)
+					})),
+					records: (feature.records ?? []).map((record) => ({
+						record,
+						key: usageKey('classes', classId, record.id)
 					}))
 				}))
 			});
@@ -791,6 +798,9 @@
 											{#each feature.pools ?? [] as { pool, key } (key)}
 												<PoolTracker {pool} tracker_key={key} tone="sheet" class="mt-1" />
 											{/each}
+											{#each feature.records ?? [] as { record, key } (key)}
+												<RecordSummary {record} tracker_key={key} tone="sheet" class="mt-1" />
+											{/each}
 										</div>
 										<div class="prose prose-invert max-w-none text-sm leading-snug">
 											{@html renderMarkdown(feature.text)}
@@ -1056,6 +1066,18 @@
 														tone="sheet"
 													/>
 												{/each}
+												{#each feature.records ?? [] as record (record.id)}
+													<RecordSummary
+														{record}
+														tracker_key={usageKey(
+															USAGE_ITEM_TYPES[group.card.type],
+															group.card.id,
+															record.id
+														)}
+														tone="sheet"
+														onedit={() => openCardDialog(group.card.key)}
+													/>
+												{/each}
 											{/each}
 											{#if group.card.type === 'community_card' && group.card.card.field_group}
 												<CommunityCardFields
@@ -1102,8 +1124,24 @@
 		>
 			{#if selectedDialogKey && allCardsByKey.get(selectedDialogKey)}
 				{@const selectedCard = allCardsByKey.get(selectedDialogKey)!}
-				<div style="width: min(520px, 92vw);">
+				{@const cardRecords = selectedCard.card.features.flatMap((feature) => feature.records ?? [])}
+				<div class="flex max-h-[90dvh] flex-col gap-3 overflow-y-auto" style="width: min(520px, 92vw);">
 					{@render renderCard(selectedCard, false, false, true)}
+					{#if cardRecords.length > 0 && character}
+						<!-- The card face is fixed-size, so record editing lives in a panel below it. -->
+						<div class="flex flex-col gap-4 rounded-lg border border-border bg-card p-4">
+							{#each cardRecords as record (record.id)}
+								<RecordEditor
+									{record}
+									tracker_key={usageKey(
+										USAGE_ITEM_TYPES[selectedCard.type],
+										selectedCard.id,
+										record.id
+									)}
+								/>
+							{/each}
+						</div>
+					{/if}
 				</div>
 			{/if}
 		</Dialog.Content>

@@ -57,6 +57,12 @@ import {
 	type PoolSource,
 	type PoolTracker
 } from './feature-pools';
+import {
+	collectRecordTrackers,
+	pruneRecords,
+	type RecordState,
+	type RecordTracker
+} from './feature-records';
 
 type InventoryPrimaryWeapon = PrimaryWeapon & { inventory_id: string };
 type InventorySecondaryWeapon = SecondaryWeapon & { inventory_id: string };
@@ -160,6 +166,7 @@ export type DerivedCharacterData = {
 	no_mercy_bonus: number;
 	usage_trackers: UsageTracker[];
 	pool_trackers: PoolTracker[];
+	record_trackers: RecordTracker[];
 
 	// feature flags
 	hasBeastformClassFeature: boolean;
@@ -2484,6 +2491,7 @@ export function derive_character_data(
 		spellcast_roll_bonus,
 		no_mercy_bonus: noMercyBonus,
 		usage_trackers: collectUsageTrackers(featureSources),
+		record_trackers: collectRecordTrackers(featureSources),
 		pool_trackers: collectPoolTrackers(
 			derivePoolSources(featureSources, character, refs, loop.traits, loop.proficiency)
 		),
@@ -3106,8 +3114,37 @@ function normalizeReferencesAndChoices(
 	for (const id of character.additional_community_card_ids) {
 		if (compendium.community_cards[id]?.field_group) nextCardFields[id] ??= [];
 	}
+
+	// Community cards that replaced their field group with a single record (e.g. Orderborne v3)
+	// carry the old values over once, in field order, then drop them.
+	const nextRecords: RecordState = { ...(character.feature_records ?? {}) };
+	for (const source of usageSources) {
+		if (source.item_type !== 'community_cards') continue;
+		const legacyValues = nextCardFields[source.item_id];
+		const card = compendium.community_cards[source.item_id];
+		if (!legacyValues || !card || card.field_group) continue;
+		const records = card.features.flatMap((feature) => feature.records ?? []);
+		if (records.length !== 1 || records[0].kind !== 'single') continue;
+		const key = usageKey(source.item_type, source.item_id, records[0].id);
+		if (legacyValues.some((value) => value.trim()) && nextRecords[key] === undefined) {
+			const values = Object.fromEntries(
+				records[0].fields.flatMap((field, index) =>
+					legacyValues[index]?.trim() ? [[field.id, legacyValues[index]]] : []
+				)
+			);
+			nextRecords[key] = [{ id: `legacy-${source.item_id}`, values }];
+		}
+		delete nextCardFields[source.item_id];
+	}
+
 	if (JSON.stringify(nextCardFields) !== JSON.stringify(character.card_fields)) {
 		character.card_fields = nextCardFields;
+		changed = true;
+	}
+
+	const prunedRecords = pruneRecords(nextRecords, usageSources);
+	if (JSON.stringify(prunedRecords) !== JSON.stringify(character.feature_records)) {
+		character.feature_records = prunedRecords;
 		changed = true;
 	}
 

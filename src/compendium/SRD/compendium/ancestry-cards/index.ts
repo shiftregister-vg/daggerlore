@@ -36,7 +36,22 @@ export const ANCESTRY_CARDS = {
 				description_html:
 					'Choose an element for your breath (such as electricity, fire, or ice). You can use this breath against a target or group of targets within Very Close range, treating it as an Instinct weapon that deals **d8** magic damage using your Proficiency.',
 				character_modifiers: [],
-				weapon_modifiers: []
+				weapon_modifiers: [],
+				records: [
+					{
+						id: 'breath_element',
+						label: 'Breath element',
+						kind: 'single',
+						fields: [
+							{
+								id: 'element',
+								label: 'Element',
+								type: 'text',
+								placeholder: 'e.g. electricity, fire or ice'
+							}
+						]
+					}
+				]
 			}
 		]
 	},

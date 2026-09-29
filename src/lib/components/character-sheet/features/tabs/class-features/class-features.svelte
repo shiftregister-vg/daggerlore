@@ -9,6 +9,7 @@
 	import FeatureTokens from './feature-tokens.svelte';
 	import UsageTracker from '$lib/components/character-sheet/features/usage-tracker.svelte';
 	import PoolTracker from '$lib/components/character-sheet/features/pool-tracker.svelte';
+	import RecordEditor from '$lib/components/character-sheet/features/record-editor.svelte';
 	import { usageKey } from '$lib/state/feature-usage';
 
 	const characterCtx = getCharacterContext();
@@ -107,6 +108,13 @@
 									class="pt-2 pl-2"
 								/>
 							{/each}
+							{#each feature.records ?? [] as record (record.id)}
+								<RecordEditor
+									{record}
+									tracker_key={usageKey('classes', characterCtx.character.primary_class_id, record.id)}
+									class="pt-2 pl-2"
+								/>
+							{/each}
 						{/if}
 					</div>
 				{/each}
@@ -142,6 +150,13 @@
 									{pool}
 									tracker_key={usageKey('classes', characterCtx.character.secondary_class_id, pool.id)}
 									tone="sheet"
+									class="pt-2 pl-2"
+								/>
+							{/each}
+							{#each feature.records ?? [] as record (record.id)}
+								<RecordEditor
+									{record}
+									tracker_key={usageKey('classes', characterCtx.character.secondary_class_id, record.id)}
 									class="pt-2 pl-2"
 								/>
 							{/each}

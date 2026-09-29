@@ -4,11 +4,25 @@ import { SRD_COMPENDIUM } from '../../compendium/SRD';
 import { THE_VOID_COMPENDIUM } from '../../compendium/The_Void';
 import { CHARACTER_DEFAULTS } from '$lib/domain/constants/constants';
 import { CharacterSchema, type Character } from '$lib/domain/schemas/characters';
-import { CharacterClassSchema, DomainCardSchema } from '$lib/domain/schemas/compendium';
+import {
+	AncestryCardSchema,
+	CharacterClassSchema,
+	CommunityCardSchema,
+	DomainCardSchema
+} from '$lib/domain/schemas/compendium';
 import { merge_compendium_content } from '$lib/utils';
 import { derive_character_state } from './derive_character';
 
 const compendium = merge_compendium_content(HAF_COMPENDIUM, SRD_COMPENDIUM, THE_VOID_COMPENDIUM);
+
+/** Orderborne as published before v3: sayings stored in a community field group, no record. */
+function fieldGroupCompendium() {
+	const pinned = structuredClone(compendium);
+	const orderborne = pinned.community_cards.orderborne;
+	orderborne.field_group = { name: 'Sayings or Values', count: 3 };
+	for (const feature of orderborne.features) delete feature.records;
+	return pinned;
+}
 
 function legacyCharacter(): Character {
 	const character = structuredClone(CHARACTER_DEFAULTS) as Character & {
@@ -36,7 +50,7 @@ describe('character card field normalization', () => {
 	});
 
 	it('loads legacy characters without card field data while preserving their cards', () => {
-		const result = derive_character_state(legacyCharacter(), compendium);
+		const result = derive_character_state(legacyCharacter(), fieldGroupCompendium());
 
 		expect(result.character.card_fields).toEqual({ orderborne: [] });
 		expect(result.derived.ancestry_card?.title).toBe('Clank');
@@ -47,7 +61,7 @@ describe('character card field normalization', () => {
 	it('preserves hidden values while the character still possesses the card', () => {
 		const character = legacyCharacter();
 		character.card_fields = { orderborne: ['Honor', 'Service', 'Discipline'] };
-		const reducedCompendium = structuredClone(compendium);
+		const reducedCompendium = fieldGroupCompendium();
 		reducedCompendium.community_cards.orderborne.field_group = {
 			name: 'Principles',
 			count: 1
@@ -348,5 +362,68 @@ describe('feature resource pools', () => {
 		character.additional_domain_card_ids = [];
 
 		expect(derive_character_state(character, compendium).character.feature_pool_tokens).toEqual({});
+	});
+});
+
+describe('feature records', () => {
+	const sayingsKey = 'community_cards:orderborne:sayings_or_values';
+
+	it('publishes valid record configuration for the proof content', () => {
+		for (const id of ['signature_move', 'know_thy_enemy', 'healing_hands']) {
+			expect(() => DomainCardSchema.parse(compendium.domain_cards[id])).not.toThrow();
+		}
+		expect(() => CommunityCardSchema.parse(compendium.community_cards.orderborne)).not.toThrow();
+		expect(() => AncestryCardSchema.parse(compendium.ancestry_cards.drakona)).not.toThrow();
+	});
+
+	it('exposes record trackers for owned features', () => {
+		const character = legacyCharacter();
+		character.ancestry_card_id = 'drakona';
+		character.additional_domain_card_ids = [{ domain_id: 'bone', card_id: 'know_thy_enemy' }];
+
+		const keys = derive_character_state(character, compendium).derived.record_trackers.map(
+			(tracker) => tracker.key
+		);
+
+		expect(keys).toEqual(
+			expect.arrayContaining([
+				sayingsKey,
+				'ancestry_cards:drakona:breath_element',
+				'domain_cards:know_thy_enemy:dossier'
+			])
+		);
+	});
+
+	it('carries Orderborne field values into its record once', () => {
+		const character = legacyCharacter();
+		character.card_fields = { orderborne: ['Honor', '', 'Discipline'] };
+
+		const result = derive_character_state(character, compendium);
+
+		expect(result.character.card_fields.orderborne).toBeUndefined();
+		expect(result.character.feature_records[sayingsKey]).toEqual([
+			{ id: 'legacy-orderborne', values: { first: 'Honor', third: 'Discipline' } }
+		]);
+	});
+
+	it('does not overwrite an existing record with stale field values', () => {
+		const character = legacyCharacter();
+		character.card_fields = { orderborne: ['Old'] };
+		character.feature_records = { [sayingsKey]: [{ id: 'e1', values: { first: 'New' } }] };
+
+		const result = derive_character_state(character, compendium);
+
+		expect(result.character.card_fields.orderborne).toBeUndefined();
+		expect(result.character.feature_records[sayingsKey]).toEqual([
+			{ id: 'e1', values: { first: 'New' } }
+		]);
+	});
+
+	it('discards records when the item is removed', () => {
+		const character = legacyCharacter();
+		character.feature_records = { [sayingsKey]: [{ id: 'e1', values: { first: 'Honor' } }] };
+		character.community_card_id = undefined;
+
+		expect(derive_character_state(character, compendium).character.feature_records).toEqual({});
 	});
 });

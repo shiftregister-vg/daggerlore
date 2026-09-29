@@ -272,7 +272,34 @@ When you take a long rest, clear all unspent tokens.`,
 - Their features and Experiences.
 
 Additionally on a success, you can **mark a Stress** to remove a Fear from the GM's Fear Pool.`,
-				character_modifiers: []
+				character_modifiers: [],
+				records: [
+					{
+						id: 'dossier',
+						label: 'Dossier',
+						kind: 'ledger',
+						fields: [
+							{ id: 'target', label: 'Target', type: 'text' },
+							{
+								id: 'information',
+								label: 'Information',
+								type: 'choice',
+								options: [
+									{ id: 'hp_stress', label: 'Unmarked Hit Points and Stress' },
+									{ id: 'difficulty_thresholds', label: 'Difficulty and damage thresholds' },
+									{ id: 'tactics_damage', label: 'Tactics and standard attack damage dice' },
+									{ id: 'features_experiences', label: 'Features and Experiences' }
+								]
+							},
+							{
+								id: 'notes',
+								label: 'Notes',
+								type: 'long_text',
+								placeholder: 'What the GM revealed'
+							}
+						]
+					}
+				]
 			}
 		]
 	},
@@ -297,7 +324,19 @@ Additionally on a success, you can **mark a Stress** to remove a Fear from the G
 				title: '',
 				description_html:
 					"Name and describe your signature combat move. Once per rest, when you perform this signature move as part of an action you're taking, you can roll a **d20** as your Hope Die. On a success, clear a Stress.",
-				character_modifiers: []
+				character_modifiers: [],
+				usage: { id: 'signature_move', max_uses: 1, reset: 'rest' },
+				records: [
+					{
+						id: 'signature_move',
+						label: 'Signature move',
+						kind: 'single',
+						fields: [
+							{ id: 'name', label: 'Name', type: 'text' },
+							{ id: 'description', label: 'Description', type: 'long_text' }
+						]
+					}
+				]
 			}
 		]
 	},

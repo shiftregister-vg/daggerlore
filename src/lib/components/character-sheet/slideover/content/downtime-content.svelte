@@ -14,6 +14,7 @@
 	import { toast } from 'svelte-sonner';
 	import { applyUsageResetEvent, type UsageResetEvent } from '$lib/state/feature-usage';
 	import { applyPoolEvent, setPoolDice, type PoolTracker } from '$lib/state/feature-pools';
+	import { applyRecordEvent } from '$lib/state/feature-records';
 	import type { PoolEvent } from '@domain/schemas/rules';
 
 	let { open = false }: { open?: boolean } = $props();
@@ -250,6 +251,7 @@
 		const previousUses = character.feature_uses ?? {};
 		const previousTokens = character.feature_pool_tokens ?? {};
 		const previousDice = character.feature_pool_dice ?? {};
+		const previousRecords = character.feature_records ?? {};
 
 		const usage = usageEvent
 			? applyUsageResetEvent(previousUses, derived_character_data?.usage_trackers ?? [], usageEvent)
@@ -262,6 +264,12 @@
 		character.feature_uses = usage.next;
 		character.feature_pool_tokens = pools.tokens;
 		character.feature_pool_dice = pools.dice;
+		const records = applyRecordEvent(
+			previousRecords,
+			derived_character_data?.record_trackers ?? [],
+			poolEvent
+		);
+		character.feature_records = records.next;
 
 		// A pool the event emptied without refilling was cleared rather than refreshed.
 		const wasCleared = (tracker: PoolTracker) =>
@@ -275,13 +283,14 @@
 				...usage.refreshed,
 				...pools.refreshed.filter((tracker) => !wasCleared(tracker))
 			] as RefreshedFeature[],
-			cleared: pools.refreshed.filter(wasCleared) as RefreshedFeature[],
+			cleared: [...pools.refreshed.filter(wasCleared), ...records.cleared] as RefreshedFeature[],
 			diceToRoll: pools.diceToRoll,
 			undo: () => {
 				if (!character) return;
 				character.feature_uses = previousUses;
 				character.feature_pool_tokens = previousTokens;
 				character.feature_pool_dice = previousDice;
+				character.feature_records = previousRecords;
 			}
 		};
 	}

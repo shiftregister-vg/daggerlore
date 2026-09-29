@@ -7,6 +7,7 @@
 	import MarkdownTextarea from './markdown-textarea.svelte';
 	import FeatureUsageEditor from './feature-usage-editor.svelte';
 	import FeaturePoolsForm from '$lib/components/homebrew/forms/shared/features/feature-pools-form.svelte';
+	import FeatureRecordsForm from '$lib/components/homebrew/forms/shared/features/feature-records-form.svelte';
 	import type { CompendiumContent, Domain, DomainCard } from '@domain/schemas/compendium';
 	import type { SourceMetadata } from '@domain/schemas/sources';
 	import type { SourceKey } from '@domain/schemas/rules';
@@ -65,7 +66,8 @@
 							? feature.weapon_modifiers
 							: [],
 						usage: feature.usage,
-						pools: feature.pools
+						pools: feature.pools,
+						records: feature.records
 					}))
 				: [{ title: '', description_html: '', character_modifiers: [], weapon_modifiers: [] }];
 
@@ -360,6 +362,13 @@
 					<div class="mt-3">
 						<FeaturePoolsForm
 							bind:pools={item.features[index].pools}
+							featureTitle={item.features[index].title ?? ''}
+							idPrefix={`admin-use_${index + 1}`}
+						/>
+					</div>
+					<div class="mt-3">
+						<FeatureRecordsForm
+							bind:records={item.features[index].records}
 							featureTitle={item.features[index].title ?? ''}
 							idPrefix={`admin-use_${index + 1}`}
 						/>
