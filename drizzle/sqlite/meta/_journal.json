@@ -78,6 +78,13 @@
       "when": 1787252400000,
       "tag": "0010_feedback_github_integration",
       "breakpoints": true
+    },
+    {
+      "idx": 11,
+      "version": "6",
+      "when": 1788500000000,
+      "tag": "0011_character_versions",
+      "breakpoints": true
     }
   ]
 }

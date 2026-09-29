@@ -6,6 +6,8 @@ import { OFFICIAL_COMPENDIUM_TABLES } from '$lib/server/compendium/official-seed
 import type { HomebrewTable } from '@domain/permissions';
 import type { OfficialItemVersions, OfficialSourceVersions } from '@domain/schemas/characters';
 import * as feedbackGitHub from '$lib/server/app/feedback-github';
+import * as characterRestore from '$lib/server/app/character-restore';
+import { UNSAFE_CHANGE } from '@domain/character-safety';
 
 async function userId(event: RequestEvent) {
 	const session = await event.locals.auth();
@@ -39,7 +41,9 @@ async function handleError(error: unknown) {
 			? 401
 			: message === 'Not authorized' || message === 'Account disabled' || message === 'Account banned'
 				? 403
-				: 400;
+				: message.startsWith(UNSAFE_CHANGE)
+					? 409
+					: 400;
 	return text(message, { status });
 }
 
@@ -155,6 +159,9 @@ export async function GET(event) {
 			return ok(await repo.getAdminUser(uid, parts[2]));
 		}
 		if (parts[0] === 'characters' && parts.length === 1) return ok(await repo.listCharacters(uid));
+		if (parts[0] === 'characters' && parts[1] && parts[2] === 'versions') {
+			return ok(await characterRestore.listCharacterVersions(uid, parts[1]));
+		}
 		if (parts[0] === 'characters' && parts[2] === 'scope') {
 			return ok(await repo.getCharacterCompendiumScope(uid, parts[1]));
 		}
@@ -200,6 +207,16 @@ export async function POST(event) {
 		const parts = pathParts(event);
 		const uid = await userId(event);
 
+		if (
+			parts[0] === 'characters' &&
+			parts[1] &&
+			parts[2] === 'versions' &&
+			parts[3] &&
+			parts[4] === 'restore'
+		) {
+			await characterRestore.restoreCharacterVersion(uid, parts[1], parts[3]);
+			return noContent();
+		}
 		if (parts[0] === 'characters' && parts[1] && parts[2] === 'compendium-updates') {
 			return ok(await repo.updateCharacterCompendiumVersions(uid, parts[1], await body(event)));
 		}

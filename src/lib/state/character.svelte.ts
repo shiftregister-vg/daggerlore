@@ -14,6 +14,12 @@ import { derive_character_state, type DerivedCharacterData } from './derive_char
 import { createVaultCompendiumSubscription, hasAnyVaultItems } from './compendium-vault.svelte';
 import { createApiResource } from './api-resource.svelte';
 import { getApi, patchApi } from '$lib/api/client';
+import { toast } from 'svelte-sonner';
+import {
+	detectDestructiveLoss,
+	detectNormalizationLoss,
+	UNSAFE_CHANGE
+} from '@domain/character-safety';
 import type { CharacterAccess } from '@domain/permissions';
 
 const SYNC_DEBOUNCE_MS = 200;
@@ -116,14 +122,34 @@ function createCharacter() {
 			.map(([key, version]) => `${key}:${version}`)
 			.join('|')
 	);
-	const officialCompendiumQuery = createApiResource<CompendiumContent>(async () => {
+	// Which sources and item versions a compendium was requested for. The compendium travels with it so a
+	// sheet never derives its character from a compendium that was loaded for something else.
+	const officialCompendiumSignature = $derived(
+		[
+			enabledOfficialSourceKeySignature,
+			enabledOfficialSourceVersionSignature,
+			enabledOfficialItemVersionSignature
+		].join('#')
+	);
+	const officialCompendiumQuery = createApiResource<{
+		signature: string;
+		content: CompendiumContent;
+	}>(async () => {
+		const signature = officialCompendiumSignature;
 		if (!activeCharacterId || enabledOfficialSourceKeys.length === 0) {
-			return merge_compendium_content();
+			return { signature, content: merge_compendium_content() };
 		}
-		return await getApi<CompendiumContent>(
+		const content = await getApi<CompendiumContent>(
 			`/official-compendium${itemVersionQuery(enabledOfficialSourceKeys, pinnedItemVersions)}`
 		);
+		return { signature, content };
 	});
+	// The first load can finish before the character's sources are known, and hold an empty compendium.
+	// Deriving a character against that removes its class, cards and gear, and the sheet saves the result.
+	const officialCompendiumIsCurrent = $derived(
+		enabledOfficialSourceKeys.length === 0 ||
+			officialCompendiumQuery.data?.signature === officialCompendiumSignature
+	);
 	const ownerHomebrewVaultState = createVaultCompendiumSubscription({
 		getVault: () => (homebrewEnabled ? (compendiumScope?.homebrew_vault ?? null) : null),
 		getPrereqLoading: () => scopeQueryPending
@@ -153,6 +179,7 @@ function createCharacter() {
 		if (!compendiumScope) return false;
 		if (officialSourcesQuery.isLoading || officialCompendiumQuery.isLoading) return false;
 		if (officialSourcesQuery.error || officialCompendiumQuery.error) return false;
+		if (!officialCompendiumIsCurrent) return false;
 		if (homebrewEnabled && ownerHomebrewVaultState.isLoading) return false;
 		if (characterCampaignId && campaignVaultState.isLoading) return false;
 		return true;
@@ -191,7 +218,7 @@ function createCharacter() {
 	});
 
 	const official_source_compendium = $derived.by((): CompendiumContent => {
-		return officialCompendiumQuery.data ?? merge_compendium_content();
+		return officialCompendiumQuery.data?.content ?? merge_compendium_content();
 	});
 
 	const full_character_compendium = $derived.by((): CompendiumContent | null => {
@@ -231,6 +258,12 @@ function createCharacter() {
 		if (!serverCharacter) return null;
 		if (!ready_character_compendium) return serverCharacter;
 		return derive_character_state(serverCharacter, ready_character_compendium).character;
+	});
+	// Tidying a character never removes its class, ancestry or community unless the compendium it used was
+	// incomplete. While that is the case nothing is saved, so the character cannot be damaged.
+	const compendiumIncompleteReason = $derived.by(() => {
+		if (!serverCharacter || !normalized_server_character) return undefined;
+		return detectNormalizationLoss(serverCharacter, normalized_server_character);
 	});
 	const sync_character = $derived.by(() => character_derivation?.character ?? character ?? null);
 	const local_snapshot = $derived.by(() =>
@@ -322,6 +355,38 @@ function createCharacter() {
 		}
 	});
 
+	// Once a save would have removed the character's class, cards or gear, this sheet stops saving until it is
+	// reloaded: what it holds is not to be trusted, and the server refuses such saves as well.
+	const INCOMPLETE_TOAST_ID = 'character-incomplete';
+	let savesBlocked = false;
+	function blockSaves(reason: string) {
+		if (savesBlocked) return;
+		savesBlocked = true;
+		clearPendingSync();
+		console.error(`Blocked an unsafe save: ${reason}`);
+		toast.error("This character didn't load completely, so nothing was saved.", {
+			description: 'Your character is unchanged. Reload the page to continue.',
+			duration: Number.POSITIVE_INFINITY,
+			action: { label: 'Reload', onClick: () => window.location.reload() }
+		});
+	}
+
+	$effect(() => {
+		const reason = compendiumIncompleteReason;
+		if (!reason) {
+			toast.dismiss(INCOMPLETE_TOAST_ID);
+			return;
+		}
+		console.error(`Character loaded with an incomplete compendium: ${reason}`);
+		toast.warning('Loading this character…', {
+			id: INCOMPLETE_TOAST_ID,
+			description:
+				"Some of its details aren't available yet, so changes won't be saved until it has loaded. If this stays, reload the page.",
+			duration: Number.POSITIVE_INFINITY,
+			action: { label: 'Reload', onClick: () => window.location.reload() }
+		});
+	});
+
 	//! Local → Server: when localCharacter changes, debounce and push to server
 	$effect(() => {
 		if (!sync_character || !local_snapshot || !id) {
@@ -333,11 +398,20 @@ function createCharacter() {
 
 		if (local_snapshot === server_snapshot) return;
 		if (!characterQuery.data?.canEdit && !characterQuery.data?.canEditInventory) return;
+		if (savesBlocked || compendiumIncompleteReason) return;
 
 		const capturedId = id;
 		const capturedCharacter: Character = JSON.parse(JSON.stringify(sync_character));
 		debounceTimer = setTimeout(() => {
 			debounceTimer = undefined;
+			// Compare with what the server holds, not with the tidied-up copy: a sheet that loaded without
+			// its full compendium looks unchanged to itself while having lost everything.
+			const stored = characterQuery.data?.character;
+			const loss = stored ? detectDestructiveLoss(stored, capturedCharacter) : undefined;
+			if (loss) {
+				blockSaves(loss);
+				return;
+			}
 			const endpoint = characterQuery.data?.canEdit
 				? `/characters/${capturedId}`
 				: `/characters/${capturedId}/inventory`;
@@ -350,7 +424,13 @@ function createCharacter() {
 						active_secondary_weapon_inventory_id:
 							capturedCharacter.active_secondary_weapon_inventory_id
 					};
-			void patchApi<void>(endpoint, payload).then(() => characterQuery.refresh());
+			void patchApi<void>(endpoint, payload)
+				.then(() => characterQuery.refresh())
+				.catch((error: unknown) => {
+					const message = error instanceof Error ? error.message : String(error);
+					if (message.startsWith(UNSAFE_CHANGE)) blockSaves(message);
+					else console.error('Could not save the character', error);
+				});
 		}, SYNC_DEBOUNCE_MS);
 
 		return () => {
@@ -619,6 +699,10 @@ function createCharacter() {
 		},
 		get isLoading() {
 			return isLoading;
+		},
+		/** True while the character has been tidied against an incomplete compendium; nothing is saved then. */
+		get compendiumIncomplete() {
+			return compendiumIncompleteReason !== undefined;
 		},
 		get error() {
 			return error;
