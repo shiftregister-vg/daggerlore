@@ -357,15 +357,20 @@
 			</Dialog.Header>
 		</div>
 
-		<div class="min-h-0 flex-1 overflow-hidden px-5 py-4">
+		<!-- Flex column (not h-full) so the panels get a bounded height and scroll; the dialog only has a max-height. -->
+		<div class="flex min-h-0 flex-1 flex-col overflow-hidden px-5 py-4">
 			{#if error}
-				<div class="mb-4 rounded border border-destructive/40 bg-destructive/10 px-3 py-2 text-sm text-destructive">
+				<div class="mb-4 shrink-0 rounded border border-destructive/40 bg-destructive/10 px-3 py-2 text-sm text-destructive">
 					{error}
 				</div>
 			{/if}
 
-			<div class="grid h-full min-h-0 gap-4 xl:grid-cols-[19rem_minmax(0,1fr)]">
-				<aside class="flex min-h-0 flex-col overflow-hidden rounded border border-border bg-card">
+			<div
+				class="grid min-h-0 flex-1 grid-rows-[auto_minmax(0,1fr)] gap-4 xl:grid-cols-[19rem_minmax(0,1fr)] xl:grid-rows-[minmax(0,1fr)]"
+			>
+				<aside
+					class="flex max-h-48 min-h-0 flex-col overflow-hidden rounded border border-border bg-card xl:max-h-none"
+				>
 					<div class="border-b border-border p-3">
 						<div class="flex items-center justify-between gap-3">
 							<div>
