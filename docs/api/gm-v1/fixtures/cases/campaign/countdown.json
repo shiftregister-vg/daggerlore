@@ -1,0 +1,423 @@
+{
+  "name": "Countdown: create, replay, invalid, update, stale, delete",
+  "kind": "countdown",
+  "steps": [
+    {
+      "label": "create-ok",
+      "class": "ok",
+      "operation": "createCountdown",
+      "request": {
+        "path": {
+          "campaignId": "3f0c8f9e-5a1b-4c2d-9e7a-1b2c3d4e5f60"
+        },
+        "headers": {
+          "Idempotency-Key": "ob-01hzx-0001"
+        },
+        "body": {
+          "client_ref": "daggerdash:7c1d2e3f4a5b6c7d8e9f0a1b2c3d4e5f",
+          "data": {
+            "name": "Foundry floods",
+            "floor": 2,
+            "reset_to": 8,
+            "current": 5,
+            "visible_to_players": true
+          }
+        }
+      },
+      "response": {
+        "status": 201,
+        "headers": {
+          "ETag": "\"1\""
+        },
+        "body": {
+          "id": "d4a1b2c3-7e8f-4091-a2b3-c4d5e6f70819",
+          "kind": "countdown",
+          "revision": 1,
+          "created_at": "2026-10-02T09:00:00Z",
+          "updated_at": "2026-10-02T09:05:12Z",
+          "deleted_at": null,
+          "client_ref": "daggerdash:7c1d2e3f4a5b6c7d8e9f0a1b2c3d4e5f",
+          "readonly": false,
+          "provenance": {
+            "origin": "campaign"
+          },
+          "extensions": {},
+          "data": {
+            "name": "Foundry floods",
+            "floor": 2,
+            "reset_to": 8,
+            "current": 5,
+            "visible_to_players": true
+          },
+          "parent": {
+            "kind": "campaign",
+            "id": "3f0c8f9e-5a1b-4c2d-9e7a-1b2c3d4e5f60"
+          }
+        }
+      }
+    },
+    {
+      "label": "retry-replay",
+      "class": "retry",
+      "operation": "createCountdown",
+      "request": {
+        "path": {
+          "campaignId": "3f0c8f9e-5a1b-4c2d-9e7a-1b2c3d4e5f60"
+        },
+        "headers": {
+          "Idempotency-Key": "ob-01hzx-0001"
+        },
+        "body": {
+          "client_ref": "daggerdash:7c1d2e3f4a5b6c7d8e9f0a1b2c3d4e5f",
+          "data": {
+            "name": "Foundry floods",
+            "floor": 2,
+            "reset_to": 8,
+            "current": 5,
+            "visible_to_players": true
+          }
+        }
+      },
+      "response": {
+        "status": 200,
+        "headers": {
+          "ETag": "\"1\"",
+          "Idempotent-Replay": "true"
+        },
+        "body": {
+          "id": "d4a1b2c3-7e8f-4091-a2b3-c4d5e6f70819",
+          "kind": "countdown",
+          "revision": 1,
+          "created_at": "2026-10-02T09:00:00Z",
+          "updated_at": "2026-10-02T09:05:12Z",
+          "deleted_at": null,
+          "client_ref": "daggerdash:7c1d2e3f4a5b6c7d8e9f0a1b2c3d4e5f",
+          "readonly": false,
+          "provenance": {
+            "origin": "campaign"
+          },
+          "extensions": {},
+          "data": {
+            "name": "Foundry floods",
+            "floor": 2,
+            "reset_to": 8,
+            "current": 5,
+            "visible_to_players": true
+          },
+          "parent": {
+            "kind": "campaign",
+            "id": "3f0c8f9e-5a1b-4c2d-9e7a-1b2c3d4e5f60"
+          }
+        }
+      },
+      "replays": 0
+    },
+    {
+      "label": "invalid-negative-floor",
+      "class": "invalid",
+      "operation": "createCountdown",
+      "request": {
+        "path": {
+          "campaignId": "3f0c8f9e-5a1b-4c2d-9e7a-1b2c3d4e5f60"
+        },
+        "headers": {
+          "Idempotency-Key": "ob-01hzx-0002"
+        },
+        "body": {
+          "client_ref": "daggerdash:7c1d2e3f4a5b6c7d8e9f0a1b2c3d4e5f1",
+          "data": {
+            "name": "Foundry floods",
+            "floor": -1,
+            "reset_to": 8,
+            "current": 5,
+            "visible_to_players": true
+          }
+        }
+      },
+      "response": {
+        "status": 422,
+        "body": {
+          "type": "https://daggerlore.app/problems/validation_failed",
+          "title": "Invalid countdown",
+          "status": 422,
+          "code": "validation_failed",
+          "retryable": false,
+          "request_id": "req_01HZX0439",
+          "field_errors": [
+            {
+              "pointer": "/data/floor",
+              "code": "minimum",
+              "message": "Floor cannot be negative"
+            }
+          ]
+        }
+      },
+      "validation": "schema"
+    },
+    {
+      "label": "invalid-floor-above-reset",
+      "class": "invalid",
+      "operation": "createCountdown",
+      "request": {
+        "path": {
+          "campaignId": "3f0c8f9e-5a1b-4c2d-9e7a-1b2c3d4e5f60"
+        },
+        "headers": {
+          "Idempotency-Key": "ob-01hzx-0003"
+        },
+        "body": {
+          "client_ref": "daggerdash:7c1d2e3f4a5b6c7d8e9f0a1b2c3d4e5f2",
+          "data": {
+            "name": "Foundry floods",
+            "floor": 9,
+            "reset_to": 8,
+            "current": 5,
+            "visible_to_players": true
+          }
+        }
+      },
+      "response": {
+        "status": 422,
+        "body": {
+          "type": "https://daggerlore.app/problems/validation_failed",
+          "title": "Invalid countdown",
+          "status": 422,
+          "code": "validation_failed",
+          "retryable": false,
+          "request_id": "req_01HZX0439",
+          "field_errors": [
+            {
+              "pointer": "/data/floor",
+              "code": "above_reset",
+              "message": "Floor cannot exceed reset_to"
+            }
+          ]
+        }
+      },
+      "validation": "server_rule"
+    },
+    {
+      "label": "put-ok-floor-differs-from-reset",
+      "class": "ok",
+      "operation": "putCountdown",
+      "request": {
+        "path": {
+          "campaignId": "3f0c8f9e-5a1b-4c2d-9e7a-1b2c3d4e5f60",
+          "countdownId": "d4a1b2c3-7e8f-4091-a2b3-c4d5e6f70819"
+        },
+        "headers": {
+          "If-Match": "\"1\""
+        },
+        "body": {
+          "data": {
+            "name": "Foundry floods",
+            "floor": 2,
+            "reset_to": 8,
+            "current": 4,
+            "visible_to_players": true
+          }
+        }
+      },
+      "response": {
+        "status": 200,
+        "headers": {
+          "ETag": "\"2\""
+        },
+        "body": {
+          "id": "d4a1b2c3-7e8f-4091-a2b3-c4d5e6f70819",
+          "kind": "countdown",
+          "revision": 2,
+          "created_at": "2026-10-02T09:00:00Z",
+          "updated_at": "2026-10-02T09:05:12Z",
+          "deleted_at": null,
+          "client_ref": "daggerdash:7c1d2e3f4a5b6c7d8e9f0a1b2c3d4e5f",
+          "readonly": false,
+          "provenance": {
+            "origin": "campaign"
+          },
+          "extensions": {},
+          "data": {
+            "name": "Foundry floods",
+            "floor": 2,
+            "reset_to": 8,
+            "current": 4,
+            "visible_to_players": true
+          },
+          "parent": {
+            "kind": "campaign",
+            "id": "3f0c8f9e-5a1b-4c2d-9e7a-1b2c3d4e5f60"
+          }
+        }
+      }
+    },
+    {
+      "label": "put-ok-no-reset-baseline",
+      "class": "ok",
+      "operation": "putCountdown",
+      "request": {
+        "path": {
+          "campaignId": "3f0c8f9e-5a1b-4c2d-9e7a-1b2c3d4e5f60",
+          "countdownId": "d4a1b2c3-7e8f-4091-a2b3-c4d5e6f70819"
+        },
+        "headers": {
+          "If-Match": "\"2\""
+        },
+        "body": {
+          "data": {
+            "name": "Foundry floods",
+            "floor": 2,
+            "reset_to": null,
+            "current": 4,
+            "visible_to_players": true
+          }
+        }
+      },
+      "response": {
+        "status": 200,
+        "headers": {
+          "ETag": "\"3\""
+        },
+        "body": {
+          "id": "d4a1b2c3-7e8f-4091-a2b3-c4d5e6f70819",
+          "kind": "countdown",
+          "revision": 3,
+          "created_at": "2026-10-02T09:00:00Z",
+          "updated_at": "2026-10-02T09:05:12Z",
+          "deleted_at": null,
+          "client_ref": "daggerdash:7c1d2e3f4a5b6c7d8e9f0a1b2c3d4e5f",
+          "readonly": false,
+          "provenance": {
+            "origin": "campaign"
+          },
+          "extensions": {},
+          "data": {
+            "name": "Foundry floods",
+            "floor": 2,
+            "reset_to": null,
+            "current": 4,
+            "visible_to_players": true
+          },
+          "parent": {
+            "kind": "campaign",
+            "id": "3f0c8f9e-5a1b-4c2d-9e7a-1b2c3d4e5f60"
+          }
+        }
+      }
+    },
+    {
+      "label": "stale",
+      "class": "stale",
+      "operation": "putCountdown",
+      "request": {
+        "path": {
+          "campaignId": "3f0c8f9e-5a1b-4c2d-9e7a-1b2c3d4e5f60",
+          "countdownId": "d4a1b2c3-7e8f-4091-a2b3-c4d5e6f70819"
+        },
+        "headers": {
+          "If-Match": "\"1\""
+        },
+        "body": {
+          "data": {
+            "name": "Foundry floods",
+            "floor": 2,
+            "reset_to": 8,
+            "current": 5,
+            "visible_to_players": true
+          }
+        }
+      },
+      "response": {
+        "status": 412,
+        "body": {
+          "type": "https://daggerlore.app/problems/stale_revision",
+          "title": "Countdown changed",
+          "status": 412,
+          "code": "stale_revision",
+          "retryable": false,
+          "request_id": "req_01HZX0426",
+          "current": {
+            "id": "d4a1b2c3-7e8f-4091-a2b3-c4d5e6f70819",
+            "kind": "countdown",
+            "revision": 3,
+            "created_at": "2026-10-02T09:00:00Z",
+            "updated_at": "2026-10-02T09:05:12Z",
+            "deleted_at": null,
+            "client_ref": "daggerdash:7c1d2e3f4a5b6c7d8e9f0a1b2c3d4e5f",
+            "readonly": false,
+            "provenance": {
+              "origin": "campaign"
+            },
+            "extensions": {},
+            "data": {
+              "name": "Foundry floods",
+              "floor": 2,
+              "reset_to": null,
+              "current": 4,
+              "visible_to_players": true
+            },
+            "parent": {
+              "kind": "campaign",
+              "id": "3f0c8f9e-5a1b-4c2d-9e7a-1b2c3d4e5f60"
+            }
+          }
+        }
+      }
+    },
+    {
+      "label": "delete-ok",
+      "class": "delete",
+      "operation": "deleteCountdown",
+      "request": {
+        "path": {
+          "campaignId": "3f0c8f9e-5a1b-4c2d-9e7a-1b2c3d4e5f60",
+          "countdownId": "d4a1b2c3-7e8f-4091-a2b3-c4d5e6f70819"
+        },
+        "headers": {
+          "If-Match": "\"3\""
+        }
+      },
+      "response": {
+        "status": 200,
+        "body": {
+          "id": "d4a1b2c3-7e8f-4091-a2b3-c4d5e6f70819",
+          "kind": "countdown",
+          "revision": 4,
+          "deleted_at": "2026-10-02T09:05:12Z",
+          "data": null,
+          "parent": {
+            "kind": "campaign",
+            "id": "3f0c8f9e-5a1b-4c2d-9e7a-1b2c3d4e5f60"
+          }
+        }
+      }
+    },
+    {
+      "label": "delete-repeat",
+      "class": "delete",
+      "operation": "deleteCountdown",
+      "request": {
+        "path": {
+          "campaignId": "3f0c8f9e-5a1b-4c2d-9e7a-1b2c3d4e5f60",
+          "countdownId": "d4a1b2c3-7e8f-4091-a2b3-c4d5e6f70819"
+        },
+        "headers": {
+          "If-Match": "\"3\""
+        }
+      },
+      "response": {
+        "status": 200,
+        "body": {
+          "id": "d4a1b2c3-7e8f-4091-a2b3-c4d5e6f70819",
+          "kind": "countdown",
+          "revision": 4,
+          "deleted_at": "2026-10-02T09:05:12Z",
+          "data": null,
+          "parent": {
+            "kind": "campaign",
+            "id": "3f0c8f9e-5a1b-4c2d-9e7a-1b2c3d4e5f60"
+          }
+        }
+      }
+    }
+  ]
+}

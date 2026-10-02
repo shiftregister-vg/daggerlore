@@ -1,0 +1,5 @@
+{
+  "source_key": "Homebrew", "title": "Heat Gauge", "description_html": "<p>Track accumulated heat.</p>",
+  "resource": { "title": "Heat", "description_html": "<p>Mark heat as you work.</p>", "max": 6 },
+  "sections": []
+}

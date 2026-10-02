@@ -37,6 +37,16 @@
 
   process.manager.implementation = "process-compose";
 
+  # One Postgres for local development. The Go backend is the only service meant to talk to it directly; the web
+  # app still reads it through Drizzle until the Go consolidation (daggerlore-srb) completes.
+  services.postgres = {
+    enable = true;
+    package = pkgs.postgresql_17;
+    listen_addresses = "127.0.0.1";
+    port = 5432;
+    initialDatabases = [ { name = "daggerlore"; } ];
+  };
+
   processes = {
     daggerlore-web = {
       exec = "npm run dev -- --host 127.0.0.1 --port 5173 --strictPort";
@@ -49,9 +59,11 @@
 
     daggerlore-api = {
       exec = "go run ./cmd/server.go";
+      after = [ "devenv:processes:postgres" ];
       env = {
         HOST = "127.0.0.1";
         PORT = "3000";
+        DATABASE_URL = "postgres://127.0.0.1:5432/daggerlore";
       };
       ready.exec = "curl -fsS http://127.0.0.1:3000/liveness >/dev/null";
     };

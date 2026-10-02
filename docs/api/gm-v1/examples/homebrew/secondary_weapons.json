@@ -1,0 +1,7 @@
+{
+  "source_key": "Homebrew", "title": "Soot Buckler",
+  "description_html": "<p>A small shield blackened by forge fire.</p>",
+  "level_requirement": 1, "type": "Physical", "available_traits": ["strength"],
+  "range": "Melee", "features": [], "attack_roll_bonus": 0, "damage_bonus": 0,
+  "damage_dice": "d4", "available_damage_types": ["phy"], "burden": 1
+}

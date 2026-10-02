@@ -1,0 +1,5 @@
+{
+  "source_key": "Homebrew", "title": "Kiln-Hardened", "description_html": "<p>Your skin cracks like glaze.</p>",
+  "features": [{ "name": "Glazed", "description_html": "<p>Resist the first burn each scene.</p>" }],
+  "questions": ["What did the fire take?"]
+}

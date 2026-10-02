@@ -1,0 +1,456 @@
+{
+  "name": "Homebrew secondary_weapons: create, replay, invalid, update, stale, delete",
+  "kind": "homebrew",
+  "type": "secondary_weapons",
+  "steps": [
+    {
+      "label": "create-ok",
+      "class": "ok",
+      "operation": "createHomebrew",
+      "request": {
+        "headers": {
+          "Idempotency-Key": "ob-hb-secondary_weapons"
+        },
+        "body": {
+          "client_ref": "daggerdash:7365636f6e646172795f776561706fab",
+          "type": "secondary_weapons",
+          "data": {
+            "source_key": "Homebrew",
+            "title": "Soot Buckler",
+            "description_html": "<p>A small shield blackened by forge fire.</p>",
+            "level_requirement": 1,
+            "type": "Physical",
+            "available_traits": [
+              "strength"
+            ],
+            "range": "Melee",
+            "features": [],
+            "attack_roll_bonus": 0,
+            "damage_bonus": 0,
+            "damage_dice": "d4",
+            "available_damage_types": [
+              "phy"
+            ],
+            "burden": 1
+          },
+          "extensions": {
+            "daggerdash": {
+              "cached_as": "opaque"
+            }
+          }
+        }
+      },
+      "response": {
+        "status": 201,
+        "headers": {
+          "ETag": "\"1\""
+        },
+        "body": {
+          "id": "b1b2b3b4-c1c2-4d1d-8e1e-f1f2f3f4f5f6",
+          "kind": "homebrew",
+          "revision": 1,
+          "created_at": "2026-10-02T09:00:00Z",
+          "updated_at": "2026-10-02T09:05:12Z",
+          "deleted_at": null,
+          "client_ref": "daggerdash:7365636f6e646172795f776561706fab",
+          "readonly": false,
+          "provenance": {
+            "origin": "homebrew",
+            "owner": {
+              "user_id": "0b6f0a1e-4d36-4a52-8d0f-6f3b2d9c7a11",
+              "display_name": "Vanessa"
+            }
+          },
+          "extensions": {
+            "daggerdash": {
+              "cached_as": "opaque"
+            }
+          },
+          "data": {
+            "source_key": "Homebrew",
+            "title": "Soot Buckler",
+            "description_html": "<p>A small shield blackened by forge fire.</p>",
+            "level_requirement": 1,
+            "type": "Physical",
+            "available_traits": [
+              "strength"
+            ],
+            "range": "Melee",
+            "features": [],
+            "attack_roll_bonus": 0,
+            "damage_bonus": 0,
+            "damage_dice": "d4",
+            "available_damage_types": [
+              "phy"
+            ],
+            "burden": 1
+          },
+          "type": "secondary_weapons"
+        }
+      }
+    },
+    {
+      "label": "retry-replay",
+      "class": "retry",
+      "operation": "createHomebrew",
+      "request": {
+        "headers": {
+          "Idempotency-Key": "ob-hb-secondary_weapons"
+        },
+        "body": {
+          "client_ref": "daggerdash:7365636f6e646172795f776561706fab",
+          "type": "secondary_weapons",
+          "data": {
+            "source_key": "Homebrew",
+            "title": "Soot Buckler",
+            "description_html": "<p>A small shield blackened by forge fire.</p>",
+            "level_requirement": 1,
+            "type": "Physical",
+            "available_traits": [
+              "strength"
+            ],
+            "range": "Melee",
+            "features": [],
+            "attack_roll_bonus": 0,
+            "damage_bonus": 0,
+            "damage_dice": "d4",
+            "available_damage_types": [
+              "phy"
+            ],
+            "burden": 1
+          },
+          "extensions": {
+            "daggerdash": {
+              "cached_as": "opaque"
+            }
+          }
+        }
+      },
+      "response": {
+        "status": 200,
+        "headers": {
+          "ETag": "\"1\"",
+          "Idempotent-Replay": "true"
+        },
+        "body": {
+          "id": "b1b2b3b4-c1c2-4d1d-8e1e-f1f2f3f4f5f6",
+          "kind": "homebrew",
+          "revision": 1,
+          "created_at": "2026-10-02T09:00:00Z",
+          "updated_at": "2026-10-02T09:05:12Z",
+          "deleted_at": null,
+          "client_ref": "daggerdash:7365636f6e646172795f776561706fab",
+          "readonly": false,
+          "provenance": {
+            "origin": "homebrew",
+            "owner": {
+              "user_id": "0b6f0a1e-4d36-4a52-8d0f-6f3b2d9c7a11",
+              "display_name": "Vanessa"
+            }
+          },
+          "extensions": {
+            "daggerdash": {
+              "cached_as": "opaque"
+            }
+          },
+          "data": {
+            "source_key": "Homebrew",
+            "title": "Soot Buckler",
+            "description_html": "<p>A small shield blackened by forge fire.</p>",
+            "level_requirement": 1,
+            "type": "Physical",
+            "available_traits": [
+              "strength"
+            ],
+            "range": "Melee",
+            "features": [],
+            "attack_roll_bonus": 0,
+            "damage_bonus": 0,
+            "damage_dice": "d4",
+            "available_damage_types": [
+              "phy"
+            ],
+            "burden": 1
+          },
+          "type": "secondary_weapons"
+        }
+      },
+      "replays": 0
+    },
+    {
+      "label": "invalid-missing-title",
+      "class": "invalid",
+      "operation": "createHomebrew",
+      "request": {
+        "headers": {
+          "Idempotency-Key": "ob-hb-bad-secondary_weapon"
+        },
+        "body": {
+          "client_ref": "daggerdash:7365636f6e646172795f776561706fab1",
+          "type": "secondary_weapons",
+          "data": {
+            "source_key": "Homebrew",
+            "description_html": "<p>A small shield blackened by forge fire.</p>",
+            "level_requirement": 1,
+            "type": "Physical",
+            "available_traits": [
+              "strength"
+            ],
+            "range": "Melee",
+            "features": [],
+            "attack_roll_bonus": 0,
+            "damage_bonus": 0,
+            "damage_dice": "d4",
+            "available_damage_types": [
+              "phy"
+            ],
+            "burden": 1
+          }
+        }
+      },
+      "response": {
+        "status": 422,
+        "body": {
+          "type": "https://daggerlore.app/problems/validation_failed",
+          "title": "Invalid homebrew",
+          "status": 422,
+          "code": "validation_failed",
+          "retryable": false,
+          "request_id": "req_01HZX0439",
+          "field_errors": [
+            {
+              "pointer": "/data/title",
+              "code": "required",
+              "message": "Title is required"
+            }
+          ]
+        }
+      },
+      "validation": "schema"
+    },
+    {
+      "label": "put-ok",
+      "class": "ok",
+      "operation": "putHomebrew",
+      "request": {
+        "path": {
+          "homebrewId": "b1b2b3b4-c1c2-4d1d-8e1e-f1f2f3f4f5f6"
+        },
+        "headers": {
+          "If-Match": "\"1\""
+        },
+        "body": {
+          "type": "secondary_weapons",
+          "data": {
+            "source_key": "Homebrew",
+            "title": "Soot Buckler II",
+            "description_html": "<p>A small shield blackened by forge fire.</p>",
+            "level_requirement": 1,
+            "type": "Physical",
+            "available_traits": [
+              "strength"
+            ],
+            "range": "Melee",
+            "features": [],
+            "attack_roll_bonus": 0,
+            "damage_bonus": 0,
+            "damage_dice": "d4",
+            "available_damage_types": [
+              "phy"
+            ],
+            "burden": 1
+          },
+          "extensions": {
+            "daggerdash": {
+              "cached_as": "opaque"
+            }
+          }
+        }
+      },
+      "response": {
+        "status": 200,
+        "headers": {
+          "ETag": "\"2\""
+        },
+        "body": {
+          "id": "b1b2b3b4-c1c2-4d1d-8e1e-f1f2f3f4f5f6",
+          "kind": "homebrew",
+          "revision": 2,
+          "created_at": "2026-10-02T09:00:00Z",
+          "updated_at": "2026-10-02T09:05:12Z",
+          "deleted_at": null,
+          "client_ref": "daggerdash:7365636f6e646172795f776561706fab",
+          "readonly": false,
+          "provenance": {
+            "origin": "homebrew",
+            "owner": {
+              "user_id": "0b6f0a1e-4d36-4a52-8d0f-6f3b2d9c7a11",
+              "display_name": "Vanessa"
+            }
+          },
+          "extensions": {
+            "daggerdash": {
+              "cached_as": "opaque"
+            }
+          },
+          "data": {
+            "source_key": "Homebrew",
+            "title": "Soot Buckler II",
+            "description_html": "<p>A small shield blackened by forge fire.</p>",
+            "level_requirement": 1,
+            "type": "Physical",
+            "available_traits": [
+              "strength"
+            ],
+            "range": "Melee",
+            "features": [],
+            "attack_roll_bonus": 0,
+            "damage_bonus": 0,
+            "damage_dice": "d4",
+            "available_damage_types": [
+              "phy"
+            ],
+            "burden": 1
+          },
+          "type": "secondary_weapons"
+        }
+      }
+    },
+    {
+      "label": "stale",
+      "class": "stale",
+      "operation": "putHomebrew",
+      "request": {
+        "path": {
+          "homebrewId": "b1b2b3b4-c1c2-4d1d-8e1e-f1f2f3f4f5f6"
+        },
+        "headers": {
+          "If-Match": "\"1\""
+        },
+        "body": {
+          "type": "secondary_weapons",
+          "data": {
+            "source_key": "Homebrew",
+            "title": "Soot Buckler",
+            "description_html": "<p>A small shield blackened by forge fire.</p>",
+            "level_requirement": 1,
+            "type": "Physical",
+            "available_traits": [
+              "strength"
+            ],
+            "range": "Melee",
+            "features": [],
+            "attack_roll_bonus": 0,
+            "damage_bonus": 0,
+            "damage_dice": "d4",
+            "available_damage_types": [
+              "phy"
+            ],
+            "burden": 1
+          }
+        }
+      },
+      "response": {
+        "status": 412,
+        "body": {
+          "type": "https://daggerlore.app/problems/stale_revision",
+          "title": "Homebrew changed",
+          "status": 412,
+          "code": "stale_revision",
+          "retryable": false,
+          "request_id": "req_01HZX0426",
+          "current": {
+            "id": "b1b2b3b4-c1c2-4d1d-8e1e-f1f2f3f4f5f6",
+            "kind": "homebrew",
+            "revision": 2,
+            "created_at": "2026-10-02T09:00:00Z",
+            "updated_at": "2026-10-02T09:05:12Z",
+            "deleted_at": null,
+            "client_ref": "daggerdash:7365636f6e646172795f776561706fab",
+            "readonly": false,
+            "provenance": {
+              "origin": "homebrew",
+              "owner": {
+                "user_id": "0b6f0a1e-4d36-4a52-8d0f-6f3b2d9c7a11",
+                "display_name": "Vanessa"
+              }
+            },
+            "extensions": {
+              "daggerdash": {
+                "cached_as": "opaque"
+              }
+            },
+            "data": {
+              "source_key": "Homebrew",
+              "title": "Soot Buckler II",
+              "description_html": "<p>A small shield blackened by forge fire.</p>",
+              "level_requirement": 1,
+              "type": "Physical",
+              "available_traits": [
+                "strength"
+              ],
+              "range": "Melee",
+              "features": [],
+              "attack_roll_bonus": 0,
+              "damage_bonus": 0,
+              "damage_dice": "d4",
+              "available_damage_types": [
+                "phy"
+              ],
+              "burden": 1
+            },
+            "type": "secondary_weapons"
+          }
+        }
+      }
+    },
+    {
+      "label": "delete-ok",
+      "class": "delete",
+      "operation": "deleteHomebrew",
+      "request": {
+        "path": {
+          "homebrewId": "b1b2b3b4-c1c2-4d1d-8e1e-f1f2f3f4f5f6"
+        },
+        "headers": {
+          "If-Match": "\"2\""
+        }
+      },
+      "response": {
+        "status": 200,
+        "body": {
+          "id": "b1b2b3b4-c1c2-4d1d-8e1e-f1f2f3f4f5f6",
+          "kind": "homebrew",
+          "revision": 3,
+          "deleted_at": "2026-10-02T09:05:12Z",
+          "data": null,
+          "type": "secondary_weapons"
+        }
+      }
+    },
+    {
+      "label": "delete-repeat",
+      "class": "delete",
+      "operation": "deleteHomebrew",
+      "request": {
+        "path": {
+          "homebrewId": "b1b2b3b4-c1c2-4d1d-8e1e-f1f2f3f4f5f6"
+        },
+        "headers": {
+          "If-Match": "\"2\""
+        }
+      },
+      "response": {
+        "status": 200,
+        "body": {
+          "id": "b1b2b3b4-c1c2-4d1d-8e1e-f1f2f3f4f5f6",
+          "kind": "homebrew",
+          "revision": 3,
+          "deleted_at": "2026-10-02T09:05:12Z",
+          "data": null,
+          "type": "secondary_weapons"
+        }
+      }
+    }
+  ]
+}

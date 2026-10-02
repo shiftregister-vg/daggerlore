@@ -1,0 +1,493 @@
+{
+  "name": "Homebrew adversary with image, attribution, raw HTML, desktop-only questions, other tools and unknown fields",
+  "mapping": "adversary",
+  "server": {
+    "resource": {
+      "id": "b1b2b3b4-c1c2-4d1d-8e1e-f1f2f3f4f5f6",
+      "kind": "homebrew",
+      "revision": 4,
+      "created_at": "2026-10-02T09:00:00Z",
+      "updated_at": "2026-10-02T09:05:12Z",
+      "deleted_at": null,
+      "client_ref": "daggerdash:5b1c0f6e2d3a4c7f8e9d0a1b2c3d4e5f",
+      "readonly": false,
+      "provenance": {
+        "origin": "homebrew",
+        "owner": {
+          "user_id": "0b6f0a1e-4d36-4a52-8d0f-6f3b2d9c7a11",
+          "display_name": "Vanessa"
+        }
+      },
+      "extensions": {
+        "daggerdash": {
+          "feature_questions": [
+            {
+              "name": "Smoldering",
+              "questions": "Who stands Close?"
+            }
+          ]
+        },
+        "othertool": {
+          "keep": [
+            1,
+            2,
+            3
+          ]
+        }
+      },
+      "data": {
+        "source_key": "Homebrew",
+        "title": "Cinder Wisp",
+        "tier": 2,
+        "type": "Skulk",
+        "image_url": "https://usercontent.daggerlore.example/images/cinder-wisp.webp",
+        "artist_name": "Ada Marsh",
+        "description": "A flickering ember spirit that nests in abandoned forges.",
+        "motives_tactics": "Burn, hide, relight",
+        "difficulty": 14,
+        "thresholds": {
+          "major": 8,
+          "severe": 15
+        },
+        "max_hp": 5,
+        "max_stress": 3,
+        "attack_modifier": 3,
+        "standard_attack": {
+          "name": "Scorch",
+          "range": "Very Close",
+          "damage_dice": "2d6",
+          "damage_bonus": 2,
+          "damage_type": "mag"
+        },
+        "experiences": [
+          "Forge Lore",
+          "Slippery"
+        ],
+        "experience_modifiers": [
+          2,
+          3
+        ],
+        "features": [
+          {
+            "type": "Passive",
+            "name": "Smoldering",
+            "max_uses": null,
+            "description_html": "<p>Creatures that start their turn <strong>Close</strong> mark a Stress.</p>"
+          },
+          {
+            "type": "Reaction",
+            "name": "Gutter Out",
+            "max_uses": 1,
+            "description_html": "<p>When marked HP, become <em>Hidden</em>.</p>"
+          },
+          {
+            "type": "Action",
+            "name": "Ember Lore",
+            "max_uses": 2,
+            "description_html": "<p>Knows <u>every</u> forge.</p>"
+          }
+        ]
+      },
+      "type": "adversaries",
+      "x_future": {
+        "added_by": "a newer server",
+        "n": 1
+      }
+    }
+  },
+  "desktop": {
+    "name": "Cinder Wisp",
+    "tier": 2,
+    "kind": "Skulk",
+    "source": "Homebrew",
+    "difficulty": 14,
+    "hp": 5,
+    "stress": 3,
+    "threshold_major": 8,
+    "threshold_severe": 15,
+    "attack_modifier": 3,
+    "attack_name": "Scorch",
+    "attack_range": "Very Close",
+    "damage_dice": "2d6",
+    "damage_bonus": 2,
+    "damage_type": "mag",
+    "motives": "Burn, hide, relight",
+    "description": "A flickering ember spirit that nests in abandoned forges.",
+    "experiences": [
+      {
+        "name": "Forge Lore",
+        "modifier": 2
+      },
+      {
+        "name": "Slippery",
+        "modifier": 3
+      }
+    ],
+    "features": [
+      {
+        "name": "Smoldering",
+        "kind": "passive",
+        "max_uses": null,
+        "text": "Creatures that start their turn **Close** mark a Stress.",
+        "questions": "Who stands Close?"
+      },
+      {
+        "name": "Gutter Out",
+        "kind": "reaction",
+        "max_uses": 1,
+        "text": "When marked HP, become _Hidden_.",
+        "questions": ""
+      },
+      {
+        "name": "Ember Lore",
+        "kind": "action",
+        "max_uses": 2,
+        "text": "Knows <u>every</u> forge.",
+        "questions": ""
+      }
+    ]
+  },
+  "edits": [
+    {
+      "name": "raise HP and attack damage",
+      "local": {
+        "name": "Cinder Wisp",
+        "tier": 2,
+        "kind": "Skulk",
+        "source": "Homebrew",
+        "difficulty": 14,
+        "hp": 7,
+        "stress": 3,
+        "threshold_major": 8,
+        "threshold_severe": 15,
+        "attack_modifier": 3,
+        "attack_name": "Scorch",
+        "attack_range": "Very Close",
+        "damage_dice": "2d8",
+        "damage_bonus": 3,
+        "damage_type": "mag",
+        "motives": "Burn, hide, relight",
+        "description": "A flickering ember spirit that nests in abandoned forges.",
+        "experiences": [
+          {
+            "name": "Forge Lore",
+            "modifier": 2
+          },
+          {
+            "name": "Slippery",
+            "modifier": 3
+          }
+        ],
+        "features": [
+          {
+            "name": "Smoldering",
+            "kind": "passive",
+            "max_uses": null,
+            "text": "Creatures that start their turn **Close** mark a Stress.",
+            "questions": "Who stands Close?"
+          },
+          {
+            "name": "Gutter Out",
+            "kind": "reaction",
+            "max_uses": 1,
+            "text": "When marked HP, become _Hidden_.",
+            "questions": ""
+          },
+          {
+            "name": "Ember Lore",
+            "kind": "action",
+            "max_uses": 2,
+            "text": "Knows <u>every</u> forge.",
+            "questions": ""
+          }
+        ]
+      },
+      "expect": {
+        "resource": {
+          "set": {
+            "/max_hp": 7,
+            "/standard_attack/damage_dice": "2d8",
+            "/standard_attack/damage_bonus": 3
+          }
+        }
+      }
+    },
+    {
+      "name": "edit one feature text; the raw <u> feature and the image stay byte-identical",
+      "local": {
+        "name": "Cinder Wisp",
+        "tier": 2,
+        "kind": "Skulk",
+        "source": "Homebrew",
+        "difficulty": 14,
+        "hp": 5,
+        "stress": 3,
+        "threshold_major": 8,
+        "threshold_severe": 15,
+        "attack_modifier": 3,
+        "attack_name": "Scorch",
+        "attack_range": "Very Close",
+        "damage_dice": "2d6",
+        "damage_bonus": 2,
+        "damage_type": "mag",
+        "motives": "Burn, hide, relight",
+        "description": "A flickering ember spirit that nests in abandoned forges.",
+        "experiences": [
+          {
+            "name": "Forge Lore",
+            "modifier": 2
+          },
+          {
+            "name": "Slippery",
+            "modifier": 3
+          }
+        ],
+        "features": [
+          {
+            "name": "Smoldering",
+            "kind": "passive",
+            "max_uses": null,
+            "text": "Creatures that start their turn **Close** mark a Stress.",
+            "questions": "Who stands Close?"
+          },
+          {
+            "name": "Gutter Out",
+            "kind": "reaction",
+            "max_uses": 1,
+            "text": "When marked HP, become _Hidden_ and move Close.",
+            "questions": ""
+          },
+          {
+            "name": "Ember Lore",
+            "kind": "action",
+            "max_uses": 2,
+            "text": "Knows <u>every</u> forge.",
+            "questions": ""
+          }
+        ]
+      },
+      "expect": {
+        "resource": {
+          "set": {
+            "/features/1/description_html": "<p>When marked HP, become <em>Hidden</em> and move Close.</p>"
+          }
+        }
+      }
+    },
+    {
+      "name": "add an experience (parallel arrays move together)",
+      "local": {
+        "name": "Cinder Wisp",
+        "tier": 2,
+        "kind": "Skulk",
+        "source": "Homebrew",
+        "difficulty": 14,
+        "hp": 5,
+        "stress": 3,
+        "threshold_major": 8,
+        "threshold_severe": 15,
+        "attack_modifier": 3,
+        "attack_name": "Scorch",
+        "attack_range": "Very Close",
+        "damage_dice": "2d6",
+        "damage_bonus": 2,
+        "damage_type": "mag",
+        "motives": "Burn, hide, relight",
+        "description": "A flickering ember spirit that nests in abandoned forges.",
+        "experiences": [
+          {
+            "name": "Forge Lore",
+            "modifier": 2
+          },
+          {
+            "name": "Slippery",
+            "modifier": 3
+          },
+          {
+            "name": "Ash Trail",
+            "modifier": 1
+          }
+        ],
+        "features": [
+          {
+            "name": "Smoldering",
+            "kind": "passive",
+            "max_uses": null,
+            "text": "Creatures that start their turn **Close** mark a Stress.",
+            "questions": "Who stands Close?"
+          },
+          {
+            "name": "Gutter Out",
+            "kind": "reaction",
+            "max_uses": 1,
+            "text": "When marked HP, become _Hidden_.",
+            "questions": ""
+          },
+          {
+            "name": "Ember Lore",
+            "kind": "action",
+            "max_uses": 2,
+            "text": "Knows <u>every</u> forge.",
+            "questions": ""
+          }
+        ]
+      },
+      "expect": {
+        "resource": {
+          "set": {
+            "/experiences": [
+              "Forge Lore",
+              "Slippery",
+              "Ash Trail"
+            ],
+            "/experience_modifiers": [
+              2,
+              3,
+              1
+            ]
+          }
+        }
+      }
+    },
+    {
+      "name": "desktop-only questions change touches extensions, not data",
+      "local": {
+        "name": "Cinder Wisp",
+        "tier": 2,
+        "kind": "Skulk",
+        "source": "Homebrew",
+        "difficulty": 14,
+        "hp": 5,
+        "stress": 3,
+        "threshold_major": 8,
+        "threshold_severe": 15,
+        "attack_modifier": 3,
+        "attack_name": "Scorch",
+        "attack_range": "Very Close",
+        "damage_dice": "2d6",
+        "damage_bonus": 2,
+        "damage_type": "mag",
+        "motives": "Burn, hide, relight",
+        "description": "A flickering ember spirit that nests in abandoned forges.",
+        "experiences": [
+          {
+            "name": "Forge Lore",
+            "modifier": 2
+          },
+          {
+            "name": "Slippery",
+            "modifier": 3
+          }
+        ],
+        "features": [
+          {
+            "name": "Smoldering",
+            "kind": "passive",
+            "max_uses": null,
+            "text": "Creatures that start their turn **Close** mark a Stress.",
+            "questions": "Who is Close?"
+          },
+          {
+            "name": "Gutter Out",
+            "kind": "reaction",
+            "max_uses": 1,
+            "text": "When marked HP, become _Hidden_.",
+            "questions": ""
+          },
+          {
+            "name": "Ember Lore",
+            "kind": "action",
+            "max_uses": 2,
+            "text": "Knows <u>every</u> forge.",
+            "questions": ""
+          }
+        ]
+      },
+      "expect": {
+        "resource": {
+          "set": {},
+          "extensions": {
+            "daggerdash": {
+              "feature_questions": [
+                {
+                  "name": "Smoldering",
+                  "questions": "Who is Close?"
+                }
+              ]
+            },
+            "othertool": {
+              "keep": [
+                1,
+                2,
+                3
+              ]
+            }
+          }
+        }
+      }
+    },
+    {
+      "name": "toggle a feature kind and its uses",
+      "local": {
+        "name": "Cinder Wisp",
+        "tier": 2,
+        "kind": "Skulk",
+        "source": "Homebrew",
+        "difficulty": 14,
+        "hp": 5,
+        "stress": 3,
+        "threshold_major": 8,
+        "threshold_severe": 15,
+        "attack_modifier": 3,
+        "attack_name": "Scorch",
+        "attack_range": "Very Close",
+        "damage_dice": "2d6",
+        "damage_bonus": 2,
+        "damage_type": "mag",
+        "motives": "Burn, hide, relight",
+        "description": "A flickering ember spirit that nests in abandoned forges.",
+        "experiences": [
+          {
+            "name": "Forge Lore",
+            "modifier": 2
+          },
+          {
+            "name": "Slippery",
+            "modifier": 3
+          }
+        ],
+        "features": [
+          {
+            "name": "Smoldering",
+            "kind": "passive",
+            "max_uses": null,
+            "text": "Creatures that start their turn **Close** mark a Stress.",
+            "questions": "Who stands Close?"
+          },
+          {
+            "name": "Gutter Out",
+            "kind": "reaction",
+            "max_uses": 1,
+            "text": "When marked HP, become _Hidden_.",
+            "questions": ""
+          },
+          {
+            "name": "Ember Lore",
+            "kind": "reaction",
+            "max_uses": null,
+            "text": "Knows <u>every</u> forge.",
+            "questions": ""
+          }
+        ]
+      },
+      "expect": {
+        "resource": {
+          "set": {
+            "/features/2/type": "Reaction",
+            "/features/2/max_uses": null
+          }
+        }
+      }
+    }
+  ]
+}

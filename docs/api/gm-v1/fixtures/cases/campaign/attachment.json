@@ -1,0 +1,416 @@
+{
+  "name": "Attachment: declare, replay, upload, limits, visibility, stale, delete",
+  "kind": "attachment",
+  "steps": [
+    {
+      "label": "create-ok",
+      "class": "ok",
+      "operation": "createAttachment",
+      "request": {
+        "path": {
+          "campaignId": "3f0c8f9e-5a1b-4c2d-9e7a-1b2c3d4e5f60"
+        },
+        "headers": {
+          "Idempotency-Key": "ob-01hzx-0101"
+        },
+        "body": {
+          "client_ref": "daggerdash:8d2e3f4a5b6c7d8e9f0a1b2c3d4e5f60",
+          "data": {
+            "name": "ferry-map.png",
+            "content_type": "image/png",
+            "size": 482113,
+            "sha256": "a3f1c9d8e7b6a5f4e3d2c1b0a9f8e7d6c5b4a3f2e1d0c9b8a7f6e5d4c3b2a1f0",
+            "visibility": "gm_only"
+          }
+        }
+      },
+      "response": {
+        "status": 201,
+        "headers": {
+          "ETag": "\"1\""
+        },
+        "body": {
+          "id": "a7b6c5d4-3e2f-4a1b-9c8d-7e6f5a4b3c2d",
+          "kind": "attachment",
+          "revision": 1,
+          "created_at": "2026-10-02T09:00:00Z",
+          "updated_at": "2026-10-02T09:05:12Z",
+          "deleted_at": null,
+          "client_ref": "daggerdash:8d2e3f4a5b6c7d8e9f0a1b2c3d4e5f60",
+          "readonly": false,
+          "provenance": {
+            "origin": "campaign"
+          },
+          "extensions": {},
+          "data": {
+            "name": "ferry-map.png",
+            "content_type": "image/png",
+            "size": 482113,
+            "sha256": "a3f1c9d8e7b6a5f4e3d2c1b0a9f8e7d6c5b4a3f2e1d0c9b8a7f6e5d4c3b2a1f0",
+            "visibility": "gm_only",
+            "upload_state": "pending",
+            "uploaded_at": null
+          },
+          "parent": {
+            "kind": "campaign",
+            "id": "3f0c8f9e-5a1b-4c2d-9e7a-1b2c3d4e5f60"
+          }
+        }
+      }
+    },
+    {
+      "label": "retry-replay",
+      "class": "retry",
+      "operation": "createAttachment",
+      "request": {
+        "path": {
+          "campaignId": "3f0c8f9e-5a1b-4c2d-9e7a-1b2c3d4e5f60"
+        },
+        "headers": {
+          "Idempotency-Key": "ob-01hzx-0101"
+        },
+        "body": {
+          "client_ref": "daggerdash:8d2e3f4a5b6c7d8e9f0a1b2c3d4e5f60",
+          "data": {
+            "name": "ferry-map.png",
+            "content_type": "image/png",
+            "size": 482113,
+            "sha256": "a3f1c9d8e7b6a5f4e3d2c1b0a9f8e7d6c5b4a3f2e1d0c9b8a7f6e5d4c3b2a1f0",
+            "visibility": "gm_only"
+          }
+        }
+      },
+      "response": {
+        "status": 200,
+        "headers": {
+          "ETag": "\"1\"",
+          "Idempotent-Replay": "true"
+        },
+        "body": {
+          "id": "a7b6c5d4-3e2f-4a1b-9c8d-7e6f5a4b3c2d",
+          "kind": "attachment",
+          "revision": 1,
+          "created_at": "2026-10-02T09:00:00Z",
+          "updated_at": "2026-10-02T09:05:12Z",
+          "deleted_at": null,
+          "client_ref": "daggerdash:8d2e3f4a5b6c7d8e9f0a1b2c3d4e5f60",
+          "readonly": false,
+          "provenance": {
+            "origin": "campaign"
+          },
+          "extensions": {},
+          "data": {
+            "name": "ferry-map.png",
+            "content_type": "image/png",
+            "size": 482113,
+            "sha256": "a3f1c9d8e7b6a5f4e3d2c1b0a9f8e7d6c5b4a3f2e1d0c9b8a7f6e5d4c3b2a1f0",
+            "visibility": "gm_only",
+            "upload_state": "pending",
+            "uploaded_at": null
+          },
+          "parent": {
+            "kind": "campaign",
+            "id": "3f0c8f9e-5a1b-4c2d-9e7a-1b2c3d4e5f60"
+          }
+        }
+      },
+      "replays": 0
+    },
+    {
+      "label": "upload-content-ok",
+      "class": "ok",
+      "operation": "putAttachmentContent",
+      "request": {
+        "path": {
+          "campaignId": "3f0c8f9e-5a1b-4c2d-9e7a-1b2c3d4e5f60",
+          "attachmentId": "a7b6c5d4-3e2f-4a1b-9c8d-7e6f5a4b3c2d"
+        },
+        "headers": {
+          "X-Content-SHA256": "a3f1c9d8e7b6a5f4e3d2c1b0a9f8e7d6c5b4a3f2e1d0c9b8a7f6e5d4c3b2a1f0",
+          "Idempotency-Key": "ob-01hzx-0102"
+        }
+      },
+      "response": {
+        "status": 200,
+        "body": {
+          "id": "a7b6c5d4-3e2f-4a1b-9c8d-7e6f5a4b3c2d",
+          "kind": "attachment",
+          "revision": 2,
+          "created_at": "2026-10-02T09:00:00Z",
+          "updated_at": "2026-10-02T09:05:12Z",
+          "deleted_at": null,
+          "client_ref": "daggerdash:8d2e3f4a5b6c7d8e9f0a1b2c3d4e5f60",
+          "readonly": false,
+          "provenance": {
+            "origin": "campaign"
+          },
+          "extensions": {},
+          "data": {
+            "name": "ferry-map.png",
+            "content_type": "image/png",
+            "size": 482113,
+            "sha256": "a3f1c9d8e7b6a5f4e3d2c1b0a9f8e7d6c5b4a3f2e1d0c9b8a7f6e5d4c3b2a1f0",
+            "visibility": "gm_only",
+            "upload_state": "complete",
+            "uploaded_at": "2026-10-02T09:05:12Z"
+          },
+          "parent": {
+            "kind": "campaign",
+            "id": "3f0c8f9e-5a1b-4c2d-9e7a-1b2c3d4e5f60"
+          }
+        }
+      }
+    },
+    {
+      "label": "invalid-too-large",
+      "class": "invalid",
+      "operation": "createAttachment",
+      "request": {
+        "path": {
+          "campaignId": "3f0c8f9e-5a1b-4c2d-9e7a-1b2c3d4e5f60"
+        },
+        "headers": {
+          "Idempotency-Key": "ob-01hzx-0103"
+        },
+        "body": {
+          "client_ref": "daggerdash:8d2e3f4a5b6c7d8e9f0a1b2c3d4e5f601",
+          "data": {
+            "name": "ferry-map.png",
+            "content_type": "image/png",
+            "size": 20971520,
+            "sha256": "a3f1c9d8e7b6a5f4e3d2c1b0a9f8e7d6c5b4a3f2e1d0c9b8a7f6e5d4c3b2a1f0",
+            "visibility": "gm_only"
+          }
+        }
+      },
+      "response": {
+        "status": 413,
+        "body": {
+          "type": "https://daggerlore.app/problems/payload_too_large",
+          "title": "Attachments are limited to 10 MiB",
+          "status": 413,
+          "code": "payload_too_large",
+          "retryable": false,
+          "request_id": "req_01HZX0430",
+          "field_errors": [
+            {
+              "pointer": "/data/size",
+              "code": "maximum",
+              "message": "At most 10485760 bytes"
+            }
+          ]
+        }
+      },
+      "validation": "schema"
+    },
+    {
+      "label": "invalid-content-type",
+      "class": "invalid",
+      "operation": "createAttachment",
+      "request": {
+        "path": {
+          "campaignId": "3f0c8f9e-5a1b-4c2d-9e7a-1b2c3d4e5f60"
+        },
+        "headers": {
+          "Idempotency-Key": "ob-01hzx-0104"
+        },
+        "body": {
+          "client_ref": "daggerdash:8d2e3f4a5b6c7d8e9f0a1b2c3d4e5f602",
+          "data": {
+            "name": "ferry-map.png",
+            "content_type": "application/x-msdownload",
+            "size": 482113,
+            "sha256": "a3f1c9d8e7b6a5f4e3d2c1b0a9f8e7d6c5b4a3f2e1d0c9b8a7f6e5d4c3b2a1f0",
+            "visibility": "gm_only"
+          }
+        }
+      },
+      "response": {
+        "status": 415,
+        "body": {
+          "type": "https://daggerlore.app/problems/unsupported_media_type",
+          "title": "Only images, PDF, text and Markdown are accepted",
+          "status": 415,
+          "code": "unsupported_media_type",
+          "retryable": false,
+          "request_id": "req_01HZX0437",
+          "field_errors": [
+            {
+              "pointer": "/data/content_type",
+              "code": "enum",
+              "message": "Not an allowed content type"
+            }
+          ]
+        }
+      },
+      "validation": "schema"
+    },
+    {
+      "label": "visibility-ok",
+      "class": "ok",
+      "operation": "putAttachment",
+      "request": {
+        "path": {
+          "campaignId": "3f0c8f9e-5a1b-4c2d-9e7a-1b2c3d4e5f60",
+          "attachmentId": "a7b6c5d4-3e2f-4a1b-9c8d-7e6f5a4b3c2d"
+        },
+        "headers": {
+          "If-Match": "\"2\""
+        },
+        "body": {
+          "data": {
+            "name": "ferry-map.png",
+            "visibility": "players"
+          }
+        }
+      },
+      "response": {
+        "status": 200,
+        "headers": {
+          "ETag": "\"3\""
+        },
+        "body": {
+          "id": "a7b6c5d4-3e2f-4a1b-9c8d-7e6f5a4b3c2d",
+          "kind": "attachment",
+          "revision": 3,
+          "created_at": "2026-10-02T09:00:00Z",
+          "updated_at": "2026-10-02T09:05:12Z",
+          "deleted_at": null,
+          "client_ref": "daggerdash:8d2e3f4a5b6c7d8e9f0a1b2c3d4e5f60",
+          "readonly": false,
+          "provenance": {
+            "origin": "campaign"
+          },
+          "extensions": {},
+          "data": {
+            "name": "ferry-map.png",
+            "content_type": "image/png",
+            "size": 482113,
+            "sha256": "a3f1c9d8e7b6a5f4e3d2c1b0a9f8e7d6c5b4a3f2e1d0c9b8a7f6e5d4c3b2a1f0",
+            "visibility": "players",
+            "upload_state": "complete",
+            "uploaded_at": "2026-10-02T09:05:12Z"
+          },
+          "parent": {
+            "kind": "campaign",
+            "id": "3f0c8f9e-5a1b-4c2d-9e7a-1b2c3d4e5f60"
+          }
+        }
+      }
+    },
+    {
+      "label": "stale",
+      "class": "stale",
+      "operation": "putAttachment",
+      "request": {
+        "path": {
+          "campaignId": "3f0c8f9e-5a1b-4c2d-9e7a-1b2c3d4e5f60",
+          "attachmentId": "a7b6c5d4-3e2f-4a1b-9c8d-7e6f5a4b3c2d"
+        },
+        "headers": {
+          "If-Match": "\"2\""
+        },
+        "body": {
+          "data": {
+            "name": "map.png",
+            "visibility": "gm_only"
+          }
+        }
+      },
+      "response": {
+        "status": 412,
+        "body": {
+          "type": "https://daggerlore.app/problems/stale_revision",
+          "title": "Attachment changed",
+          "status": 412,
+          "code": "stale_revision",
+          "retryable": false,
+          "request_id": "req_01HZX0426",
+          "current": {
+            "id": "a7b6c5d4-3e2f-4a1b-9c8d-7e6f5a4b3c2d",
+            "kind": "attachment",
+            "revision": 3,
+            "created_at": "2026-10-02T09:00:00Z",
+            "updated_at": "2026-10-02T09:05:12Z",
+            "deleted_at": null,
+            "client_ref": "daggerdash:8d2e3f4a5b6c7d8e9f0a1b2c3d4e5f60",
+            "readonly": false,
+            "provenance": {
+              "origin": "campaign"
+            },
+            "extensions": {},
+            "data": {
+              "name": "ferry-map.png",
+              "content_type": "image/png",
+              "size": 482113,
+              "sha256": "a3f1c9d8e7b6a5f4e3d2c1b0a9f8e7d6c5b4a3f2e1d0c9b8a7f6e5d4c3b2a1f0",
+              "visibility": "players",
+              "upload_state": "complete",
+              "uploaded_at": "2026-10-02T09:05:12Z"
+            },
+            "parent": {
+              "kind": "campaign",
+              "id": "3f0c8f9e-5a1b-4c2d-9e7a-1b2c3d4e5f60"
+            }
+          }
+        }
+      }
+    },
+    {
+      "label": "delete-ok",
+      "class": "delete",
+      "operation": "deleteAttachment",
+      "request": {
+        "path": {
+          "campaignId": "3f0c8f9e-5a1b-4c2d-9e7a-1b2c3d4e5f60",
+          "attachmentId": "a7b6c5d4-3e2f-4a1b-9c8d-7e6f5a4b3c2d"
+        },
+        "headers": {
+          "If-Match": "\"3\""
+        }
+      },
+      "response": {
+        "status": 200,
+        "body": {
+          "id": "a7b6c5d4-3e2f-4a1b-9c8d-7e6f5a4b3c2d",
+          "kind": "attachment",
+          "revision": 4,
+          "deleted_at": "2026-10-02T09:05:12Z",
+          "data": null,
+          "parent": {
+            "kind": "campaign",
+            "id": "3f0c8f9e-5a1b-4c2d-9e7a-1b2c3d4e5f60"
+          }
+        }
+      }
+    },
+    {
+      "label": "delete-repeat",
+      "class": "delete",
+      "operation": "deleteAttachment",
+      "request": {
+        "path": {
+          "campaignId": "3f0c8f9e-5a1b-4c2d-9e7a-1b2c3d4e5f60",
+          "attachmentId": "a7b6c5d4-3e2f-4a1b-9c8d-7e6f5a4b3c2d"
+        },
+        "headers": {
+          "If-Match": "\"3\""
+        }
+      },
+      "response": {
+        "status": 200,
+        "body": {
+          "id": "a7b6c5d4-3e2f-4a1b-9c8d-7e6f5a4b3c2d",
+          "kind": "attachment",
+          "revision": 4,
+          "deleted_at": "2026-10-02T09:05:12Z",
+          "data": null,
+          "parent": {
+            "kind": "campaign",
+            "id": "3f0c8f9e-5a1b-4c2d-9e7a-1b2c3d4e5f60"
+          }
+        }
+      }
+    }
+  ]
+}

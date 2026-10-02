@@ -1,0 +1,483 @@
+{
+  "name": "Homebrew beastforms: create, replay, invalid, update, stale, delete",
+  "kind": "homebrew",
+  "type": "beastforms",
+  "steps": [
+    {
+      "label": "create-ok",
+      "class": "ok",
+      "operation": "createHomebrew",
+      "request": {
+        "headers": {
+          "Idempotency-Key": "ob-hb-beastforms"
+        },
+        "body": {
+          "client_ref": "daggerdash:6265617374666f726d730000000000ab",
+          "type": "beastforms",
+          "data": {
+            "source_key": "Homebrew",
+            "level_requirement": 3,
+            "title": "Ash Hound",
+            "category": "Predator",
+            "character_trait": {
+              "trait": "instinct",
+              "bonus": 1
+            },
+            "attack": {
+              "range": "Melee",
+              "trait": "instinct",
+              "damage_dice": "d8",
+              "damage_bonus": 1,
+              "damage_type": "phy"
+            },
+            "advantages": [
+              "Tracking by scent"
+            ],
+            "evasion_bonus": 1,
+            "features": []
+          },
+          "extensions": {
+            "daggerdash": {
+              "cached_as": "opaque"
+            }
+          }
+        }
+      },
+      "response": {
+        "status": 201,
+        "headers": {
+          "ETag": "\"1\""
+        },
+        "body": {
+          "id": "b1b2b3b4-c1c2-4d1d-8e1e-f1f2f3f4f5f6",
+          "kind": "homebrew",
+          "revision": 1,
+          "created_at": "2026-10-02T09:00:00Z",
+          "updated_at": "2026-10-02T09:05:12Z",
+          "deleted_at": null,
+          "client_ref": "daggerdash:6265617374666f726d730000000000ab",
+          "readonly": false,
+          "provenance": {
+            "origin": "homebrew",
+            "owner": {
+              "user_id": "0b6f0a1e-4d36-4a52-8d0f-6f3b2d9c7a11",
+              "display_name": "Vanessa"
+            }
+          },
+          "extensions": {
+            "daggerdash": {
+              "cached_as": "opaque"
+            }
+          },
+          "data": {
+            "source_key": "Homebrew",
+            "level_requirement": 3,
+            "title": "Ash Hound",
+            "category": "Predator",
+            "character_trait": {
+              "trait": "instinct",
+              "bonus": 1
+            },
+            "attack": {
+              "range": "Melee",
+              "trait": "instinct",
+              "damage_dice": "d8",
+              "damage_bonus": 1,
+              "damage_type": "phy"
+            },
+            "advantages": [
+              "Tracking by scent"
+            ],
+            "evasion_bonus": 1,
+            "features": []
+          },
+          "type": "beastforms"
+        }
+      }
+    },
+    {
+      "label": "retry-replay",
+      "class": "retry",
+      "operation": "createHomebrew",
+      "request": {
+        "headers": {
+          "Idempotency-Key": "ob-hb-beastforms"
+        },
+        "body": {
+          "client_ref": "daggerdash:6265617374666f726d730000000000ab",
+          "type": "beastforms",
+          "data": {
+            "source_key": "Homebrew",
+            "level_requirement": 3,
+            "title": "Ash Hound",
+            "category": "Predator",
+            "character_trait": {
+              "trait": "instinct",
+              "bonus": 1
+            },
+            "attack": {
+              "range": "Melee",
+              "trait": "instinct",
+              "damage_dice": "d8",
+              "damage_bonus": 1,
+              "damage_type": "phy"
+            },
+            "advantages": [
+              "Tracking by scent"
+            ],
+            "evasion_bonus": 1,
+            "features": []
+          },
+          "extensions": {
+            "daggerdash": {
+              "cached_as": "opaque"
+            }
+          }
+        }
+      },
+      "response": {
+        "status": 200,
+        "headers": {
+          "ETag": "\"1\"",
+          "Idempotent-Replay": "true"
+        },
+        "body": {
+          "id": "b1b2b3b4-c1c2-4d1d-8e1e-f1f2f3f4f5f6",
+          "kind": "homebrew",
+          "revision": 1,
+          "created_at": "2026-10-02T09:00:00Z",
+          "updated_at": "2026-10-02T09:05:12Z",
+          "deleted_at": null,
+          "client_ref": "daggerdash:6265617374666f726d730000000000ab",
+          "readonly": false,
+          "provenance": {
+            "origin": "homebrew",
+            "owner": {
+              "user_id": "0b6f0a1e-4d36-4a52-8d0f-6f3b2d9c7a11",
+              "display_name": "Vanessa"
+            }
+          },
+          "extensions": {
+            "daggerdash": {
+              "cached_as": "opaque"
+            }
+          },
+          "data": {
+            "source_key": "Homebrew",
+            "level_requirement": 3,
+            "title": "Ash Hound",
+            "category": "Predator",
+            "character_trait": {
+              "trait": "instinct",
+              "bonus": 1
+            },
+            "attack": {
+              "range": "Melee",
+              "trait": "instinct",
+              "damage_dice": "d8",
+              "damage_bonus": 1,
+              "damage_type": "phy"
+            },
+            "advantages": [
+              "Tracking by scent"
+            ],
+            "evasion_bonus": 1,
+            "features": []
+          },
+          "type": "beastforms"
+        }
+      },
+      "replays": 0
+    },
+    {
+      "label": "invalid-missing-title",
+      "class": "invalid",
+      "operation": "createHomebrew",
+      "request": {
+        "headers": {
+          "Idempotency-Key": "ob-hb-bad-beastforms"
+        },
+        "body": {
+          "client_ref": "daggerdash:6265617374666f726d730000000000ab1",
+          "type": "beastforms",
+          "data": {
+            "source_key": "Homebrew",
+            "level_requirement": 3,
+            "category": "Predator",
+            "character_trait": {
+              "trait": "instinct",
+              "bonus": 1
+            },
+            "attack": {
+              "range": "Melee",
+              "trait": "instinct",
+              "damage_dice": "d8",
+              "damage_bonus": 1,
+              "damage_type": "phy"
+            },
+            "advantages": [
+              "Tracking by scent"
+            ],
+            "evasion_bonus": 1,
+            "features": []
+          }
+        }
+      },
+      "response": {
+        "status": 422,
+        "body": {
+          "type": "https://daggerlore.app/problems/validation_failed",
+          "title": "Invalid homebrew",
+          "status": 422,
+          "code": "validation_failed",
+          "retryable": false,
+          "request_id": "req_01HZX0439",
+          "field_errors": [
+            {
+              "pointer": "/data/title",
+              "code": "required",
+              "message": "Title is required"
+            }
+          ]
+        }
+      },
+      "validation": "schema"
+    },
+    {
+      "label": "put-ok",
+      "class": "ok",
+      "operation": "putHomebrew",
+      "request": {
+        "path": {
+          "homebrewId": "b1b2b3b4-c1c2-4d1d-8e1e-f1f2f3f4f5f6"
+        },
+        "headers": {
+          "If-Match": "\"1\""
+        },
+        "body": {
+          "type": "beastforms",
+          "data": {
+            "source_key": "Homebrew",
+            "level_requirement": 3,
+            "title": "Ash Hound II",
+            "category": "Predator",
+            "character_trait": {
+              "trait": "instinct",
+              "bonus": 1
+            },
+            "attack": {
+              "range": "Melee",
+              "trait": "instinct",
+              "damage_dice": "d8",
+              "damage_bonus": 1,
+              "damage_type": "phy"
+            },
+            "advantages": [
+              "Tracking by scent"
+            ],
+            "evasion_bonus": 1,
+            "features": []
+          },
+          "extensions": {
+            "daggerdash": {
+              "cached_as": "opaque"
+            }
+          }
+        }
+      },
+      "response": {
+        "status": 200,
+        "headers": {
+          "ETag": "\"2\""
+        },
+        "body": {
+          "id": "b1b2b3b4-c1c2-4d1d-8e1e-f1f2f3f4f5f6",
+          "kind": "homebrew",
+          "revision": 2,
+          "created_at": "2026-10-02T09:00:00Z",
+          "updated_at": "2026-10-02T09:05:12Z",
+          "deleted_at": null,
+          "client_ref": "daggerdash:6265617374666f726d730000000000ab",
+          "readonly": false,
+          "provenance": {
+            "origin": "homebrew",
+            "owner": {
+              "user_id": "0b6f0a1e-4d36-4a52-8d0f-6f3b2d9c7a11",
+              "display_name": "Vanessa"
+            }
+          },
+          "extensions": {
+            "daggerdash": {
+              "cached_as": "opaque"
+            }
+          },
+          "data": {
+            "source_key": "Homebrew",
+            "level_requirement": 3,
+            "title": "Ash Hound II",
+            "category": "Predator",
+            "character_trait": {
+              "trait": "instinct",
+              "bonus": 1
+            },
+            "attack": {
+              "range": "Melee",
+              "trait": "instinct",
+              "damage_dice": "d8",
+              "damage_bonus": 1,
+              "damage_type": "phy"
+            },
+            "advantages": [
+              "Tracking by scent"
+            ],
+            "evasion_bonus": 1,
+            "features": []
+          },
+          "type": "beastforms"
+        }
+      }
+    },
+    {
+      "label": "stale",
+      "class": "stale",
+      "operation": "putHomebrew",
+      "request": {
+        "path": {
+          "homebrewId": "b1b2b3b4-c1c2-4d1d-8e1e-f1f2f3f4f5f6"
+        },
+        "headers": {
+          "If-Match": "\"1\""
+        },
+        "body": {
+          "type": "beastforms",
+          "data": {
+            "source_key": "Homebrew",
+            "level_requirement": 3,
+            "title": "Ash Hound",
+            "category": "Predator",
+            "character_trait": {
+              "trait": "instinct",
+              "bonus": 1
+            },
+            "attack": {
+              "range": "Melee",
+              "trait": "instinct",
+              "damage_dice": "d8",
+              "damage_bonus": 1,
+              "damage_type": "phy"
+            },
+            "advantages": [
+              "Tracking by scent"
+            ],
+            "evasion_bonus": 1,
+            "features": []
+          }
+        }
+      },
+      "response": {
+        "status": 412,
+        "body": {
+          "type": "https://daggerlore.app/problems/stale_revision",
+          "title": "Homebrew changed",
+          "status": 412,
+          "code": "stale_revision",
+          "retryable": false,
+          "request_id": "req_01HZX0426",
+          "current": {
+            "id": "b1b2b3b4-c1c2-4d1d-8e1e-f1f2f3f4f5f6",
+            "kind": "homebrew",
+            "revision": 2,
+            "created_at": "2026-10-02T09:00:00Z",
+            "updated_at": "2026-10-02T09:05:12Z",
+            "deleted_at": null,
+            "client_ref": "daggerdash:6265617374666f726d730000000000ab",
+            "readonly": false,
+            "provenance": {
+              "origin": "homebrew",
+              "owner": {
+                "user_id": "0b6f0a1e-4d36-4a52-8d0f-6f3b2d9c7a11",
+                "display_name": "Vanessa"
+              }
+            },
+            "extensions": {
+              "daggerdash": {
+                "cached_as": "opaque"
+              }
+            },
+            "data": {
+              "source_key": "Homebrew",
+              "level_requirement": 3,
+              "title": "Ash Hound II",
+              "category": "Predator",
+              "character_trait": {
+                "trait": "instinct",
+                "bonus": 1
+              },
+              "attack": {
+                "range": "Melee",
+                "trait": "instinct",
+                "damage_dice": "d8",
+                "damage_bonus": 1,
+                "damage_type": "phy"
+              },
+              "advantages": [
+                "Tracking by scent"
+              ],
+              "evasion_bonus": 1,
+              "features": []
+            },
+            "type": "beastforms"
+          }
+        }
+      }
+    },
+    {
+      "label": "delete-ok",
+      "class": "delete",
+      "operation": "deleteHomebrew",
+      "request": {
+        "path": {
+          "homebrewId": "b1b2b3b4-c1c2-4d1d-8e1e-f1f2f3f4f5f6"
+        },
+        "headers": {
+          "If-Match": "\"2\""
+        }
+      },
+      "response": {
+        "status": 200,
+        "body": {
+          "id": "b1b2b3b4-c1c2-4d1d-8e1e-f1f2f3f4f5f6",
+          "kind": "homebrew",
+          "revision": 3,
+          "deleted_at": "2026-10-02T09:05:12Z",
+          "data": null,
+          "type": "beastforms"
+        }
+      }
+    },
+    {
+      "label": "delete-repeat",
+      "class": "delete",
+      "operation": "deleteHomebrew",
+      "request": {
+        "path": {
+          "homebrewId": "b1b2b3b4-c1c2-4d1d-8e1e-f1f2f3f4f5f6"
+        },
+        "headers": {
+          "If-Match": "\"2\""
+        }
+      },
+      "response": {
+        "status": 200,
+        "body": {
+          "id": "b1b2b3b4-c1c2-4d1d-8e1e-f1f2f3f4f5f6",
+          "kind": "homebrew",
+          "revision": 3,
+          "deleted_at": "2026-10-02T09:05:12Z",
+          "data": null,
+          "type": "beastforms"
+        }
+      }
+    }
+  ]
+}

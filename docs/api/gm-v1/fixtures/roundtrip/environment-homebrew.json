@@ -1,0 +1,103 @@
+{
+  "name": "Environment keeps image, attribution, relative_strength and adversary ids it does not model",
+  "mapping": "environment",
+  "server": {
+    "resource": {
+      "id": "b1b2b3b4-c1c2-4d1d-8e1e-f1f2f3f4f5f7",
+      "kind": "homebrew",
+      "revision": 2,
+      "created_at": "2026-10-02T09:00:00Z",
+      "updated_at": "2026-10-02T09:05:12Z",
+      "deleted_at": null,
+      "client_ref": null,
+      "readonly": false,
+      "provenance": {
+        "origin": "homebrew",
+        "owner": {
+          "user_id": "0b6f0a1e-4d36-4a52-8d0f-6f3b2d9c7a11",
+          "display_name": "Vanessa"
+        }
+      },
+      "extensions": {
+        "othertool": {
+          "pin": true
+        }
+      },
+      "data": {
+        "source_key": "Homebrew",
+        "title": "Collapsing Foundry",
+        "description": "A drowned foundry whose floors give way under heat.",
+        "tier": 2,
+        "image_url": "https://usercontent.daggerlore.example/images/foundry.webp",
+        "artist_name": "Ada Marsh",
+        "type": "Traversal",
+        "impulses": "Burn the unwary, drown the careless",
+        "relative_strength": true,
+        "difficulty": 15,
+        "potential_adversaries": "Cinder Wisp, Slag Golem",
+        "potential_adversaries_ids": [
+          "homebrew:cinder-wisp",
+          "homebrew:slag-golem"
+        ],
+        "features": [
+          {
+            "type": "Action",
+            "name": "Floor Gives Way",
+            "description_html": "<p>A section of floor collapses.</p>",
+            "questions": "Who is standing nearest the furnace?"
+          }
+        ]
+      },
+      "type": "environments"
+    }
+  },
+  "desktop": {
+    "name": "Collapsing Foundry",
+    "tier": 2,
+    "kind": "Traversal",
+    "source": "Homebrew",
+    "difficulty": 15,
+    "impulses": "Burn the unwary, drown the careless",
+    "potential_adversaries": "Cinder Wisp, Slag Golem",
+    "description": "A drowned foundry whose floors give way under heat.",
+    "features": [
+      {
+        "name": "Floor Gives Way",
+        "kind": "action",
+        "text": "A section of floor collapses.",
+        "questions": "Who is standing nearest the furnace?"
+      }
+    ]
+  },
+  "edits": [
+    {
+      "name": "edit impulses and a feature",
+      "local": {
+        "name": "Collapsing Foundry",
+        "tier": 2,
+        "kind": "Traversal",
+        "source": "Homebrew",
+        "difficulty": 15,
+        "impulses": "Burn the unwary",
+        "potential_adversaries": "Cinder Wisp, Slag Golem",
+        "description": "A drowned foundry whose floors give way under heat.",
+        "features": [
+          {
+            "name": "Floor Gives Way",
+            "kind": "action",
+            "text": "A section of floor collapses and **drops** a PC.",
+            "questions": "Who is standing nearest the furnace?"
+          }
+        ]
+      },
+      "expect": {
+        "resource": {
+          "set": {
+            "/impulses": "Burn the unwary",
+            "/features/0/description_html": "<p>A section of floor collapses and <strong>drops</strong> a PC.</p>"
+          }
+        }
+      }
+    }
+  ]
+}

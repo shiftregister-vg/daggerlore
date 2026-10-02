@@ -1,0 +1,159 @@
+{
+  "name": "Encounter link: create, idempotent repeat, unlink, stale, forbidden",
+  "kind": "encounter_link",
+  "steps": [
+    {
+      "label": "link-created",
+      "class": "ok",
+      "operation": "putEncounterLink",
+      "request": {
+        "path": {
+          "campaignId": "9a8b7c6d-5e4f-4a3b-8c2d-1e0f9a8b7c6d",
+          "encounterId": "e5c0a1b2-6d7e-4f80-91a2-b3c4d5e6f708"
+        }
+      },
+      "response": {
+        "status": 201,
+        "body": {
+          "id": "9a8b7c6d-5e4f-4a3b-8c2d-1e0f9a8b7c6d~e5c0a1b2-6d7e-4f80-91a2-b3c4d5e6f708",
+          "kind": "encounter_link",
+          "revision": 1,
+          "created_at": "2026-10-02T09:00:00Z",
+          "updated_at": "2026-10-02T09:05:12Z",
+          "deleted_at": null,
+          "client_ref": null,
+          "readonly": false,
+          "provenance": {
+            "origin": "campaign"
+          },
+          "extensions": {},
+          "data": {
+            "campaign_id": "9a8b7c6d-5e4f-4a3b-8c2d-1e0f9a8b7c6d",
+            "encounter_id": "e5c0a1b2-6d7e-4f80-91a2-b3c4d5e6f708"
+          }
+        }
+      }
+    },
+    {
+      "label": "link-repeat",
+      "class": "ok",
+      "operation": "putEncounterLink",
+      "request": {
+        "path": {
+          "campaignId": "9a8b7c6d-5e4f-4a3b-8c2d-1e0f9a8b7c6d",
+          "encounterId": "e5c0a1b2-6d7e-4f80-91a2-b3c4d5e6f708"
+        }
+      },
+      "response": {
+        "status": 200,
+        "body": {
+          "id": "9a8b7c6d-5e4f-4a3b-8c2d-1e0f9a8b7c6d~e5c0a1b2-6d7e-4f80-91a2-b3c4d5e6f708",
+          "kind": "encounter_link",
+          "revision": 1,
+          "created_at": "2026-10-02T09:00:00Z",
+          "updated_at": "2026-10-02T09:05:12Z",
+          "deleted_at": null,
+          "client_ref": null,
+          "readonly": false,
+          "provenance": {
+            "origin": "campaign"
+          },
+          "extensions": {},
+          "data": {
+            "campaign_id": "9a8b7c6d-5e4f-4a3b-8c2d-1e0f9a8b7c6d",
+            "encounter_id": "e5c0a1b2-6d7e-4f80-91a2-b3c4d5e6f708"
+          }
+        }
+      }
+    },
+    {
+      "label": "forbidden-not-owner",
+      "class": "forbidden",
+      "operation": "putEncounterLink",
+      "request": {
+        "path": {
+          "campaignId": "9a8b7c6d-5e4f-4a3b-8c2d-1e0f9a8b7c6d",
+          "encounterId": "e5c0a1b2-6d7e-4f80-91a2-b3c4d5e6f709"
+        }
+      },
+      "response": {
+        "status": 403,
+        "body": {
+          "type": "https://daggerlore.app/problems/forbidden",
+          "title": "Only the encounter owner can link it",
+          "status": 403,
+          "code": "forbidden",
+          "retryable": false,
+          "request_id": "req_01HZX0412"
+        }
+      }
+    },
+    {
+      "label": "stale",
+      "class": "stale",
+      "operation": "deleteEncounterLink",
+      "request": {
+        "path": {
+          "campaignId": "9a8b7c6d-5e4f-4a3b-8c2d-1e0f9a8b7c6d",
+          "encounterId": "e5c0a1b2-6d7e-4f80-91a2-b3c4d5e6f708"
+        },
+        "headers": {
+          "If-Match": "\"1\""
+        }
+      },
+      "response": {
+        "status": 412,
+        "body": {
+          "type": "https://daggerlore.app/problems/stale_revision",
+          "title": "Link changed",
+          "status": 412,
+          "code": "stale_revision",
+          "retryable": false,
+          "request_id": "req_01HZX0426",
+          "current": {
+            "id": "9a8b7c6d-5e4f-4a3b-8c2d-1e0f9a8b7c6d~e5c0a1b2-6d7e-4f80-91a2-b3c4d5e6f708",
+            "kind": "encounter_link",
+            "revision": 2,
+            "created_at": "2026-10-02T09:00:00Z",
+            "updated_at": "2026-10-02T09:05:12Z",
+            "deleted_at": null,
+            "client_ref": null,
+            "readonly": false,
+            "provenance": {
+              "origin": "campaign"
+            },
+            "extensions": {},
+            "data": {
+              "campaign_id": "9a8b7c6d-5e4f-4a3b-8c2d-1e0f9a8b7c6d",
+              "encounter_id": "e5c0a1b2-6d7e-4f80-91a2-b3c4d5e6f708"
+            }
+          }
+        }
+      }
+    },
+    {
+      "label": "unlink-ok",
+      "class": "delete",
+      "operation": "deleteEncounterLink",
+      "request": {
+        "path": {
+          "campaignId": "9a8b7c6d-5e4f-4a3b-8c2d-1e0f9a8b7c6d",
+          "encounterId": "e5c0a1b2-6d7e-4f80-91a2-b3c4d5e6f708"
+        },
+        "headers": {
+          "If-Match": "\"2\""
+        }
+      },
+      "response": {
+        "status": 200,
+        "body": {
+          "id": "9a8b7c6d-5e4f-4a3b-8c2d-1e0f9a8b7c6d~e5c0a1b2-6d7e-4f80-91a2-b3c4d5e6f708",
+          "kind": "encounter_link",
+          "revision": 3,
+          "deleted_at": "2026-10-02T09:05:12Z",
+          "data": null
+        }
+      }
+    }
+  ]
+}

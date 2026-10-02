@@ -1,0 +1,22 @@
+{
+  "source_key": "Homebrew",
+  "title": "Cinder Wisp",
+  "tier": 2,
+  "type": "Skulk",
+  "image_url": "https://usercontent.daggerlore.example/images/cinder-wisp.webp",
+  "artist_name": "Ada Marsh",
+  "description": "A flickering ember spirit that nests in abandoned forges.",
+  "motives_tactics": "Burn, hide, relight",
+  "difficulty": 14,
+  "thresholds": { "major": 8, "severe": 15 },
+  "max_hp": 5,
+  "max_stress": 3,
+  "attack_modifier": 3,
+  "standard_attack": { "name": "Scorch", "range": "Very Close", "damage_dice": "2d6", "damage_bonus": 2, "damage_type": "mag" },
+  "experiences": ["Forge Lore", "Slippery"],
+  "experience_modifiers": [2, 3],
+  "features": [
+    { "type": "Passive", "name": "Smoldering", "max_uses": null, "description_html": "<p>Creatures that start their turn <strong>Close</strong> mark a Stress.</p>" },
+    { "type": "Reaction", "name": "Gutter Out", "max_uses": 1, "description_html": "<p>When marked HP, become <em>Hidden</em>.</p>" }
+  ]
+}

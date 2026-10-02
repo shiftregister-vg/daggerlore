@@ -1,0 +1,507 @@
+{
+  "name": "Homebrew environments: create, replay, invalid, update, stale, delete",
+  "kind": "homebrew",
+  "type": "environments",
+  "steps": [
+    {
+      "label": "create-ok",
+      "class": "ok",
+      "operation": "createHomebrew",
+      "request": {
+        "headers": {
+          "Idempotency-Key": "ob-hb-environments"
+        },
+        "body": {
+          "client_ref": "daggerdash:656e7669726f6e6d656e7473000000ab",
+          "type": "environments",
+          "data": {
+            "source_key": "Homebrew",
+            "title": "Collapsing Foundry",
+            "description": "A drowned foundry whose floors give way under heat.",
+            "tier": 2,
+            "image_url": "",
+            "artist_name": "",
+            "type": "Traversal",
+            "impulses": "Burn the unwary, drown the careless",
+            "relative_strength": true,
+            "difficulty": 15,
+            "potential_adversaries": "Cinder Wisp, Slag Golem",
+            "potential_adversaries_ids": [
+              "homebrew:cinder-wisp"
+            ],
+            "features": [
+              {
+                "type": "Action",
+                "name": "Floor Gives Way",
+                "description_html": "<p>A section of floor collapses.</p>",
+                "questions": "Who is standing nearest the furnace?"
+              }
+            ]
+          },
+          "extensions": {
+            "daggerdash": {
+              "cached_as": "modeled"
+            }
+          },
+          "add_to_campaign_ids": [
+            "3f0c8f9e-5a1b-4c2d-9e7a-1b2c3d4e5f60"
+          ]
+        }
+      },
+      "response": {
+        "status": 201,
+        "headers": {
+          "ETag": "\"1\""
+        },
+        "body": {
+          "id": "b1b2b3b4-c1c2-4d1d-8e1e-f1f2f3f4f5f6",
+          "kind": "homebrew",
+          "revision": 1,
+          "created_at": "2026-10-02T09:00:00Z",
+          "updated_at": "2026-10-02T09:05:12Z",
+          "deleted_at": null,
+          "client_ref": "daggerdash:656e7669726f6e6d656e7473000000ab",
+          "readonly": false,
+          "provenance": {
+            "origin": "homebrew",
+            "owner": {
+              "user_id": "0b6f0a1e-4d36-4a52-8d0f-6f3b2d9c7a11",
+              "display_name": "Vanessa"
+            }
+          },
+          "extensions": {
+            "daggerdash": {
+              "cached_as": "modeled"
+            }
+          },
+          "data": {
+            "source_key": "Homebrew",
+            "title": "Collapsing Foundry",
+            "description": "A drowned foundry whose floors give way under heat.",
+            "tier": 2,
+            "image_url": "",
+            "artist_name": "",
+            "type": "Traversal",
+            "impulses": "Burn the unwary, drown the careless",
+            "relative_strength": true,
+            "difficulty": 15,
+            "potential_adversaries": "Cinder Wisp, Slag Golem",
+            "potential_adversaries_ids": [
+              "homebrew:cinder-wisp"
+            ],
+            "features": [
+              {
+                "type": "Action",
+                "name": "Floor Gives Way",
+                "description_html": "<p>A section of floor collapses.</p>",
+                "questions": "Who is standing nearest the furnace?"
+              }
+            ]
+          },
+          "type": "environments"
+        }
+      }
+    },
+    {
+      "label": "retry-replay",
+      "class": "retry",
+      "operation": "createHomebrew",
+      "request": {
+        "headers": {
+          "Idempotency-Key": "ob-hb-environments"
+        },
+        "body": {
+          "client_ref": "daggerdash:656e7669726f6e6d656e7473000000ab",
+          "type": "environments",
+          "data": {
+            "source_key": "Homebrew",
+            "title": "Collapsing Foundry",
+            "description": "A drowned foundry whose floors give way under heat.",
+            "tier": 2,
+            "image_url": "",
+            "artist_name": "",
+            "type": "Traversal",
+            "impulses": "Burn the unwary, drown the careless",
+            "relative_strength": true,
+            "difficulty": 15,
+            "potential_adversaries": "Cinder Wisp, Slag Golem",
+            "potential_adversaries_ids": [
+              "homebrew:cinder-wisp"
+            ],
+            "features": [
+              {
+                "type": "Action",
+                "name": "Floor Gives Way",
+                "description_html": "<p>A section of floor collapses.</p>",
+                "questions": "Who is standing nearest the furnace?"
+              }
+            ]
+          },
+          "extensions": {
+            "daggerdash": {
+              "cached_as": "modeled"
+            }
+          },
+          "add_to_campaign_ids": [
+            "3f0c8f9e-5a1b-4c2d-9e7a-1b2c3d4e5f60"
+          ]
+        }
+      },
+      "response": {
+        "status": 200,
+        "headers": {
+          "ETag": "\"1\"",
+          "Idempotent-Replay": "true"
+        },
+        "body": {
+          "id": "b1b2b3b4-c1c2-4d1d-8e1e-f1f2f3f4f5f6",
+          "kind": "homebrew",
+          "revision": 1,
+          "created_at": "2026-10-02T09:00:00Z",
+          "updated_at": "2026-10-02T09:05:12Z",
+          "deleted_at": null,
+          "client_ref": "daggerdash:656e7669726f6e6d656e7473000000ab",
+          "readonly": false,
+          "provenance": {
+            "origin": "homebrew",
+            "owner": {
+              "user_id": "0b6f0a1e-4d36-4a52-8d0f-6f3b2d9c7a11",
+              "display_name": "Vanessa"
+            }
+          },
+          "extensions": {
+            "daggerdash": {
+              "cached_as": "modeled"
+            }
+          },
+          "data": {
+            "source_key": "Homebrew",
+            "title": "Collapsing Foundry",
+            "description": "A drowned foundry whose floors give way under heat.",
+            "tier": 2,
+            "image_url": "",
+            "artist_name": "",
+            "type": "Traversal",
+            "impulses": "Burn the unwary, drown the careless",
+            "relative_strength": true,
+            "difficulty": 15,
+            "potential_adversaries": "Cinder Wisp, Slag Golem",
+            "potential_adversaries_ids": [
+              "homebrew:cinder-wisp"
+            ],
+            "features": [
+              {
+                "type": "Action",
+                "name": "Floor Gives Way",
+                "description_html": "<p>A section of floor collapses.</p>",
+                "questions": "Who is standing nearest the furnace?"
+              }
+            ]
+          },
+          "type": "environments"
+        }
+      },
+      "replays": 0
+    },
+    {
+      "label": "invalid-missing-title",
+      "class": "invalid",
+      "operation": "createHomebrew",
+      "request": {
+        "headers": {
+          "Idempotency-Key": "ob-hb-bad-environments"
+        },
+        "body": {
+          "client_ref": "daggerdash:656e7669726f6e6d656e7473000000ab1",
+          "type": "environments",
+          "data": {
+            "source_key": "Homebrew",
+            "description": "A drowned foundry whose floors give way under heat.",
+            "tier": 2,
+            "image_url": "",
+            "artist_name": "",
+            "type": "Traversal",
+            "impulses": "Burn the unwary, drown the careless",
+            "relative_strength": true,
+            "difficulty": 15,
+            "potential_adversaries": "Cinder Wisp, Slag Golem",
+            "potential_adversaries_ids": [
+              "homebrew:cinder-wisp"
+            ],
+            "features": [
+              {
+                "type": "Action",
+                "name": "Floor Gives Way",
+                "description_html": "<p>A section of floor collapses.</p>",
+                "questions": "Who is standing nearest the furnace?"
+              }
+            ]
+          }
+        }
+      },
+      "response": {
+        "status": 422,
+        "body": {
+          "type": "https://daggerlore.app/problems/validation_failed",
+          "title": "Invalid homebrew",
+          "status": 422,
+          "code": "validation_failed",
+          "retryable": false,
+          "request_id": "req_01HZX0439",
+          "field_errors": [
+            {
+              "pointer": "/data/title",
+              "code": "required",
+              "message": "Title is required"
+            }
+          ]
+        }
+      },
+      "validation": "schema"
+    },
+    {
+      "label": "put-ok",
+      "class": "ok",
+      "operation": "putHomebrew",
+      "request": {
+        "path": {
+          "homebrewId": "b1b2b3b4-c1c2-4d1d-8e1e-f1f2f3f4f5f6"
+        },
+        "headers": {
+          "If-Match": "\"1\""
+        },
+        "body": {
+          "type": "environments",
+          "data": {
+            "source_key": "Homebrew",
+            "title": "Collapsing Foundry II",
+            "description": "A drowned foundry whose floors give way under heat.",
+            "tier": 2,
+            "image_url": "",
+            "artist_name": "",
+            "type": "Traversal",
+            "impulses": "Burn the unwary, drown the careless",
+            "relative_strength": true,
+            "difficulty": 15,
+            "potential_adversaries": "Cinder Wisp, Slag Golem",
+            "potential_adversaries_ids": [
+              "homebrew:cinder-wisp"
+            ],
+            "features": [
+              {
+                "type": "Action",
+                "name": "Floor Gives Way",
+                "description_html": "<p>A section of floor collapses.</p>",
+                "questions": "Who is standing nearest the furnace?"
+              }
+            ]
+          },
+          "extensions": {
+            "daggerdash": {
+              "cached_as": "modeled"
+            }
+          }
+        }
+      },
+      "response": {
+        "status": 200,
+        "headers": {
+          "ETag": "\"2\""
+        },
+        "body": {
+          "id": "b1b2b3b4-c1c2-4d1d-8e1e-f1f2f3f4f5f6",
+          "kind": "homebrew",
+          "revision": 2,
+          "created_at": "2026-10-02T09:00:00Z",
+          "updated_at": "2026-10-02T09:05:12Z",
+          "deleted_at": null,
+          "client_ref": "daggerdash:656e7669726f6e6d656e7473000000ab",
+          "readonly": false,
+          "provenance": {
+            "origin": "homebrew",
+            "owner": {
+              "user_id": "0b6f0a1e-4d36-4a52-8d0f-6f3b2d9c7a11",
+              "display_name": "Vanessa"
+            }
+          },
+          "extensions": {
+            "daggerdash": {
+              "cached_as": "modeled"
+            }
+          },
+          "data": {
+            "source_key": "Homebrew",
+            "title": "Collapsing Foundry II",
+            "description": "A drowned foundry whose floors give way under heat.",
+            "tier": 2,
+            "image_url": "",
+            "artist_name": "",
+            "type": "Traversal",
+            "impulses": "Burn the unwary, drown the careless",
+            "relative_strength": true,
+            "difficulty": 15,
+            "potential_adversaries": "Cinder Wisp, Slag Golem",
+            "potential_adversaries_ids": [
+              "homebrew:cinder-wisp"
+            ],
+            "features": [
+              {
+                "type": "Action",
+                "name": "Floor Gives Way",
+                "description_html": "<p>A section of floor collapses.</p>",
+                "questions": "Who is standing nearest the furnace?"
+              }
+            ]
+          },
+          "type": "environments"
+        }
+      }
+    },
+    {
+      "label": "stale",
+      "class": "stale",
+      "operation": "putHomebrew",
+      "request": {
+        "path": {
+          "homebrewId": "b1b2b3b4-c1c2-4d1d-8e1e-f1f2f3f4f5f6"
+        },
+        "headers": {
+          "If-Match": "\"1\""
+        },
+        "body": {
+          "type": "environments",
+          "data": {
+            "source_key": "Homebrew",
+            "title": "Collapsing Foundry",
+            "description": "A drowned foundry whose floors give way under heat.",
+            "tier": 2,
+            "image_url": "",
+            "artist_name": "",
+            "type": "Traversal",
+            "impulses": "Burn the unwary, drown the careless",
+            "relative_strength": true,
+            "difficulty": 15,
+            "potential_adversaries": "Cinder Wisp, Slag Golem",
+            "potential_adversaries_ids": [
+              "homebrew:cinder-wisp"
+            ],
+            "features": [
+              {
+                "type": "Action",
+                "name": "Floor Gives Way",
+                "description_html": "<p>A section of floor collapses.</p>",
+                "questions": "Who is standing nearest the furnace?"
+              }
+            ]
+          }
+        }
+      },
+      "response": {
+        "status": 412,
+        "body": {
+          "type": "https://daggerlore.app/problems/stale_revision",
+          "title": "Homebrew changed",
+          "status": 412,
+          "code": "stale_revision",
+          "retryable": false,
+          "request_id": "req_01HZX0426",
+          "current": {
+            "id": "b1b2b3b4-c1c2-4d1d-8e1e-f1f2f3f4f5f6",
+            "kind": "homebrew",
+            "revision": 2,
+            "created_at": "2026-10-02T09:00:00Z",
+            "updated_at": "2026-10-02T09:05:12Z",
+            "deleted_at": null,
+            "client_ref": "daggerdash:656e7669726f6e6d656e7473000000ab",
+            "readonly": false,
+            "provenance": {
+              "origin": "homebrew",
+              "owner": {
+                "user_id": "0b6f0a1e-4d36-4a52-8d0f-6f3b2d9c7a11",
+                "display_name": "Vanessa"
+              }
+            },
+            "extensions": {
+              "daggerdash": {
+                "cached_as": "modeled"
+              }
+            },
+            "data": {
+              "source_key": "Homebrew",
+              "title": "Collapsing Foundry II",
+              "description": "A drowned foundry whose floors give way under heat.",
+              "tier": 2,
+              "image_url": "",
+              "artist_name": "",
+              "type": "Traversal",
+              "impulses": "Burn the unwary, drown the careless",
+              "relative_strength": true,
+              "difficulty": 15,
+              "potential_adversaries": "Cinder Wisp, Slag Golem",
+              "potential_adversaries_ids": [
+                "homebrew:cinder-wisp"
+              ],
+              "features": [
+                {
+                  "type": "Action",
+                  "name": "Floor Gives Way",
+                  "description_html": "<p>A section of floor collapses.</p>",
+                  "questions": "Who is standing nearest the furnace?"
+                }
+              ]
+            },
+            "type": "environments"
+          }
+        }
+      }
+    },
+    {
+      "label": "delete-ok",
+      "class": "delete",
+      "operation": "deleteHomebrew",
+      "request": {
+        "path": {
+          "homebrewId": "b1b2b3b4-c1c2-4d1d-8e1e-f1f2f3f4f5f6"
+        },
+        "headers": {
+          "If-Match": "\"2\""
+        }
+      },
+      "response": {
+        "status": 200,
+        "body": {
+          "id": "b1b2b3b4-c1c2-4d1d-8e1e-f1f2f3f4f5f6",
+          "kind": "homebrew",
+          "revision": 3,
+          "deleted_at": "2026-10-02T09:05:12Z",
+          "data": null,
+          "type": "environments"
+        }
+      }
+    },
+    {
+      "label": "delete-repeat",
+      "class": "delete",
+      "operation": "deleteHomebrew",
+      "request": {
+        "path": {
+          "homebrewId": "b1b2b3b4-c1c2-4d1d-8e1e-f1f2f3f4f5f6"
+        },
+        "headers": {
+          "If-Match": "\"2\""
+        }
+      },
+      "response": {
+        "status": 200,
+        "body": {
+          "id": "b1b2b3b4-c1c2-4d1d-8e1e-f1f2f3f4f5f6",
+          "kind": "homebrew",
+          "revision": 3,
+          "deleted_at": "2026-10-02T09:05:12Z",
+          "data": null,
+          "type": "environments"
+        }
+      }
+    }
+  ]
+}

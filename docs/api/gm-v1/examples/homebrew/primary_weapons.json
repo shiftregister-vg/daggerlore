@@ -1,0 +1,7 @@
+{
+  "source_key": "Homebrew", "title": "Emberglass Spear",
+  "description_html": "<p>A spear tipped with fused slag glass.</p>",
+  "level_requirement": 2, "type": "Physical", "available_traits": ["strength", "finesse"],
+  "range": "Very Close", "features": [], "attack_roll_bonus": 0, "damage_bonus": 1,
+  "damage_dice": "d10", "available_damage_types": ["phy"], "burden": 2
+}

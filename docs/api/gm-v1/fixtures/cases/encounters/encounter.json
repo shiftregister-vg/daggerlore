@@ -1,0 +1,1991 @@
+{
+  "name": "Encounter: create with two campaign links, replay, invalid, update, stale, delete",
+  "kind": "encounter",
+  "steps": [
+    {
+      "label": "create-ok",
+      "class": "ok",
+      "operation": "createEncounter",
+      "request": {
+        "headers": {
+          "Idempotency-Key": "ob-01hzx-0201"
+        },
+        "body": {
+          "client_ref": "daggerdash:9e3f4a5b6c7d8e9f0a1b2c3d4e5f6071",
+          "campaign_ids": [
+            "3f0c8f9e-5a1b-4c2d-9e7a-1b2c3d4e5f60",
+            "9a8b7c6d-5e4f-4a3b-8c2d-1e0f9a8b7c6d"
+          ],
+          "data": {
+            "name": "Foundry ambush",
+            "description_html": "<p>The floor <u>groans</u>.</p>",
+            "condition_list": [
+              "Burning"
+            ],
+            "enable_massive_damage": true,
+            "number_of_players": 4,
+            "encounter_tier": 2,
+            "bonus_damage": false,
+            "extra_battle_points": 1,
+            "items": [
+              {
+                "type": "adversary",
+                "ref": {
+                  "origin": "homebrew",
+                  "homebrew_id": "b1b2b3b4-c1c2-4d1d-8e1e-f1f2f3f4f5f6"
+                },
+                "instances": [
+                  {},
+                  {},
+                  {}
+                ]
+              },
+              {
+                "type": "environment",
+                "ref": {
+                  "origin": "homebrew",
+                  "homebrew_id": "b1b2b3b4-c1c2-4d1d-8e1e-f1f2f3f4f5f0"
+                }
+              },
+              {
+                "type": "adversary",
+                "ref": {
+                  "origin": "official",
+                  "source_key": "SRD",
+                  "item_type": "adversaries",
+                  "item_id": "acid-burrower",
+                  "item_version": 2,
+                  "legacy_id": "acid-burrower"
+                },
+                "edited_adversary": {
+                  "source_key": "SRD",
+                  "title": "Acid Burrower (flooded)",
+                  "tier": 2,
+                  "type": "Skulk",
+                  "image_url": "https://usercontent.daggerlore.example/images/cinder-wisp.webp",
+                  "artist_name": "Ada Marsh",
+                  "description": "A flickering ember spirit that nests in abandoned forges.",
+                  "motives_tactics": "Burn, hide, relight",
+                  "difficulty": 14,
+                  "thresholds": {
+                    "major": 8,
+                    "severe": 15
+                  },
+                  "max_hp": 5,
+                  "max_stress": 3,
+                  "attack_modifier": 3,
+                  "standard_attack": {
+                    "name": "Scorch",
+                    "range": "Very Close",
+                    "damage_dice": "2d6",
+                    "damage_bonus": 2,
+                    "damage_type": "mag"
+                  },
+                  "experiences": [
+                    "Forge Lore",
+                    "Slippery"
+                  ],
+                  "experience_modifiers": [
+                    2,
+                    3
+                  ],
+                  "features": [
+                    {
+                      "type": "Passive",
+                      "name": "Smoldering",
+                      "max_uses": null,
+                      "description_html": "<p>Creatures that start their turn <strong>Close</strong> mark a Stress.</p>"
+                    },
+                    {
+                      "type": "Reaction",
+                      "name": "Gutter Out",
+                      "max_uses": 1,
+                      "description_html": "<p>When marked HP, become <em>Hidden</em>.</p>"
+                    }
+                  ]
+                },
+                "instances": [
+                  {}
+                ]
+              }
+            ]
+          },
+          "new_instance_state": [
+            {
+              "item_index": 0,
+              "instance_index": 1,
+              "data": {
+                "name": "Wisp Two",
+                "marked_hp": 2,
+                "marked_stress": 0,
+                "conditions": [
+                  {
+                    "name": "Vulnerable",
+                    "enabled": true
+                  },
+                  {
+                    "name": "Burning",
+                    "enabled": false
+                  }
+                ]
+              }
+            }
+          ],
+          "extensions": {
+            "daggerdash": {
+              "uid": "9e3f4a5b6c7d8e9f0a1b2c3d4e5f6071"
+            }
+          }
+        }
+      },
+      "response": {
+        "status": 201,
+        "headers": {
+          "ETag": "\"1\""
+        },
+        "body": {
+          "id": "e5c0a1b2-6d7e-4f80-91a2-b3c4d5e6f708",
+          "kind": "encounter",
+          "revision": 1,
+          "created_at": "2026-10-02T09:00:00Z",
+          "updated_at": "2026-10-02T09:05:12Z",
+          "deleted_at": null,
+          "client_ref": "daggerdash:9e3f4a5b6c7d8e9f0a1b2c3d4e5f6071",
+          "readonly": false,
+          "provenance": {
+            "origin": "campaign"
+          },
+          "extensions": {
+            "daggerdash": {
+              "uid": "9e3f4a5b6c7d8e9f0a1b2c3d4e5f6071"
+            }
+          },
+          "data": {
+            "name": "Foundry ambush",
+            "description_html": "<p>The floor <u>groans</u>.</p>",
+            "condition_list": [
+              "Burning"
+            ],
+            "enable_massive_damage": true,
+            "number_of_players": 4,
+            "encounter_tier": 2,
+            "bonus_damage": false,
+            "extra_battle_points": 1,
+            "items": [
+              {
+                "item_id": "11111111-aaaa-4aaa-8aaa-111111111111",
+                "type": "adversary",
+                "ref": {
+                  "origin": "homebrew",
+                  "homebrew_id": "b1b2b3b4-c1c2-4d1d-8e1e-f1f2f3f4f5f6"
+                },
+                "instances": [
+                  {
+                    "instance_id": "44444444-0000-4000-8000-000000000001"
+                  },
+                  {
+                    "instance_id": "44444444-0000-4000-8000-000000000002"
+                  },
+                  {
+                    "instance_id": "44444444-0000-4000-8000-000000000003"
+                  }
+                ]
+              },
+              {
+                "item_id": "22222222-bbbb-4bbb-8bbb-222222222222",
+                "type": "environment",
+                "ref": {
+                  "origin": "homebrew",
+                  "homebrew_id": "b1b2b3b4-c1c2-4d1d-8e1e-f1f2f3f4f5f0"
+                }
+              },
+              {
+                "item_id": "33333333-cccc-4ccc-8ccc-333333333333",
+                "type": "adversary",
+                "ref": {
+                  "origin": "official",
+                  "source_key": "SRD",
+                  "item_type": "adversaries",
+                  "item_id": "acid-burrower",
+                  "item_version": 2,
+                  "legacy_id": "acid-burrower"
+                },
+                "edited_adversary": {
+                  "source_key": "SRD",
+                  "title": "Acid Burrower (flooded)",
+                  "tier": 2,
+                  "type": "Skulk",
+                  "image_url": "https://usercontent.daggerlore.example/images/cinder-wisp.webp",
+                  "artist_name": "Ada Marsh",
+                  "description": "A flickering ember spirit that nests in abandoned forges.",
+                  "motives_tactics": "Burn, hide, relight",
+                  "difficulty": 14,
+                  "thresholds": {
+                    "major": 8,
+                    "severe": 15
+                  },
+                  "max_hp": 5,
+                  "max_stress": 3,
+                  "attack_modifier": 3,
+                  "standard_attack": {
+                    "name": "Scorch",
+                    "range": "Very Close",
+                    "damage_dice": "2d6",
+                    "damage_bonus": 2,
+                    "damage_type": "mag"
+                  },
+                  "experiences": [
+                    "Forge Lore",
+                    "Slippery"
+                  ],
+                  "experience_modifiers": [
+                    2,
+                    3
+                  ],
+                  "features": [
+                    {
+                      "type": "Passive",
+                      "name": "Smoldering",
+                      "max_uses": null,
+                      "description_html": "<p>Creatures that start their turn <strong>Close</strong> mark a Stress.</p>"
+                    },
+                    {
+                      "type": "Reaction",
+                      "name": "Gutter Out",
+                      "max_uses": 1,
+                      "description_html": "<p>When marked HP, become <em>Hidden</em>.</p>"
+                    }
+                  ]
+                },
+                "instances": [
+                  {
+                    "instance_id": "44444444-0000-4000-8000-000000000004"
+                  }
+                ]
+              }
+            ]
+          },
+          "campaign_ids": [
+            "3f0c8f9e-5a1b-4c2d-9e7a-1b2c3d4e5f60",
+            "9a8b7c6d-5e4f-4a3b-8c2d-1e0f9a8b7c6d"
+          ]
+        }
+      }
+    },
+    {
+      "label": "retry-replay",
+      "class": "retry",
+      "operation": "createEncounter",
+      "request": {
+        "headers": {
+          "Idempotency-Key": "ob-01hzx-0201"
+        },
+        "body": {
+          "client_ref": "daggerdash:9e3f4a5b6c7d8e9f0a1b2c3d4e5f6071",
+          "campaign_ids": [
+            "3f0c8f9e-5a1b-4c2d-9e7a-1b2c3d4e5f60",
+            "9a8b7c6d-5e4f-4a3b-8c2d-1e0f9a8b7c6d"
+          ],
+          "data": {
+            "name": "Foundry ambush",
+            "description_html": "<p>The floor <u>groans</u>.</p>",
+            "condition_list": [
+              "Burning"
+            ],
+            "enable_massive_damage": true,
+            "number_of_players": 4,
+            "encounter_tier": 2,
+            "bonus_damage": false,
+            "extra_battle_points": 1,
+            "items": [
+              {
+                "type": "adversary",
+                "ref": {
+                  "origin": "homebrew",
+                  "homebrew_id": "b1b2b3b4-c1c2-4d1d-8e1e-f1f2f3f4f5f6"
+                },
+                "instances": [
+                  {},
+                  {},
+                  {}
+                ]
+              },
+              {
+                "type": "environment",
+                "ref": {
+                  "origin": "homebrew",
+                  "homebrew_id": "b1b2b3b4-c1c2-4d1d-8e1e-f1f2f3f4f5f0"
+                }
+              },
+              {
+                "type": "adversary",
+                "ref": {
+                  "origin": "official",
+                  "source_key": "SRD",
+                  "item_type": "adversaries",
+                  "item_id": "acid-burrower",
+                  "item_version": 2,
+                  "legacy_id": "acid-burrower"
+                },
+                "edited_adversary": {
+                  "source_key": "SRD",
+                  "title": "Acid Burrower (flooded)",
+                  "tier": 2,
+                  "type": "Skulk",
+                  "image_url": "https://usercontent.daggerlore.example/images/cinder-wisp.webp",
+                  "artist_name": "Ada Marsh",
+                  "description": "A flickering ember spirit that nests in abandoned forges.",
+                  "motives_tactics": "Burn, hide, relight",
+                  "difficulty": 14,
+                  "thresholds": {
+                    "major": 8,
+                    "severe": 15
+                  },
+                  "max_hp": 5,
+                  "max_stress": 3,
+                  "attack_modifier": 3,
+                  "standard_attack": {
+                    "name": "Scorch",
+                    "range": "Very Close",
+                    "damage_dice": "2d6",
+                    "damage_bonus": 2,
+                    "damage_type": "mag"
+                  },
+                  "experiences": [
+                    "Forge Lore",
+                    "Slippery"
+                  ],
+                  "experience_modifiers": [
+                    2,
+                    3
+                  ],
+                  "features": [
+                    {
+                      "type": "Passive",
+                      "name": "Smoldering",
+                      "max_uses": null,
+                      "description_html": "<p>Creatures that start their turn <strong>Close</strong> mark a Stress.</p>"
+                    },
+                    {
+                      "type": "Reaction",
+                      "name": "Gutter Out",
+                      "max_uses": 1,
+                      "description_html": "<p>When marked HP, become <em>Hidden</em>.</p>"
+                    }
+                  ]
+                },
+                "instances": [
+                  {}
+                ]
+              }
+            ]
+          },
+          "new_instance_state": [
+            {
+              "item_index": 0,
+              "instance_index": 1,
+              "data": {
+                "name": "Wisp Two",
+                "marked_hp": 2,
+                "marked_stress": 0,
+                "conditions": [
+                  {
+                    "name": "Vulnerable",
+                    "enabled": true
+                  },
+                  {
+                    "name": "Burning",
+                    "enabled": false
+                  }
+                ]
+              }
+            }
+          ],
+          "extensions": {
+            "daggerdash": {
+              "uid": "9e3f4a5b6c7d8e9f0a1b2c3d4e5f6071"
+            }
+          }
+        }
+      },
+      "response": {
+        "status": 200,
+        "headers": {
+          "ETag": "\"1\"",
+          "Idempotent-Replay": "true"
+        },
+        "body": {
+          "id": "e5c0a1b2-6d7e-4f80-91a2-b3c4d5e6f708",
+          "kind": "encounter",
+          "revision": 1,
+          "created_at": "2026-10-02T09:00:00Z",
+          "updated_at": "2026-10-02T09:05:12Z",
+          "deleted_at": null,
+          "client_ref": "daggerdash:9e3f4a5b6c7d8e9f0a1b2c3d4e5f6071",
+          "readonly": false,
+          "provenance": {
+            "origin": "campaign"
+          },
+          "extensions": {
+            "daggerdash": {
+              "uid": "9e3f4a5b6c7d8e9f0a1b2c3d4e5f6071"
+            }
+          },
+          "data": {
+            "name": "Foundry ambush",
+            "description_html": "<p>The floor <u>groans</u>.</p>",
+            "condition_list": [
+              "Burning"
+            ],
+            "enable_massive_damage": true,
+            "number_of_players": 4,
+            "encounter_tier": 2,
+            "bonus_damage": false,
+            "extra_battle_points": 1,
+            "items": [
+              {
+                "item_id": "11111111-aaaa-4aaa-8aaa-111111111111",
+                "type": "adversary",
+                "ref": {
+                  "origin": "homebrew",
+                  "homebrew_id": "b1b2b3b4-c1c2-4d1d-8e1e-f1f2f3f4f5f6"
+                },
+                "instances": [
+                  {
+                    "instance_id": "44444444-0000-4000-8000-000000000001"
+                  },
+                  {
+                    "instance_id": "44444444-0000-4000-8000-000000000002"
+                  },
+                  {
+                    "instance_id": "44444444-0000-4000-8000-000000000003"
+                  }
+                ]
+              },
+              {
+                "item_id": "22222222-bbbb-4bbb-8bbb-222222222222",
+                "type": "environment",
+                "ref": {
+                  "origin": "homebrew",
+                  "homebrew_id": "b1b2b3b4-c1c2-4d1d-8e1e-f1f2f3f4f5f0"
+                }
+              },
+              {
+                "item_id": "33333333-cccc-4ccc-8ccc-333333333333",
+                "type": "adversary",
+                "ref": {
+                  "origin": "official",
+                  "source_key": "SRD",
+                  "item_type": "adversaries",
+                  "item_id": "acid-burrower",
+                  "item_version": 2,
+                  "legacy_id": "acid-burrower"
+                },
+                "edited_adversary": {
+                  "source_key": "SRD",
+                  "title": "Acid Burrower (flooded)",
+                  "tier": 2,
+                  "type": "Skulk",
+                  "image_url": "https://usercontent.daggerlore.example/images/cinder-wisp.webp",
+                  "artist_name": "Ada Marsh",
+                  "description": "A flickering ember spirit that nests in abandoned forges.",
+                  "motives_tactics": "Burn, hide, relight",
+                  "difficulty": 14,
+                  "thresholds": {
+                    "major": 8,
+                    "severe": 15
+                  },
+                  "max_hp": 5,
+                  "max_stress": 3,
+                  "attack_modifier": 3,
+                  "standard_attack": {
+                    "name": "Scorch",
+                    "range": "Very Close",
+                    "damage_dice": "2d6",
+                    "damage_bonus": 2,
+                    "damage_type": "mag"
+                  },
+                  "experiences": [
+                    "Forge Lore",
+                    "Slippery"
+                  ],
+                  "experience_modifiers": [
+                    2,
+                    3
+                  ],
+                  "features": [
+                    {
+                      "type": "Passive",
+                      "name": "Smoldering",
+                      "max_uses": null,
+                      "description_html": "<p>Creatures that start their turn <strong>Close</strong> mark a Stress.</p>"
+                    },
+                    {
+                      "type": "Reaction",
+                      "name": "Gutter Out",
+                      "max_uses": 1,
+                      "description_html": "<p>When marked HP, become <em>Hidden</em>.</p>"
+                    }
+                  ]
+                },
+                "instances": [
+                  {
+                    "instance_id": "44444444-0000-4000-8000-000000000004"
+                  }
+                ]
+              }
+            ]
+          },
+          "campaign_ids": [
+            "3f0c8f9e-5a1b-4c2d-9e7a-1b2c3d4e5f60",
+            "9a8b7c6d-5e4f-4a3b-8c2d-1e0f9a8b7c6d"
+          ]
+        }
+      },
+      "replays": 0
+    },
+    {
+      "label": "create-unlinked-library-entity-ok",
+      "class": "ok",
+      "operation": "createEncounter",
+      "request": {
+        "headers": {
+          "Idempotency-Key": "ob-01hzx-0204"
+        },
+        "body": {
+          "client_ref": "daggerdash:9e3f4a5b6c7d8e9f0a1b2c3d4e5f60719",
+          "data": {
+            "name": "Unassigned ambush",
+            "description_html": "<p>The floor <u>groans</u>.</p>",
+            "condition_list": [
+              "Burning"
+            ],
+            "enable_massive_damage": true,
+            "number_of_players": 4,
+            "encounter_tier": 2,
+            "bonus_damage": false,
+            "extra_battle_points": 1,
+            "items": [
+              {
+                "type": "adversary",
+                "ref": {
+                  "origin": "homebrew",
+                  "homebrew_id": "b1b2b3b4-c1c2-4d1d-8e1e-f1f2f3f4f5f6"
+                },
+                "instances": [
+                  {},
+                  {},
+                  {}
+                ]
+              },
+              {
+                "type": "environment",
+                "ref": {
+                  "origin": "homebrew",
+                  "homebrew_id": "b1b2b3b4-c1c2-4d1d-8e1e-f1f2f3f4f5f0"
+                }
+              },
+              {
+                "type": "adversary",
+                "ref": {
+                  "origin": "official",
+                  "source_key": "SRD",
+                  "item_type": "adversaries",
+                  "item_id": "acid-burrower",
+                  "item_version": 2,
+                  "legacy_id": "acid-burrower"
+                },
+                "edited_adversary": {
+                  "source_key": "SRD",
+                  "title": "Acid Burrower (flooded)",
+                  "tier": 2,
+                  "type": "Skulk",
+                  "image_url": "https://usercontent.daggerlore.example/images/cinder-wisp.webp",
+                  "artist_name": "Ada Marsh",
+                  "description": "A flickering ember spirit that nests in abandoned forges.",
+                  "motives_tactics": "Burn, hide, relight",
+                  "difficulty": 14,
+                  "thresholds": {
+                    "major": 8,
+                    "severe": 15
+                  },
+                  "max_hp": 5,
+                  "max_stress": 3,
+                  "attack_modifier": 3,
+                  "standard_attack": {
+                    "name": "Scorch",
+                    "range": "Very Close",
+                    "damage_dice": "2d6",
+                    "damage_bonus": 2,
+                    "damage_type": "mag"
+                  },
+                  "experiences": [
+                    "Forge Lore",
+                    "Slippery"
+                  ],
+                  "experience_modifiers": [
+                    2,
+                    3
+                  ],
+                  "features": [
+                    {
+                      "type": "Passive",
+                      "name": "Smoldering",
+                      "max_uses": null,
+                      "description_html": "<p>Creatures that start their turn <strong>Close</strong> mark a Stress.</p>"
+                    },
+                    {
+                      "type": "Reaction",
+                      "name": "Gutter Out",
+                      "max_uses": 1,
+                      "description_html": "<p>When marked HP, become <em>Hidden</em>.</p>"
+                    }
+                  ]
+                },
+                "instances": [
+                  {}
+                ]
+              }
+            ]
+          }
+        }
+      },
+      "response": {
+        "status": 201,
+        "headers": {
+          "ETag": "\"1\""
+        },
+        "body": {
+          "id": "e5c0a1b2-6d7e-4f80-91a2-b3c4d5e6f707",
+          "kind": "encounter",
+          "revision": 1,
+          "created_at": "2026-10-02T09:00:00Z",
+          "updated_at": "2026-10-02T09:05:12Z",
+          "deleted_at": null,
+          "client_ref": "daggerdash:9e3f4a5b6c7d8e9f0a1b2c3d4e5f60719",
+          "readonly": false,
+          "provenance": {
+            "origin": "campaign"
+          },
+          "extensions": {
+            "daggerdash": {
+              "uid": "9e3f4a5b6c7d8e9f0a1b2c3d4e5f6071"
+            }
+          },
+          "data": {
+            "name": "Unassigned ambush",
+            "description_html": "<p>The floor <u>groans</u>.</p>",
+            "condition_list": [
+              "Burning"
+            ],
+            "enable_massive_damage": true,
+            "number_of_players": 4,
+            "encounter_tier": 2,
+            "bonus_damage": false,
+            "extra_battle_points": 1,
+            "items": [
+              {
+                "item_id": "11111111-aaaa-4aaa-8aaa-111111111111",
+                "type": "adversary",
+                "ref": {
+                  "origin": "homebrew",
+                  "homebrew_id": "b1b2b3b4-c1c2-4d1d-8e1e-f1f2f3f4f5f6"
+                },
+                "instances": [
+                  {
+                    "instance_id": "44444444-0000-4000-8000-000000000001"
+                  },
+                  {
+                    "instance_id": "44444444-0000-4000-8000-000000000002"
+                  },
+                  {
+                    "instance_id": "44444444-0000-4000-8000-000000000003"
+                  }
+                ]
+              },
+              {
+                "item_id": "22222222-bbbb-4bbb-8bbb-222222222222",
+                "type": "environment",
+                "ref": {
+                  "origin": "homebrew",
+                  "homebrew_id": "b1b2b3b4-c1c2-4d1d-8e1e-f1f2f3f4f5f0"
+                }
+              },
+              {
+                "item_id": "33333333-cccc-4ccc-8ccc-333333333333",
+                "type": "adversary",
+                "ref": {
+                  "origin": "official",
+                  "source_key": "SRD",
+                  "item_type": "adversaries",
+                  "item_id": "acid-burrower",
+                  "item_version": 2,
+                  "legacy_id": "acid-burrower"
+                },
+                "edited_adversary": {
+                  "source_key": "SRD",
+                  "title": "Acid Burrower (flooded)",
+                  "tier": 2,
+                  "type": "Skulk",
+                  "image_url": "https://usercontent.daggerlore.example/images/cinder-wisp.webp",
+                  "artist_name": "Ada Marsh",
+                  "description": "A flickering ember spirit that nests in abandoned forges.",
+                  "motives_tactics": "Burn, hide, relight",
+                  "difficulty": 14,
+                  "thresholds": {
+                    "major": 8,
+                    "severe": 15
+                  },
+                  "max_hp": 5,
+                  "max_stress": 3,
+                  "attack_modifier": 3,
+                  "standard_attack": {
+                    "name": "Scorch",
+                    "range": "Very Close",
+                    "damage_dice": "2d6",
+                    "damage_bonus": 2,
+                    "damage_type": "mag"
+                  },
+                  "experiences": [
+                    "Forge Lore",
+                    "Slippery"
+                  ],
+                  "experience_modifiers": [
+                    2,
+                    3
+                  ],
+                  "features": [
+                    {
+                      "type": "Passive",
+                      "name": "Smoldering",
+                      "max_uses": null,
+                      "description_html": "<p>Creatures that start their turn <strong>Close</strong> mark a Stress.</p>"
+                    },
+                    {
+                      "type": "Reaction",
+                      "name": "Gutter Out",
+                      "max_uses": 1,
+                      "description_html": "<p>When marked HP, become <em>Hidden</em>.</p>"
+                    }
+                  ]
+                },
+                "instances": [
+                  {
+                    "instance_id": "44444444-0000-4000-8000-000000000004"
+                  }
+                ]
+              }
+            ]
+          },
+          "campaign_ids": []
+        }
+      }
+    },
+    {
+      "label": "invalid-tier",
+      "class": "invalid",
+      "operation": "createEncounter",
+      "request": {
+        "headers": {
+          "Idempotency-Key": "ob-01hzx-0202"
+        },
+        "body": {
+          "client_ref": "daggerdash:9e3f4a5b6c7d8e9f0a1b2c3d4e5f60711",
+          "campaign_ids": [
+            "3f0c8f9e-5a1b-4c2d-9e7a-1b2c3d4e5f60"
+          ],
+          "data": {
+            "name": "Foundry ambush",
+            "description_html": "<p>The floor <u>groans</u>.</p>",
+            "condition_list": [
+              "Burning"
+            ],
+            "enable_massive_damage": true,
+            "number_of_players": 4,
+            "encounter_tier": 7,
+            "bonus_damage": false,
+            "extra_battle_points": 1,
+            "items": [
+              {
+                "type": "adversary",
+                "ref": {
+                  "origin": "homebrew",
+                  "homebrew_id": "b1b2b3b4-c1c2-4d1d-8e1e-f1f2f3f4f5f6"
+                },
+                "instances": [
+                  {},
+                  {},
+                  {}
+                ]
+              },
+              {
+                "type": "environment",
+                "ref": {
+                  "origin": "homebrew",
+                  "homebrew_id": "b1b2b3b4-c1c2-4d1d-8e1e-f1f2f3f4f5f0"
+                }
+              },
+              {
+                "type": "adversary",
+                "ref": {
+                  "origin": "official",
+                  "source_key": "SRD",
+                  "item_type": "adversaries",
+                  "item_id": "acid-burrower",
+                  "item_version": 2,
+                  "legacy_id": "acid-burrower"
+                },
+                "edited_adversary": {
+                  "source_key": "SRD",
+                  "title": "Acid Burrower (flooded)",
+                  "tier": 2,
+                  "type": "Skulk",
+                  "image_url": "https://usercontent.daggerlore.example/images/cinder-wisp.webp",
+                  "artist_name": "Ada Marsh",
+                  "description": "A flickering ember spirit that nests in abandoned forges.",
+                  "motives_tactics": "Burn, hide, relight",
+                  "difficulty": 14,
+                  "thresholds": {
+                    "major": 8,
+                    "severe": 15
+                  },
+                  "max_hp": 5,
+                  "max_stress": 3,
+                  "attack_modifier": 3,
+                  "standard_attack": {
+                    "name": "Scorch",
+                    "range": "Very Close",
+                    "damage_dice": "2d6",
+                    "damage_bonus": 2,
+                    "damage_type": "mag"
+                  },
+                  "experiences": [
+                    "Forge Lore",
+                    "Slippery"
+                  ],
+                  "experience_modifiers": [
+                    2,
+                    3
+                  ],
+                  "features": [
+                    {
+                      "type": "Passive",
+                      "name": "Smoldering",
+                      "max_uses": null,
+                      "description_html": "<p>Creatures that start their turn <strong>Close</strong> mark a Stress.</p>"
+                    },
+                    {
+                      "type": "Reaction",
+                      "name": "Gutter Out",
+                      "max_uses": 1,
+                      "description_html": "<p>When marked HP, become <em>Hidden</em>.</p>"
+                    }
+                  ]
+                },
+                "instances": [
+                  {}
+                ]
+              }
+            ]
+          }
+        }
+      },
+      "response": {
+        "status": 422,
+        "body": {
+          "type": "https://daggerlore.app/problems/validation_failed",
+          "title": "Invalid encounter",
+          "status": 422,
+          "code": "validation_failed",
+          "retryable": false,
+          "request_id": "req_01HZX0439",
+          "field_errors": [
+            {
+              "pointer": "/data/encounter_tier",
+              "code": "enum",
+              "message": "Tier is 1 to 4"
+            }
+          ]
+        }
+      },
+      "validation": "schema"
+    },
+    {
+      "label": "invalid-foreign-instance-id",
+      "class": "invalid",
+      "operation": "putEncounter",
+      "request": {
+        "path": {
+          "encounterId": "e5c0a1b2-6d7e-4f80-91a2-b3c4d5e6f708"
+        },
+        "headers": {
+          "If-Match": "\"1\""
+        },
+        "body": {
+          "data": {
+            "name": "Foundry ambush",
+            "description_html": "<p>The floor <u>groans</u>.</p>",
+            "condition_list": [
+              "Burning"
+            ],
+            "enable_massive_damage": true,
+            "number_of_players": 4,
+            "encounter_tier": 2,
+            "bonus_damage": false,
+            "extra_battle_points": 1,
+            "items": [
+              {
+                "item_id": "11111111-aaaa-4aaa-8aaa-111111111111",
+                "type": "adversary",
+                "ref": {
+                  "origin": "homebrew",
+                  "homebrew_id": "b1b2b3b4-c1c2-4d1d-8e1e-f1f2f3f4f5f6"
+                },
+                "instances": [
+                  {
+                    "instance_id": "44444444-0000-4000-8000-000000000001"
+                  },
+                  {
+                    "instance_id": "44444444-0000-4000-8000-0000000000ff"
+                  },
+                  {
+                    "instance_id": "44444444-0000-4000-8000-000000000003"
+                  }
+                ]
+              },
+              {
+                "item_id": "22222222-bbbb-4bbb-8bbb-222222222222",
+                "type": "environment",
+                "ref": {
+                  "origin": "homebrew",
+                  "homebrew_id": "b1b2b3b4-c1c2-4d1d-8e1e-f1f2f3f4f5f0"
+                }
+              },
+              {
+                "item_id": "33333333-cccc-4ccc-8ccc-333333333333",
+                "type": "adversary",
+                "ref": {
+                  "origin": "official",
+                  "source_key": "SRD",
+                  "item_type": "adversaries",
+                  "item_id": "acid-burrower",
+                  "item_version": 2,
+                  "legacy_id": "acid-burrower"
+                },
+                "edited_adversary": {
+                  "source_key": "SRD",
+                  "title": "Acid Burrower (flooded)",
+                  "tier": 2,
+                  "type": "Skulk",
+                  "image_url": "https://usercontent.daggerlore.example/images/cinder-wisp.webp",
+                  "artist_name": "Ada Marsh",
+                  "description": "A flickering ember spirit that nests in abandoned forges.",
+                  "motives_tactics": "Burn, hide, relight",
+                  "difficulty": 14,
+                  "thresholds": {
+                    "major": 8,
+                    "severe": 15
+                  },
+                  "max_hp": 5,
+                  "max_stress": 3,
+                  "attack_modifier": 3,
+                  "standard_attack": {
+                    "name": "Scorch",
+                    "range": "Very Close",
+                    "damage_dice": "2d6",
+                    "damage_bonus": 2,
+                    "damage_type": "mag"
+                  },
+                  "experiences": [
+                    "Forge Lore",
+                    "Slippery"
+                  ],
+                  "experience_modifiers": [
+                    2,
+                    3
+                  ],
+                  "features": [
+                    {
+                      "type": "Passive",
+                      "name": "Smoldering",
+                      "max_uses": null,
+                      "description_html": "<p>Creatures that start their turn <strong>Close</strong> mark a Stress.</p>"
+                    },
+                    {
+                      "type": "Reaction",
+                      "name": "Gutter Out",
+                      "max_uses": 1,
+                      "description_html": "<p>When marked HP, become <em>Hidden</em>.</p>"
+                    }
+                  ]
+                },
+                "instances": [
+                  {
+                    "instance_id": "44444444-0000-4000-8000-000000000004"
+                  }
+                ]
+              }
+            ]
+          }
+        }
+      },
+      "response": {
+        "status": 422,
+        "body": {
+          "type": "https://daggerlore.app/problems/validation_failed",
+          "title": "Invalid encounter",
+          "status": 422,
+          "code": "validation_failed",
+          "retryable": false,
+          "request_id": "req_01HZX0439",
+          "field_errors": [
+            {
+              "pointer": "/data/items/0/instances/1/instance_id",
+              "code": "unknown_id",
+              "message": "instance_id does not belong to this encounter; omit it to create a new instance"
+            }
+          ]
+        }
+      },
+      "validation": "server_rule"
+    },
+    {
+      "label": "put-ok-interleaving-preserved",
+      "class": "ok",
+      "operation": "putEncounter",
+      "request": {
+        "path": {
+          "encounterId": "e5c0a1b2-6d7e-4f80-91a2-b3c4d5e6f708"
+        },
+        "headers": {
+          "If-Match": "\"1\""
+        },
+        "body": {
+          "data": {
+            "name": "Foundry ambush (v2)",
+            "description_html": "<p>The floor <u>groans</u>.</p>",
+            "condition_list": [
+              "Burning"
+            ],
+            "enable_massive_damage": true,
+            "number_of_players": 4,
+            "encounter_tier": 2,
+            "bonus_damage": false,
+            "extra_battle_points": 1,
+            "items": [
+              {
+                "item_id": "11111111-aaaa-4aaa-8aaa-111111111111",
+                "type": "adversary",
+                "ref": {
+                  "origin": "homebrew",
+                  "homebrew_id": "b1b2b3b4-c1c2-4d1d-8e1e-f1f2f3f4f5f6"
+                },
+                "instances": [
+                  {
+                    "instance_id": "44444444-0000-4000-8000-000000000001"
+                  },
+                  {
+                    "instance_id": "44444444-0000-4000-8000-000000000002"
+                  },
+                  {
+                    "instance_id": "44444444-0000-4000-8000-000000000003"
+                  }
+                ]
+              },
+              {
+                "item_id": "22222222-bbbb-4bbb-8bbb-222222222222",
+                "type": "environment",
+                "ref": {
+                  "origin": "homebrew",
+                  "homebrew_id": "b1b2b3b4-c1c2-4d1d-8e1e-f1f2f3f4f5f0"
+                }
+              },
+              {
+                "item_id": "33333333-cccc-4ccc-8ccc-333333333333",
+                "type": "adversary",
+                "ref": {
+                  "origin": "official",
+                  "source_key": "SRD",
+                  "item_type": "adversaries",
+                  "item_id": "acid-burrower",
+                  "item_version": 2,
+                  "legacy_id": "acid-burrower"
+                },
+                "edited_adversary": {
+                  "source_key": "SRD",
+                  "title": "Acid Burrower (flooded)",
+                  "tier": 2,
+                  "type": "Skulk",
+                  "image_url": "https://usercontent.daggerlore.example/images/cinder-wisp.webp",
+                  "artist_name": "Ada Marsh",
+                  "description": "A flickering ember spirit that nests in abandoned forges.",
+                  "motives_tactics": "Burn, hide, relight",
+                  "difficulty": 14,
+                  "thresholds": {
+                    "major": 8,
+                    "severe": 15
+                  },
+                  "max_hp": 5,
+                  "max_stress": 3,
+                  "attack_modifier": 3,
+                  "standard_attack": {
+                    "name": "Scorch",
+                    "range": "Very Close",
+                    "damage_dice": "2d6",
+                    "damage_bonus": 2,
+                    "damage_type": "mag"
+                  },
+                  "experiences": [
+                    "Forge Lore",
+                    "Slippery"
+                  ],
+                  "experience_modifiers": [
+                    2,
+                    3
+                  ],
+                  "features": [
+                    {
+                      "type": "Passive",
+                      "name": "Smoldering",
+                      "max_uses": null,
+                      "description_html": "<p>Creatures that start their turn <strong>Close</strong> mark a Stress.</p>"
+                    },
+                    {
+                      "type": "Reaction",
+                      "name": "Gutter Out",
+                      "max_uses": 1,
+                      "description_html": "<p>When marked HP, become <em>Hidden</em>.</p>"
+                    }
+                  ]
+                },
+                "instances": [
+                  {
+                    "instance_id": "44444444-0000-4000-8000-000000000004"
+                  }
+                ]
+              }
+            ]
+          }
+        }
+      },
+      "response": {
+        "status": 200,
+        "headers": {
+          "ETag": "\"2\""
+        },
+        "body": {
+          "id": "e5c0a1b2-6d7e-4f80-91a2-b3c4d5e6f708",
+          "kind": "encounter",
+          "revision": 2,
+          "created_at": "2026-10-02T09:00:00Z",
+          "updated_at": "2026-10-02T09:05:12Z",
+          "deleted_at": null,
+          "client_ref": "daggerdash:9e3f4a5b6c7d8e9f0a1b2c3d4e5f6071",
+          "readonly": false,
+          "provenance": {
+            "origin": "campaign"
+          },
+          "extensions": {
+            "daggerdash": {
+              "uid": "9e3f4a5b6c7d8e9f0a1b2c3d4e5f6071"
+            }
+          },
+          "data": {
+            "name": "Foundry ambush (v2)",
+            "description_html": "<p>The floor <u>groans</u>.</p>",
+            "condition_list": [
+              "Burning"
+            ],
+            "enable_massive_damage": true,
+            "number_of_players": 4,
+            "encounter_tier": 2,
+            "bonus_damage": false,
+            "extra_battle_points": 1,
+            "items": [
+              {
+                "item_id": "11111111-aaaa-4aaa-8aaa-111111111111",
+                "type": "adversary",
+                "ref": {
+                  "origin": "homebrew",
+                  "homebrew_id": "b1b2b3b4-c1c2-4d1d-8e1e-f1f2f3f4f5f6"
+                },
+                "instances": [
+                  {
+                    "instance_id": "44444444-0000-4000-8000-000000000001"
+                  },
+                  {
+                    "instance_id": "44444444-0000-4000-8000-000000000002"
+                  },
+                  {
+                    "instance_id": "44444444-0000-4000-8000-000000000003"
+                  }
+                ]
+              },
+              {
+                "item_id": "22222222-bbbb-4bbb-8bbb-222222222222",
+                "type": "environment",
+                "ref": {
+                  "origin": "homebrew",
+                  "homebrew_id": "b1b2b3b4-c1c2-4d1d-8e1e-f1f2f3f4f5f0"
+                }
+              },
+              {
+                "item_id": "33333333-cccc-4ccc-8ccc-333333333333",
+                "type": "adversary",
+                "ref": {
+                  "origin": "official",
+                  "source_key": "SRD",
+                  "item_type": "adversaries",
+                  "item_id": "acid-burrower",
+                  "item_version": 2,
+                  "legacy_id": "acid-burrower"
+                },
+                "edited_adversary": {
+                  "source_key": "SRD",
+                  "title": "Acid Burrower (flooded)",
+                  "tier": 2,
+                  "type": "Skulk",
+                  "image_url": "https://usercontent.daggerlore.example/images/cinder-wisp.webp",
+                  "artist_name": "Ada Marsh",
+                  "description": "A flickering ember spirit that nests in abandoned forges.",
+                  "motives_tactics": "Burn, hide, relight",
+                  "difficulty": 14,
+                  "thresholds": {
+                    "major": 8,
+                    "severe": 15
+                  },
+                  "max_hp": 5,
+                  "max_stress": 3,
+                  "attack_modifier": 3,
+                  "standard_attack": {
+                    "name": "Scorch",
+                    "range": "Very Close",
+                    "damage_dice": "2d6",
+                    "damage_bonus": 2,
+                    "damage_type": "mag"
+                  },
+                  "experiences": [
+                    "Forge Lore",
+                    "Slippery"
+                  ],
+                  "experience_modifiers": [
+                    2,
+                    3
+                  ],
+                  "features": [
+                    {
+                      "type": "Passive",
+                      "name": "Smoldering",
+                      "max_uses": null,
+                      "description_html": "<p>Creatures that start their turn <strong>Close</strong> mark a Stress.</p>"
+                    },
+                    {
+                      "type": "Reaction",
+                      "name": "Gutter Out",
+                      "max_uses": 1,
+                      "description_html": "<p>When marked HP, become <em>Hidden</em>.</p>"
+                    }
+                  ]
+                },
+                "instances": [
+                  {
+                    "instance_id": "44444444-0000-4000-8000-000000000004"
+                  }
+                ]
+              }
+            ]
+          },
+          "campaign_ids": [
+            "3f0c8f9e-5a1b-4c2d-9e7a-1b2c3d4e5f60",
+            "9a8b7c6d-5e4f-4a3b-8c2d-1e0f9a8b7c6d"
+          ]
+        }
+      }
+    },
+    {
+      "label": "stale-parked",
+      "class": "stale",
+      "operation": "putEncounter",
+      "request": {
+        "path": {
+          "encounterId": "e5c0a1b2-6d7e-4f80-91a2-b3c4d5e6f708"
+        },
+        "headers": {
+          "If-Match": "\"1\"",
+          "Prefer": "conflict=park"
+        },
+        "body": {
+          "data": {
+            "name": "Foundry ambush",
+            "description_html": "<p>The floor <u>groans</u>.</p>",
+            "condition_list": [
+              "Burning"
+            ],
+            "enable_massive_damage": true,
+            "number_of_players": 4,
+            "encounter_tier": 2,
+            "bonus_damage": false,
+            "extra_battle_points": 1,
+            "items": [
+              {
+                "item_id": "11111111-aaaa-4aaa-8aaa-111111111111",
+                "type": "adversary",
+                "ref": {
+                  "origin": "homebrew",
+                  "homebrew_id": "b1b2b3b4-c1c2-4d1d-8e1e-f1f2f3f4f5f6"
+                },
+                "instances": [
+                  {
+                    "instance_id": "44444444-0000-4000-8000-000000000001"
+                  },
+                  {
+                    "instance_id": "44444444-0000-4000-8000-000000000002"
+                  },
+                  {
+                    "instance_id": "44444444-0000-4000-8000-000000000003"
+                  }
+                ]
+              },
+              {
+                "item_id": "22222222-bbbb-4bbb-8bbb-222222222222",
+                "type": "environment",
+                "ref": {
+                  "origin": "homebrew",
+                  "homebrew_id": "b1b2b3b4-c1c2-4d1d-8e1e-f1f2f3f4f5f0"
+                }
+              },
+              {
+                "item_id": "33333333-cccc-4ccc-8ccc-333333333333",
+                "type": "adversary",
+                "ref": {
+                  "origin": "official",
+                  "source_key": "SRD",
+                  "item_type": "adversaries",
+                  "item_id": "acid-burrower",
+                  "item_version": 2,
+                  "legacy_id": "acid-burrower"
+                },
+                "edited_adversary": {
+                  "source_key": "SRD",
+                  "title": "Acid Burrower (flooded)",
+                  "tier": 2,
+                  "type": "Skulk",
+                  "image_url": "https://usercontent.daggerlore.example/images/cinder-wisp.webp",
+                  "artist_name": "Ada Marsh",
+                  "description": "A flickering ember spirit that nests in abandoned forges.",
+                  "motives_tactics": "Burn, hide, relight",
+                  "difficulty": 14,
+                  "thresholds": {
+                    "major": 8,
+                    "severe": 15
+                  },
+                  "max_hp": 5,
+                  "max_stress": 3,
+                  "attack_modifier": 3,
+                  "standard_attack": {
+                    "name": "Scorch",
+                    "range": "Very Close",
+                    "damage_dice": "2d6",
+                    "damage_bonus": 2,
+                    "damage_type": "mag"
+                  },
+                  "experiences": [
+                    "Forge Lore",
+                    "Slippery"
+                  ],
+                  "experience_modifiers": [
+                    2,
+                    3
+                  ],
+                  "features": [
+                    {
+                      "type": "Passive",
+                      "name": "Smoldering",
+                      "max_uses": null,
+                      "description_html": "<p>Creatures that start their turn <strong>Close</strong> mark a Stress.</p>"
+                    },
+                    {
+                      "type": "Reaction",
+                      "name": "Gutter Out",
+                      "max_uses": 1,
+                      "description_html": "<p>When marked HP, become <em>Hidden</em>.</p>"
+                    }
+                  ]
+                },
+                "instances": [
+                  {
+                    "instance_id": "44444444-0000-4000-8000-000000000004"
+                  }
+                ]
+              }
+            ]
+          }
+        }
+      },
+      "response": {
+        "status": 409,
+        "body": {
+          "type": "https://daggerlore.app/problems/conflict",
+          "title": "Encounter changed; your version was kept",
+          "status": 409,
+          "code": "conflict",
+          "retryable": false,
+          "request_id": "req_01HZX0417",
+          "current": {
+            "id": "e5c0a1b2-6d7e-4f80-91a2-b3c4d5e6f708",
+            "kind": "encounter",
+            "revision": 2,
+            "created_at": "2026-10-02T09:00:00Z",
+            "updated_at": "2026-10-02T09:05:12Z",
+            "deleted_at": null,
+            "client_ref": "daggerdash:9e3f4a5b6c7d8e9f0a1b2c3d4e5f6071",
+            "readonly": false,
+            "provenance": {
+              "origin": "campaign"
+            },
+            "extensions": {
+              "daggerdash": {
+                "uid": "9e3f4a5b6c7d8e9f0a1b2c3d4e5f6071"
+              }
+            },
+            "data": {
+              "name": "Foundry ambush (v2)",
+              "description_html": "<p>The floor <u>groans</u>.</p>",
+              "condition_list": [
+                "Burning"
+              ],
+              "enable_massive_damage": true,
+              "number_of_players": 4,
+              "encounter_tier": 2,
+              "bonus_damage": false,
+              "extra_battle_points": 1,
+              "items": [
+                {
+                  "item_id": "11111111-aaaa-4aaa-8aaa-111111111111",
+                  "type": "adversary",
+                  "ref": {
+                    "origin": "homebrew",
+                    "homebrew_id": "b1b2b3b4-c1c2-4d1d-8e1e-f1f2f3f4f5f6"
+                  },
+                  "instances": [
+                    {
+                      "instance_id": "44444444-0000-4000-8000-000000000001"
+                    },
+                    {
+                      "instance_id": "44444444-0000-4000-8000-000000000002"
+                    },
+                    {
+                      "instance_id": "44444444-0000-4000-8000-000000000003"
+                    }
+                  ]
+                },
+                {
+                  "item_id": "22222222-bbbb-4bbb-8bbb-222222222222",
+                  "type": "environment",
+                  "ref": {
+                    "origin": "homebrew",
+                    "homebrew_id": "b1b2b3b4-c1c2-4d1d-8e1e-f1f2f3f4f5f0"
+                  }
+                },
+                {
+                  "item_id": "33333333-cccc-4ccc-8ccc-333333333333",
+                  "type": "adversary",
+                  "ref": {
+                    "origin": "official",
+                    "source_key": "SRD",
+                    "item_type": "adversaries",
+                    "item_id": "acid-burrower",
+                    "item_version": 2,
+                    "legacy_id": "acid-burrower"
+                  },
+                  "edited_adversary": {
+                    "source_key": "SRD",
+                    "title": "Acid Burrower (flooded)",
+                    "tier": 2,
+                    "type": "Skulk",
+                    "image_url": "https://usercontent.daggerlore.example/images/cinder-wisp.webp",
+                    "artist_name": "Ada Marsh",
+                    "description": "A flickering ember spirit that nests in abandoned forges.",
+                    "motives_tactics": "Burn, hide, relight",
+                    "difficulty": 14,
+                    "thresholds": {
+                      "major": 8,
+                      "severe": 15
+                    },
+                    "max_hp": 5,
+                    "max_stress": 3,
+                    "attack_modifier": 3,
+                    "standard_attack": {
+                      "name": "Scorch",
+                      "range": "Very Close",
+                      "damage_dice": "2d6",
+                      "damage_bonus": 2,
+                      "damage_type": "mag"
+                    },
+                    "experiences": [
+                      "Forge Lore",
+                      "Slippery"
+                    ],
+                    "experience_modifiers": [
+                      2,
+                      3
+                    ],
+                    "features": [
+                      {
+                        "type": "Passive",
+                        "name": "Smoldering",
+                        "max_uses": null,
+                        "description_html": "<p>Creatures that start their turn <strong>Close</strong> mark a Stress.</p>"
+                      },
+                      {
+                        "type": "Reaction",
+                        "name": "Gutter Out",
+                        "max_uses": 1,
+                        "description_html": "<p>When marked HP, become <em>Hidden</em>.</p>"
+                      }
+                    ]
+                  },
+                  "instances": [
+                    {
+                      "instance_id": "44444444-0000-4000-8000-000000000004"
+                    }
+                  ]
+                }
+              ]
+            },
+            "campaign_ids": [
+              "3f0c8f9e-5a1b-4c2d-9e7a-1b2c3d4e5f60",
+              "9a8b7c6d-5e4f-4a3b-8c2d-1e0f9a8b7c6d"
+            ]
+          },
+          "conflict_id": "f0e1d2c3-b4a5-4968-8776-655443322110"
+        }
+      }
+    },
+    {
+      "label": "stale",
+      "class": "stale",
+      "operation": "putEncounter",
+      "request": {
+        "path": {
+          "encounterId": "e5c0a1b2-6d7e-4f80-91a2-b3c4d5e6f708"
+        },
+        "headers": {
+          "If-Match": "\"1\""
+        },
+        "body": {
+          "data": {
+            "name": "Foundry ambush",
+            "description_html": "<p>The floor <u>groans</u>.</p>",
+            "condition_list": [
+              "Burning"
+            ],
+            "enable_massive_damage": true,
+            "number_of_players": 4,
+            "encounter_tier": 2,
+            "bonus_damage": false,
+            "extra_battle_points": 1,
+            "items": [
+              {
+                "item_id": "11111111-aaaa-4aaa-8aaa-111111111111",
+                "type": "adversary",
+                "ref": {
+                  "origin": "homebrew",
+                  "homebrew_id": "b1b2b3b4-c1c2-4d1d-8e1e-f1f2f3f4f5f6"
+                },
+                "instances": [
+                  {
+                    "instance_id": "44444444-0000-4000-8000-000000000001"
+                  },
+                  {
+                    "instance_id": "44444444-0000-4000-8000-000000000002"
+                  },
+                  {
+                    "instance_id": "44444444-0000-4000-8000-000000000003"
+                  }
+                ]
+              },
+              {
+                "item_id": "22222222-bbbb-4bbb-8bbb-222222222222",
+                "type": "environment",
+                "ref": {
+                  "origin": "homebrew",
+                  "homebrew_id": "b1b2b3b4-c1c2-4d1d-8e1e-f1f2f3f4f5f0"
+                }
+              },
+              {
+                "item_id": "33333333-cccc-4ccc-8ccc-333333333333",
+                "type": "adversary",
+                "ref": {
+                  "origin": "official",
+                  "source_key": "SRD",
+                  "item_type": "adversaries",
+                  "item_id": "acid-burrower",
+                  "item_version": 2,
+                  "legacy_id": "acid-burrower"
+                },
+                "edited_adversary": {
+                  "source_key": "SRD",
+                  "title": "Acid Burrower (flooded)",
+                  "tier": 2,
+                  "type": "Skulk",
+                  "image_url": "https://usercontent.daggerlore.example/images/cinder-wisp.webp",
+                  "artist_name": "Ada Marsh",
+                  "description": "A flickering ember spirit that nests in abandoned forges.",
+                  "motives_tactics": "Burn, hide, relight",
+                  "difficulty": 14,
+                  "thresholds": {
+                    "major": 8,
+                    "severe": 15
+                  },
+                  "max_hp": 5,
+                  "max_stress": 3,
+                  "attack_modifier": 3,
+                  "standard_attack": {
+                    "name": "Scorch",
+                    "range": "Very Close",
+                    "damage_dice": "2d6",
+                    "damage_bonus": 2,
+                    "damage_type": "mag"
+                  },
+                  "experiences": [
+                    "Forge Lore",
+                    "Slippery"
+                  ],
+                  "experience_modifiers": [
+                    2,
+                    3
+                  ],
+                  "features": [
+                    {
+                      "type": "Passive",
+                      "name": "Smoldering",
+                      "max_uses": null,
+                      "description_html": "<p>Creatures that start their turn <strong>Close</strong> mark a Stress.</p>"
+                    },
+                    {
+                      "type": "Reaction",
+                      "name": "Gutter Out",
+                      "max_uses": 1,
+                      "description_html": "<p>When marked HP, become <em>Hidden</em>.</p>"
+                    }
+                  ]
+                },
+                "instances": [
+                  {
+                    "instance_id": "44444444-0000-4000-8000-000000000004"
+                  }
+                ]
+              }
+            ]
+          }
+        }
+      },
+      "response": {
+        "status": 412,
+        "body": {
+          "type": "https://daggerlore.app/problems/stale_revision",
+          "title": "Encounter changed",
+          "status": 412,
+          "code": "stale_revision",
+          "retryable": false,
+          "request_id": "req_01HZX0426",
+          "current": {
+            "id": "e5c0a1b2-6d7e-4f80-91a2-b3c4d5e6f708",
+            "kind": "encounter",
+            "revision": 2,
+            "created_at": "2026-10-02T09:00:00Z",
+            "updated_at": "2026-10-02T09:05:12Z",
+            "deleted_at": null,
+            "client_ref": "daggerdash:9e3f4a5b6c7d8e9f0a1b2c3d4e5f6071",
+            "readonly": false,
+            "provenance": {
+              "origin": "campaign"
+            },
+            "extensions": {
+              "daggerdash": {
+                "uid": "9e3f4a5b6c7d8e9f0a1b2c3d4e5f6071"
+              }
+            },
+            "data": {
+              "name": "Foundry ambush (v2)",
+              "description_html": "<p>The floor <u>groans</u>.</p>",
+              "condition_list": [
+                "Burning"
+              ],
+              "enable_massive_damage": true,
+              "number_of_players": 4,
+              "encounter_tier": 2,
+              "bonus_damage": false,
+              "extra_battle_points": 1,
+              "items": [
+                {
+                  "item_id": "11111111-aaaa-4aaa-8aaa-111111111111",
+                  "type": "adversary",
+                  "ref": {
+                    "origin": "homebrew",
+                    "homebrew_id": "b1b2b3b4-c1c2-4d1d-8e1e-f1f2f3f4f5f6"
+                  },
+                  "instances": [
+                    {
+                      "instance_id": "44444444-0000-4000-8000-000000000001"
+                    },
+                    {
+                      "instance_id": "44444444-0000-4000-8000-000000000002"
+                    },
+                    {
+                      "instance_id": "44444444-0000-4000-8000-000000000003"
+                    }
+                  ]
+                },
+                {
+                  "item_id": "22222222-bbbb-4bbb-8bbb-222222222222",
+                  "type": "environment",
+                  "ref": {
+                    "origin": "homebrew",
+                    "homebrew_id": "b1b2b3b4-c1c2-4d1d-8e1e-f1f2f3f4f5f0"
+                  }
+                },
+                {
+                  "item_id": "33333333-cccc-4ccc-8ccc-333333333333",
+                  "type": "adversary",
+                  "ref": {
+                    "origin": "official",
+                    "source_key": "SRD",
+                    "item_type": "adversaries",
+                    "item_id": "acid-burrower",
+                    "item_version": 2,
+                    "legacy_id": "acid-burrower"
+                  },
+                  "edited_adversary": {
+                    "source_key": "SRD",
+                    "title": "Acid Burrower (flooded)",
+                    "tier": 2,
+                    "type": "Skulk",
+                    "image_url": "https://usercontent.daggerlore.example/images/cinder-wisp.webp",
+                    "artist_name": "Ada Marsh",
+                    "description": "A flickering ember spirit that nests in abandoned forges.",
+                    "motives_tactics": "Burn, hide, relight",
+                    "difficulty": 14,
+                    "thresholds": {
+                      "major": 8,
+                      "severe": 15
+                    },
+                    "max_hp": 5,
+                    "max_stress": 3,
+                    "attack_modifier": 3,
+                    "standard_attack": {
+                      "name": "Scorch",
+                      "range": "Very Close",
+                      "damage_dice": "2d6",
+                      "damage_bonus": 2,
+                      "damage_type": "mag"
+                    },
+                    "experiences": [
+                      "Forge Lore",
+                      "Slippery"
+                    ],
+                    "experience_modifiers": [
+                      2,
+                      3
+                    ],
+                    "features": [
+                      {
+                        "type": "Passive",
+                        "name": "Smoldering",
+                        "max_uses": null,
+                        "description_html": "<p>Creatures that start their turn <strong>Close</strong> mark a Stress.</p>"
+                      },
+                      {
+                        "type": "Reaction",
+                        "name": "Gutter Out",
+                        "max_uses": 1,
+                        "description_html": "<p>When marked HP, become <em>Hidden</em>.</p>"
+                      }
+                    ]
+                  },
+                  "instances": [
+                    {
+                      "instance_id": "44444444-0000-4000-8000-000000000004"
+                    }
+                  ]
+                }
+              ]
+            },
+            "campaign_ids": [
+              "3f0c8f9e-5a1b-4c2d-9e7a-1b2c3d4e5f60",
+              "9a8b7c6d-5e4f-4a3b-8c2d-1e0f9a8b7c6d"
+            ]
+          }
+        }
+      }
+    },
+    {
+      "label": "forbidden-other-owner",
+      "class": "forbidden",
+      "operation": "createEncounter",
+      "request": {
+        "headers": {
+          "Idempotency-Key": "ob-01hzx-0203"
+        },
+        "body": {
+          "client_ref": "daggerdash:9e3f4a5b6c7d8e9f0a1b2c3d4e5f60712",
+          "campaign_ids": [
+            "9a8b7c6d-5e4f-4a3b-8c2d-1e0f9a8b7c6d"
+          ],
+          "data": {
+            "name": "Foundry ambush",
+            "description_html": "<p>The floor <u>groans</u>.</p>",
+            "condition_list": [
+              "Burning"
+            ],
+            "enable_massive_damage": true,
+            "number_of_players": 4,
+            "encounter_tier": 2,
+            "bonus_damage": false,
+            "extra_battle_points": 1,
+            "items": [
+              {
+                "type": "adversary",
+                "ref": {
+                  "origin": "homebrew",
+                  "homebrew_id": "b1b2b3b4-c1c2-4d1d-8e1e-f1f2f3f4f5f6"
+                },
+                "instances": [
+                  {},
+                  {},
+                  {}
+                ]
+              },
+              {
+                "type": "environment",
+                "ref": {
+                  "origin": "homebrew",
+                  "homebrew_id": "b1b2b3b4-c1c2-4d1d-8e1e-f1f2f3f4f5f0"
+                }
+              },
+              {
+                "type": "adversary",
+                "ref": {
+                  "origin": "official",
+                  "source_key": "SRD",
+                  "item_type": "adversaries",
+                  "item_id": "acid-burrower",
+                  "item_version": 2,
+                  "legacy_id": "acid-burrower"
+                },
+                "edited_adversary": {
+                  "source_key": "SRD",
+                  "title": "Acid Burrower (flooded)",
+                  "tier": 2,
+                  "type": "Skulk",
+                  "image_url": "https://usercontent.daggerlore.example/images/cinder-wisp.webp",
+                  "artist_name": "Ada Marsh",
+                  "description": "A flickering ember spirit that nests in abandoned forges.",
+                  "motives_tactics": "Burn, hide, relight",
+                  "difficulty": 14,
+                  "thresholds": {
+                    "major": 8,
+                    "severe": 15
+                  },
+                  "max_hp": 5,
+                  "max_stress": 3,
+                  "attack_modifier": 3,
+                  "standard_attack": {
+                    "name": "Scorch",
+                    "range": "Very Close",
+                    "damage_dice": "2d6",
+                    "damage_bonus": 2,
+                    "damage_type": "mag"
+                  },
+                  "experiences": [
+                    "Forge Lore",
+                    "Slippery"
+                  ],
+                  "experience_modifiers": [
+                    2,
+                    3
+                  ],
+                  "features": [
+                    {
+                      "type": "Passive",
+                      "name": "Smoldering",
+                      "max_uses": null,
+                      "description_html": "<p>Creatures that start their turn <strong>Close</strong> mark a Stress.</p>"
+                    },
+                    {
+                      "type": "Reaction",
+                      "name": "Gutter Out",
+                      "max_uses": 1,
+                      "description_html": "<p>When marked HP, become <em>Hidden</em>.</p>"
+                    }
+                  ]
+                },
+                "instances": [
+                  {}
+                ]
+              }
+            ]
+          }
+        }
+      },
+      "response": {
+        "status": 403,
+        "body": {
+          "type": "https://daggerlore.app/problems/scope_not_granted",
+          "title": "Campaign is not in this workspace grant",
+          "status": 403,
+          "code": "scope_not_granted",
+          "retryable": false,
+          "request_id": "req_01HZX0420"
+        }
+      }
+    },
+    {
+      "label": "delete-ok",
+      "class": "delete",
+      "operation": "deleteEncounter",
+      "request": {
+        "path": {
+          "encounterId": "e5c0a1b2-6d7e-4f80-91a2-b3c4d5e6f708"
+        },
+        "headers": {
+          "If-Match": "\"2\""
+        }
+      },
+      "response": {
+        "status": 200,
+        "body": {
+          "id": "e5c0a1b2-6d7e-4f80-91a2-b3c4d5e6f708",
+          "kind": "encounter",
+          "revision": 3,
+          "deleted_at": "2026-10-02T09:05:12Z",
+          "data": null
+        }
+      }
+    },
+    {
+      "label": "delete-repeat",
+      "class": "delete",
+      "operation": "deleteEncounter",
+      "request": {
+        "path": {
+          "encounterId": "e5c0a1b2-6d7e-4f80-91a2-b3c4d5e6f708"
+        },
+        "headers": {
+          "If-Match": "\"2\""
+        }
+      },
+      "response": {
+        "status": 200,
+        "body": {
+          "id": "e5c0a1b2-6d7e-4f80-91a2-b3c4d5e6f708",
+          "kind": "encounter",
+          "revision": 3,
+          "deleted_at": "2026-10-02T09:05:12Z",
+          "data": null
+        }
+      }
+    }
+  ]
+}

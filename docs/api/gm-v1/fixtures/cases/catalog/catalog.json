@@ -1,0 +1,243 @@
+{
+  "name": "Catalog: unlocked official items are read-only and versioned",
+  "kind": "catalog_item",
+  "steps": [
+    {
+      "label": "list-ok",
+      "class": "ok",
+      "operation": "listCatalogItems",
+      "request": {
+        "query": {
+          "type": "adversaries",
+          "source_key": "SRD"
+        }
+      },
+      "response": {
+        "status": 200,
+        "body": {
+          "items": [
+            {
+              "id": "SRD~adversaries~acid-burrower",
+              "kind": "catalog_item",
+              "revision": 2,
+              "created_at": "2026-10-02T09:00:00Z",
+              "updated_at": "2026-10-02T09:05:12Z",
+              "deleted_at": null,
+              "client_ref": null,
+              "readonly": true,
+              "provenance": {
+                "origin": "official",
+                "official": {
+                  "source_key": "SRD",
+                  "item_type": "adversaries",
+                  "item_id": "acid-burrower",
+                  "item_version": 2
+                }
+              },
+              "extensions": {},
+              "data": {
+                "source_key": "SRD",
+                "title": "Acid Burrower",
+                "tier": 2,
+                "type": "Skulk",
+                "image_url": "https://usercontent.daggerlore.example/images/cinder-wisp.webp",
+                "artist_name": "Ada Marsh",
+                "description": "A flickering ember spirit that nests in abandoned forges.",
+                "motives_tactics": "Burn, hide, relight",
+                "difficulty": 14,
+                "thresholds": {
+                  "major": 8,
+                  "severe": 15
+                },
+                "max_hp": 5,
+                "max_stress": 3,
+                "attack_modifier": 3,
+                "standard_attack": {
+                  "name": "Scorch",
+                  "range": "Very Close",
+                  "damage_dice": "2d6",
+                  "damage_bonus": 2,
+                  "damage_type": "mag"
+                },
+                "experiences": [
+                  "Forge Lore",
+                  "Slippery"
+                ],
+                "experience_modifiers": [
+                  2,
+                  3
+                ],
+                "features": [
+                  {
+                    "type": "Passive",
+                    "name": "Smoldering",
+                    "max_uses": null,
+                    "description_html": "<p>Creatures that start their turn <strong>Close</strong> mark a Stress.</p>"
+                  },
+                  {
+                    "type": "Reaction",
+                    "name": "Gutter Out",
+                    "max_uses": 1,
+                    "description_html": "<p>When marked HP, become <em>Hidden</em>.</p>"
+                  }
+                ]
+              },
+              "type": "adversaries"
+            }
+          ],
+          "next_cursor": null
+        }
+      }
+    },
+    {
+      "label": "get-ok",
+      "class": "ok",
+      "operation": "getCatalogItem",
+      "request": {
+        "path": {
+          "catalogId": "SRD~adversaries~acid-burrower"
+        }
+      },
+      "response": {
+        "status": 200,
+        "body": {
+          "id": "SRD~adversaries~acid-burrower",
+          "kind": "catalog_item",
+          "revision": 2,
+          "created_at": "2026-10-02T09:00:00Z",
+          "updated_at": "2026-10-02T09:05:12Z",
+          "deleted_at": null,
+          "client_ref": null,
+          "readonly": true,
+          "provenance": {
+            "origin": "official",
+            "official": {
+              "source_key": "SRD",
+              "item_type": "adversaries",
+              "item_id": "acid-burrower",
+              "item_version": 2
+            }
+          },
+          "extensions": {},
+          "data": {
+            "source_key": "SRD",
+            "title": "Acid Burrower",
+            "tier": 2,
+            "type": "Skulk",
+            "image_url": "https://usercontent.daggerlore.example/images/cinder-wisp.webp",
+            "artist_name": "Ada Marsh",
+            "description": "A flickering ember spirit that nests in abandoned forges.",
+            "motives_tactics": "Burn, hide, relight",
+            "difficulty": 14,
+            "thresholds": {
+              "major": 8,
+              "severe": 15
+            },
+            "max_hp": 5,
+            "max_stress": 3,
+            "attack_modifier": 3,
+            "standard_attack": {
+              "name": "Scorch",
+              "range": "Very Close",
+              "damage_dice": "2d6",
+              "damage_bonus": 2,
+              "damage_type": "mag"
+            },
+            "experiences": [
+              "Forge Lore",
+              "Slippery"
+            ],
+            "experience_modifiers": [
+              2,
+              3
+            ],
+            "features": [
+              {
+                "type": "Passive",
+                "name": "Smoldering",
+                "max_uses": null,
+                "description_html": "<p>Creatures that start their turn <strong>Close</strong> mark a Stress.</p>"
+              },
+              {
+                "type": "Reaction",
+                "name": "Gutter Out",
+                "max_uses": 1,
+                "description_html": "<p>When marked HP, become <em>Hidden</em>.</p>"
+              }
+            ]
+          },
+          "type": "adversaries"
+        }
+      }
+    },
+    {
+      "label": "sources-ok",
+      "class": "ok",
+      "operation": "listCatalogSources",
+      "request": {},
+      "response": {
+        "status": 200,
+        "body": {
+          "items": [
+            {
+              "source_key": "SRD",
+              "name": "Daggerheart SRD",
+              "short_title": "SRD"
+            }
+          ]
+        }
+      }
+    },
+    {
+      "label": "write-rejected",
+      "class": "rejected",
+      "raw": {
+        "method": "PUT",
+        "path": "/catalog/items/SRD~adversaries~acid-burrower"
+      },
+      "request": {
+        "headers": {
+          "If-Match": "\"2\""
+        },
+        "body": {
+          "data": {}
+        }
+      },
+      "response": {
+        "status": 405,
+        "headers": {
+          "Allow": "GET"
+        },
+        "body": {
+          "type": "https://daggerlore.app/problems/official_immutable",
+          "title": "Official content is immutable",
+          "status": 405,
+          "code": "official_immutable",
+          "retryable": false,
+          "request_id": "req_01HZX0423"
+        }
+      }
+    },
+    {
+      "label": "forbidden-scope",
+      "class": "forbidden",
+      "operation": "listCatalogItems",
+      "request": {
+        "query": {
+          "type": "environments"
+        }
+      },
+      "response": {
+        "status": 403,
+        "body": {
+          "type": "https://daggerlore.app/problems/scope_not_granted",
+          "title": "This workspace was not granted catalog:unlocked",
+          "status": 403,
+          "code": "scope_not_granted",
+          "retryable": false,
+          "request_id": "req_01HZX0420"
+        }
+      }
+    }
+  ]
+}

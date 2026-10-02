@@ -1,0 +1,133 @@
+{
+  "name": "Public notes: update, invalid, stale",
+  "kind": "campaign_public_notes",
+  "steps": [
+    {
+      "label": "update-ok",
+      "class": "ok",
+      "operation": "putCampaignNotes",
+      "request": {
+        "path": {
+          "campaignId": "3f0c8f9e-5a1b-4c2d-9e7a-1b2c3d4e5f60",
+          "visibility": "public"
+        },
+        "headers": {
+          "If-Match": "\"2\""
+        },
+        "body": {
+          "data": {
+            "markdown": "The ferry runs at dawn.\n\n- **Bring** lamp oil"
+          }
+        }
+      },
+      "response": {
+        "status": 200,
+        "headers": {
+          "ETag": "\"3\""
+        },
+        "body": {
+          "id": "3f0c8f9e-5a1b-4c2d-9e7a-1b2c3d4e5f60",
+          "kind": "campaign_public_notes",
+          "revision": 3,
+          "created_at": "2026-10-02T09:00:00Z",
+          "updated_at": "2026-10-02T09:05:12Z",
+          "deleted_at": null,
+          "client_ref": null,
+          "readonly": false,
+          "provenance": {
+            "origin": "campaign"
+          },
+          "extensions": {},
+          "data": {
+            "markdown": "The ferry runs at dawn.\n\n- **Bring** lamp oil"
+          }
+        }
+      }
+    },
+    {
+      "label": "invalid-not-text",
+      "class": "invalid",
+      "operation": "putCampaignNotes",
+      "request": {
+        "path": {
+          "campaignId": "3f0c8f9e-5a1b-4c2d-9e7a-1b2c3d4e5f60",
+          "visibility": "public"
+        },
+        "headers": {
+          "If-Match": "\"3\""
+        },
+        "body": {
+          "data": {
+            "markdown": 42
+          }
+        }
+      },
+      "response": {
+        "status": 422,
+        "body": {
+          "type": "https://daggerlore.app/problems/validation_failed",
+          "title": "Notes must be Markdown text",
+          "status": 422,
+          "code": "validation_failed",
+          "retryable": false,
+          "request_id": "req_01HZX0439",
+          "field_errors": [
+            {
+              "pointer": "/data/markdown",
+              "code": "type",
+              "message": "Expected a string"
+            }
+          ]
+        }
+      },
+      "validation": "schema"
+    },
+    {
+      "label": "stale",
+      "class": "stale",
+      "operation": "putCampaignNotes",
+      "request": {
+        "path": {
+          "campaignId": "3f0c8f9e-5a1b-4c2d-9e7a-1b2c3d4e5f60",
+          "visibility": "public"
+        },
+        "headers": {
+          "If-Match": "\"2\""
+        },
+        "body": {
+          "data": {
+            "markdown": "The ferry runs at dawn.\n\n- **Bring** lamp oil"
+          }
+        }
+      },
+      "response": {
+        "status": 412,
+        "body": {
+          "type": "https://daggerlore.app/problems/stale_revision",
+          "title": "Notes changed",
+          "status": 412,
+          "code": "stale_revision",
+          "retryable": false,
+          "request_id": "req_01HZX0426",
+          "current": {
+            "id": "3f0c8f9e-5a1b-4c2d-9e7a-1b2c3d4e5f60",
+            "kind": "campaign_public_notes",
+            "revision": 4,
+            "created_at": "2026-10-02T09:00:00Z",
+            "updated_at": "2026-10-02T09:05:12Z",
+            "deleted_at": null,
+            "client_ref": null,
+            "readonly": false,
+            "provenance": {
+              "origin": "campaign"
+            },
+            "extensions": {},
+            "data": {
+              "markdown": "Edited elsewhere"
+            }
+          }
+        }
+      }
+    }
+  ]
+}

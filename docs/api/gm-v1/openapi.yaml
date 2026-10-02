@@ -1,0 +1,2151 @@
+openapi: 3.1.0
+info:
+  title: Daggerlore GM API
+  version: 1.0.0-draft.1
+  summary: External API for GM preparation and live state, used by the Daggerdash desktop companion.
+  description: |
+    Contract gate for bead daggerlore-fqc.1. Normative companion documents:
+
+    - `docs/decisions/0001-gm-api-go-boundary.md` — Go/SvelteKit boundary, auth, ownership, sync target.
+    - `docs/api/gm-v1/field-mapping.md` — Daggerlore ⇄ Daggerdash field and semantic mappings.
+    - `docs/api/gm-v1/fixtures/` — request/response cases and lossless round-trip fixtures.
+
+    **Scope.** Preparation and live GM state for the campaigns a workspace was explicitly granted, every
+    homebrew type, and unlocked official adversaries/environments for offline use. Character sheets, characters,
+    campaign membership, invite codes, dice history, billing and admin are out of scope. Homebrew *definitions* of
+    sheet-related types (classes, subclasses, domains, domain cards, ancestry/community cards, transformations,
+    sheet add-ons, weapons, armor, loot, consumables, beastforms) are in scope as opaque, lossless resources.
+
+    **Conventions.**
+    - Base path `/api/rest/v1`, served by the Go/Fiber service. All times are RFC 3339 UTC.
+    - Every resource is wrapped in the *resource envelope* (`ResourceBase`). `data` follows the Daggerlore domain
+      schemas verbatim (generated into `schemas/domain.generated.json`); `extensions` is opaque client-owned JSON
+      preserved byte-for-byte; unknown top-level envelope fields are ignored by clients and never dropped by the server.
+    - **Revisions.** Each resource has an integer `revision` that increases by one per committed change. Reads
+      return `ETag: "<revision>"`. Every `PUT`/`DELETE` requires `If-Match` (428 when absent, 412 when stale).
+    - **Create identity.** `POST` bodies carry `client_ref` (unique per workspace and kind) and requests carry an
+      `Idempotency-Key`. Server ids are assigned by the server; a client's own ids (for example Daggerdash's 32-hex
+      `uid`) are only ever a `client_ref`, never an id.
+    - **Deletion** is a tombstone (`deleted_at` set, `data` null) that keeps its revision and appears in the change
+      feed. Repeating a delete of a tombstone returns the tombstone (idempotent).
+    - **Pagination.** `limit` (1–200, default 50) and opaque `cursor`; responses carry `next_cursor` (null at the end).
+    - **Errors.** `application/problem+json` (`Problem`), always with a stable `code`.
+    - **Sync.** `GET /sync/snapshot` bootstraps, `GET /sync/changes` long-polls. Measurable targets are published
+      in `GET /capabilities` and recorded in the decision record.
+  license:
+    name: Proprietary
+    identifier: LicenseRef-Proprietary
+servers:
+  - url: https://daggerlore.app/api/rest/v1
+    description: Production (Caddy routes /api/rest/* to the Go service)
+  - url: http://localhost:8080/api/rest/v1
+    description: Local gateway
+  - url: http://daggerlore-api.railway.internal:3000/internal/v1
+    description: >-
+      Internal domain-service surface for SvelteKit (same resources and semantics, `internalPrincipal` security).
+      Not routed by Caddy and never reachable from a browser.
+security:
+  - workspaceToken: []
+tags:
+  - { name: meta, description: Capabilities and the workspace grant }
+  - { name: sync, description: Snapshot and change feed }
+  - { name: campaigns, description: 'Campaign settings, live state, notes and attachments' }
+  - { name: encounters, description: 'Reusable encounters, campaign links and live instance state' }
+  - { name: homebrew, description: All homebrew types }
+  - { name: catalog, description: Read-only unlocked official adversaries and environments }
+  - { name: conflicts, description: GM-resolved conflicts that keep both versions }
+
+paths:
+  /capabilities:
+    get:
+      tags: [meta]
+      operationId: getCapabilities
+      summary: API version, limits, sync targets and supported resource kinds
+      responses:
+        '200':
+          description: Capabilities
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/Capabilities' }
+        '401': { $ref: '#/components/responses/Unauthorized' }
+
+  /workspace:
+    get:
+      tags: [meta]
+      operationId: getWorkspace
+      summary: The grant behind this token
+      description: |
+        Lists the selected campaigns and account scopes, plus campaigns the account GMs that were **not** selected
+        (`available_campaigns`, names only). A new campaign is never enrolled implicitly; it only appears here.
+      responses:
+        '200':
+          description: Workspace grant
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/Workspace' }
+        '401': { $ref: '#/components/responses/Unauthorized' }
+
+  /workspace/scope-requests:
+    post:
+      tags: [meta]
+      operationId: createScopeRequest
+      summary: Ask the GM to widen the grant (browser consent required)
+      description: |
+        Expansion (more campaigns, `homebrew:all`, `catalog:unlocked`) never takes effect from this call. It
+        returns a browser consent URL; the grant changes only when the GM approves there. Narrowing needs no
+        consent and uses `DELETE /workspace/campaigns/{campaignId}`.
+      parameters:
+        - { $ref: '#/components/parameters/IdempotencyKey' }
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: '#/components/schemas/ScopeRequestInput' }
+      responses:
+        '202':
+          description: Consent required
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/ScopeRequest' }
+        '401': { $ref: '#/components/responses/Unauthorized' }
+        '403': { $ref: '#/components/responses/Forbidden' }
+        '422': { $ref: '#/components/responses/Validation' }
+  /workspace/scope-requests/{requestId}:
+    get:
+      tags: [meta]
+      operationId: getScopeRequest
+      summary: Poll a pending scope request
+      parameters:
+        - { name: requestId, in: path, required: true, schema: { type: string, format: uuid } }
+      responses:
+        '200':
+          description: Scope request
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/ScopeRequest' }
+        '404': { $ref: '#/components/responses/NotFound' }
+  /workspace/campaigns/{campaignId}:
+    delete:
+      tags: [meta]
+      operationId: deselectCampaign
+      summary: Remove a campaign from the grant (no consent needed)
+      description: |
+        Journals a `purge` change with `reason: deselected` for the campaign and everything reachable only
+        through it. Clients stop syncing it and keep their local data.
+      parameters:
+        - { $ref: '#/components/parameters/CampaignId' }
+      responses:
+        '200':
+          description: Updated workspace
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/Workspace' }
+        '404': { $ref: '#/components/responses/NotFound' }
+
+  /sync/snapshot:
+    get:
+      tags: [sync]
+      operationId: getSnapshotPage
+      summary: Page through everything the grant can see
+      description: |
+        The first call (no `page_token`) captures `snapshot_cursor` = the journal head *before* reading. Pages are
+        read live, so a client must finish paging and then replay `GET /sync/changes?after=<snapshot_cursor>`;
+        applying an upsert whose `revision` is not newer than the cached one is a no-op, so the result converges.
+        Tombstones in the replay cover anything deleted while paging.
+      parameters:
+        - { name: page_token, in: query, schema: { type: string } }
+        - { $ref: '#/components/parameters/Limit' }
+        - name: kinds
+          in: query
+          description: Restrict to kinds. Default is every kind the grant allows.
+          schema:
+            type: array
+            items: { $ref: '#/components/schemas/ResourceKind' }
+          style: form
+          explode: false
+      responses:
+        '200':
+          description: Snapshot page
+          headers: { X-Grant-Revision: { $ref: '#/components/headers/GrantRevision' } }
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/SnapshotPage' }
+        '401': { $ref: '#/components/responses/Unauthorized' }
+        '410': { $ref: '#/components/responses/Gone' }
+        '422': { $ref: '#/components/responses/Validation' }
+
+  /sync/changes:
+    get:
+      tags: [sync]
+      operationId: getChanges
+      summary: Change feed with long polling
+      description: |
+        Returns changes with `seq` greater than `after`, oldest first. When none exist the call holds for up to
+        `wait_ms` and returns early on commit (Postgres LISTEN/NOTIFY), so clients see remote edits within the
+        published sync target. `410 cursor_expired` means the cursor is older than the retained journal and the
+        client must re-bootstrap with `/sync/snapshot`.
+      parameters:
+        - { name: after, in: query, required: true, schema: { $ref: '#/components/schemas/Cursor' } }
+        - { name: wait_ms, in: query, schema: { type: integer, minimum: 0, maximum: 25000, default: 0 } }
+        - { $ref: '#/components/parameters/Limit' }
+        - name: X-Sync-Ack
+          in: header
+          description: Last cursor the client has durably applied; used only for end-to-end lag metrics.
+          schema: { $ref: '#/components/schemas/Cursor' }
+      responses:
+        '200':
+          description: Change page (empty `changes` after a wait timeout)
+          headers: { X-Grant-Revision: { $ref: '#/components/headers/GrantRevision' } }
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/ChangePage' }
+        '401': { $ref: '#/components/responses/Unauthorized' }
+        '410': { $ref: '#/components/responses/Gone' }
+        '422': { $ref: '#/components/responses/Validation' }
+
+  /campaigns:
+    get:
+      tags: [campaigns]
+      operationId: listCampaigns
+      summary: Selected campaigns
+      parameters:
+        - { $ref: '#/components/parameters/Limit' }
+        - { $ref: '#/components/parameters/PageCursor' }
+      responses:
+        '200':
+          description: Campaigns
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/CampaignList' }
+        '401': { $ref: '#/components/responses/Unauthorized' }
+  /campaigns/{campaignId}:
+    parameters:
+      - { $ref: '#/components/parameters/CampaignId' }
+    get:
+      tags: [campaigns]
+      operationId: getCampaign
+      summary: Campaign settings
+      responses:
+        '200':
+          description: Campaign
+          headers: { ETag: { $ref: '#/components/headers/ETag' } }
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/Campaign' }
+        '403': { $ref: '#/components/responses/Forbidden' }
+        '404': { $ref: '#/components/responses/NotFound' }
+    put:
+      tags: [campaigns]
+      operationId: putCampaign
+      summary: Replace campaign settings
+      description: Settings only. Fear, countdowns, notes and attachments are separate resources with their own revisions.
+      parameters:
+        - { $ref: '#/components/parameters/IfMatch' }
+        - { $ref: '#/components/parameters/Prefer' }
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: '#/components/schemas/CampaignWrite' }
+      responses:
+        '200':
+          description: Updated
+          headers: { ETag: { $ref: '#/components/headers/ETag' } }
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/Campaign' }
+        '403': { $ref: '#/components/responses/Forbidden' }
+        '404': { $ref: '#/components/responses/NotFound' }
+        '409': { $ref: '#/components/responses/Conflict' }
+        '412': { $ref: '#/components/responses/Stale' }
+        '422': { $ref: '#/components/responses/Validation' }
+        '428': { $ref: '#/components/responses/PreconditionRequired' }
+
+  /campaigns/{campaignId}/fear:
+    parameters:
+      - { $ref: '#/components/parameters/CampaignId' }
+    get:
+      tags: [campaigns]
+      operationId: getFear
+      summary: Fear track (0..12)
+      responses:
+        '200':
+          description: Fear
+          headers: { ETag: { $ref: '#/components/headers/ETag' } }
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/CampaignFear' }
+        '404': { $ref: '#/components/responses/NotFound' }
+    put:
+      tags: [campaigns]
+      operationId: putFear
+      summary: Set the fear track
+      parameters:
+        - { $ref: '#/components/parameters/IfMatch' }
+        - { $ref: '#/components/parameters/Prefer' }
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: '#/components/schemas/CampaignFearWrite' }
+      responses:
+        '200':
+          description: Updated
+          headers: { ETag: { $ref: '#/components/headers/ETag' } }
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/CampaignFear' }
+        '409': { $ref: '#/components/responses/Conflict' }
+        '412': { $ref: '#/components/responses/Stale' }
+        '422': { $ref: '#/components/responses/Validation' }
+        '428': { $ref: '#/components/responses/PreconditionRequired' }
+
+  /campaigns/{campaignId}/countdowns:
+    parameters:
+      - { $ref: '#/components/parameters/CampaignId' }
+    get:
+      tags: [campaigns]
+      operationId: listCountdowns
+      summary: Countdowns in GM order
+      parameters:
+        - { $ref: '#/components/parameters/Limit' }
+        - { $ref: '#/components/parameters/PageCursor' }
+        - { name: include_deleted, in: query, schema: { type: boolean, default: false } }
+      responses:
+        '200':
+          description: Countdowns
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/CountdownList' }
+        '401': { $ref: '#/components/responses/Unauthorized' }
+    post:
+      tags: [campaigns]
+      operationId: createCountdown
+      summary: Create a countdown
+      parameters:
+        - { $ref: '#/components/parameters/IdempotencyKey' }
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: '#/components/schemas/CountdownCreate' }
+      responses:
+        '201':
+          description: Created
+          headers: { ETag: { $ref: '#/components/headers/ETag' } }
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/Countdown' }
+        '200':
+          description: Idempotent replay or existing `client_ref` with identical content
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/Countdown' }
+        '409': { $ref: '#/components/responses/Conflict' }
+        '422': { $ref: '#/components/responses/Validation' }
+  /campaigns/{campaignId}/countdowns/{countdownId}:
+    parameters:
+      - { $ref: '#/components/parameters/CampaignId' }
+      - { $ref: '#/components/parameters/CountdownId' }
+    get:
+      tags: [campaigns]
+      operationId: getCountdown
+      summary: One countdown
+      responses:
+        '200':
+          description: Countdown
+          headers: { ETag: { $ref: '#/components/headers/ETag' } }
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/Countdown' }
+        '404': { $ref: '#/components/responses/NotFound' }
+    put:
+      tags: [campaigns]
+      operationId: putCountdown
+      summary: Replace a countdown
+      parameters:
+        - { $ref: '#/components/parameters/IfMatch' }
+        - { $ref: '#/components/parameters/Prefer' }
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: '#/components/schemas/CountdownWrite' }
+      responses:
+        '200':
+          description: Updated
+          headers: { ETag: { $ref: '#/components/headers/ETag' } }
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/Countdown' }
+        '409': { $ref: '#/components/responses/Conflict' }
+        '412': { $ref: '#/components/responses/Stale' }
+        '422': { $ref: '#/components/responses/Validation' }
+        '428': { $ref: '#/components/responses/PreconditionRequired' }
+    delete:
+      tags: [campaigns]
+      operationId: deleteCountdown
+      summary: Delete a countdown (tombstone)
+      parameters:
+        - { $ref: '#/components/parameters/IfMatch' }
+      responses:
+        '200':
+          description: Tombstone
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/Tombstone' }
+        '412': { $ref: '#/components/responses/Stale' }
+        '428': { $ref: '#/components/responses/PreconditionRequired' }
+
+  /campaigns/{campaignId}/notes/{visibility}:
+    parameters:
+      - { $ref: '#/components/parameters/CampaignId' }
+      - { $ref: '#/components/parameters/NoteVisibility' }
+    get:
+      tags: [campaigns]
+      operationId: getCampaignNotes
+      summary: Public or private notes (Markdown)
+      description: |
+        `public` notes are what players see; `private` notes are GM-only through this API. (The current web app
+        shows private notes to all members; hiding them there is a separate product issue, not part of this contract.)
+      responses:
+        '200':
+          description: Notes
+          headers: { ETag: { $ref: '#/components/headers/ETag' } }
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/CampaignNotes' }
+        '404': { $ref: '#/components/responses/NotFound' }
+    put:
+      tags: [campaigns]
+      operationId: putCampaignNotes
+      summary: Replace notes
+      parameters:
+        - { $ref: '#/components/parameters/IfMatch' }
+        - { $ref: '#/components/parameters/Prefer' }
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: '#/components/schemas/CampaignNotesWrite' }
+      responses:
+        '200':
+          description: Updated
+          headers: { ETag: { $ref: '#/components/headers/ETag' } }
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/CampaignNotes' }
+        '409': { $ref: '#/components/responses/Conflict' }
+        '412': { $ref: '#/components/responses/Stale' }
+        '422': { $ref: '#/components/responses/Validation' }
+        '428': { $ref: '#/components/responses/PreconditionRequired' }
+
+  /campaigns/{campaignId}/attachments:
+    parameters:
+      - { $ref: '#/components/parameters/CampaignId' }
+    get:
+      tags: [campaigns]
+      operationId: listAttachments
+      summary: Attachments (metadata)
+      parameters:
+        - { $ref: '#/components/parameters/Limit' }
+        - { $ref: '#/components/parameters/PageCursor' }
+      responses:
+        '200':
+          description: Attachments
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/AttachmentList' }
+        '401': { $ref: '#/components/responses/Unauthorized' }
+    post:
+      tags: [campaigns]
+      operationId: createAttachment
+      summary: Declare an attachment, then upload its content
+      description: |
+        Creates the metadata in `upload_state: pending`. The attachment becomes `complete` once
+        `PUT .../content` stores bytes whose SHA-256 and size match the declaration. Pending attachments older
+        than 24 hours are tombstoned by the server.
+      parameters:
+        - { $ref: '#/components/parameters/IdempotencyKey' }
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: '#/components/schemas/AttachmentCreate' }
+      responses:
+        '201':
+          description: Created
+          headers: { ETag: { $ref: '#/components/headers/ETag' } }
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/Attachment' }
+        '200':
+          description: Idempotent replay
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/Attachment' }
+        '413': { $ref: '#/components/responses/TooLarge' }
+        '415': { $ref: '#/components/responses/UnsupportedMedia' }
+        '422': { $ref: '#/components/responses/Validation' }
+  /campaigns/{campaignId}/attachments/{attachmentId}:
+    parameters:
+      - { $ref: '#/components/parameters/CampaignId' }
+      - { $ref: '#/components/parameters/AttachmentId' }
+    get:
+      tags: [campaigns]
+      operationId: getAttachment
+      summary: Attachment metadata
+      responses:
+        '200':
+          description: Attachment
+          headers: { ETag: { $ref: '#/components/headers/ETag' } }
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/Attachment' }
+        '404': { $ref: '#/components/responses/NotFound' }
+    put:
+      tags: [campaigns]
+      operationId: putAttachment
+      summary: Rename or change visibility
+      parameters:
+        - { $ref: '#/components/parameters/IfMatch' }
+        - { $ref: '#/components/parameters/Prefer' }
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: '#/components/schemas/AttachmentWrite' }
+      responses:
+        '200':
+          description: Updated
+          headers: { ETag: { $ref: '#/components/headers/ETag' } }
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/Attachment' }
+        '409': { $ref: '#/components/responses/Conflict' }
+        '412': { $ref: '#/components/responses/Stale' }
+        '422': { $ref: '#/components/responses/Validation' }
+        '428': { $ref: '#/components/responses/PreconditionRequired' }
+    delete:
+      tags: [campaigns]
+      operationId: deleteAttachment
+      summary: Delete an attachment (tombstone; bytes purged after the retention window)
+      parameters:
+        - { $ref: '#/components/parameters/IfMatch' }
+      responses:
+        '200':
+          description: Tombstone
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/Tombstone' }
+        '412': { $ref: '#/components/responses/Stale' }
+        '428': { $ref: '#/components/responses/PreconditionRequired' }
+  /campaigns/{campaignId}/attachments/{attachmentId}/content:
+    parameters:
+      - { $ref: '#/components/parameters/CampaignId' }
+      - { $ref: '#/components/parameters/AttachmentId' }
+    get:
+      tags: [campaigns]
+      operationId: getAttachmentContent
+      summary: Download bytes (supports If-None-Match and Range)
+      responses:
+        '200':
+          description: Bytes
+          content:
+            application/octet-stream:
+              schema: { type: string, format: binary }
+        '304': { description: Not modified }
+        '404': { $ref: '#/components/responses/NotFound' }
+    put:
+      tags: [campaigns]
+      operationId: putAttachmentContent
+      summary: Upload bytes for a pending attachment
+      parameters:
+        - { name: X-Content-SHA256, in: header, required: true, schema: { type: string, pattern: '^[0-9a-f]{64}$' } }
+        - { $ref: '#/components/parameters/IdempotencyKey' }
+      requestBody:
+        required: true
+        content:
+          application/octet-stream:
+            schema: { type: string, format: binary }
+      responses:
+        '200':
+          description: Attachment is now complete
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/Attachment' }
+        '413': { $ref: '#/components/responses/TooLarge' }
+        '422': { $ref: '#/components/responses/Validation' }
+
+  /campaigns/{campaignId}/encounters:
+    parameters:
+      - { $ref: '#/components/parameters/CampaignId' }
+    get:
+      tags: [encounters]
+      operationId: listCampaignEncounterLinks
+      summary: Encounters linked to this campaign
+      parameters:
+        - { $ref: '#/components/parameters/Limit' }
+        - { $ref: '#/components/parameters/PageCursor' }
+      responses:
+        '200':
+          description: Links
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/EncounterLinkList' }
+        '401': { $ref: '#/components/responses/Unauthorized' }
+  /campaigns/{campaignId}/encounters/{encounterId}:
+    parameters:
+      - { $ref: '#/components/parameters/CampaignId' }
+      - { $ref: '#/components/parameters/EncounterId' }
+    put:
+      tags: [encounters]
+      operationId: putEncounterLink
+      summary: Link an encounter to this campaign (idempotent)
+      description: The link carries no copy; the encounter stays one reusable resource. The encounter must be owned by the principal.
+      responses:
+        '200':
+          description: Existing link
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/EncounterLink' }
+        '201':
+          description: Link created
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/EncounterLink' }
+        '403': { $ref: '#/components/responses/Forbidden' }
+        '404': { $ref: '#/components/responses/NotFound' }
+    delete:
+      tags: [encounters]
+      operationId: deleteEncounterLink
+      summary: Unlink (the encounter is kept)
+      parameters:
+        - { $ref: '#/components/parameters/IfMatch' }
+      responses:
+        '200':
+          description: Tombstone of the link
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/Tombstone' }
+        '412': { $ref: '#/components/responses/Stale' }
+        '428': { $ref: '#/components/responses/PreconditionRequired' }
+
+  /encounters:
+    get:
+      tags: [encounters]
+      operationId: listEncounters
+      summary: Encounters visible to the grant
+      description: |
+        Encounters are library entities owned by one user and used by campaigns through links; they do not belong to
+        a campaign. Visible: encounters linked to a selected campaign, encounters this workspace created itself
+        (linked or not), and, with the `encounters:all` scope, every encounter the principal owns.
+        `campaign_id` filters to one campaign's links.
+      parameters:
+        - { $ref: '#/components/parameters/Limit' }
+        - { $ref: '#/components/parameters/PageCursor' }
+        - { name: campaign_id, in: query, schema: { type: string, format: uuid } }
+      responses:
+        '200':
+          description: Encounters
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/EncounterList' }
+        '401': { $ref: '#/components/responses/Unauthorized' }
+    post:
+      tags: [encounters]
+      operationId: createEncounter
+      summary: Create an encounter (optionally linked to selected campaigns)
+      parameters:
+        - { $ref: '#/components/parameters/IdempotencyKey' }
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: '#/components/schemas/EncounterCreate' }
+      responses:
+        '201':
+          description: Created
+          headers: { ETag: { $ref: '#/components/headers/ETag' } }
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/Encounter' }
+        '200':
+          description: Idempotent replay or existing `client_ref` with identical content
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/Encounter' }
+        '403': { $ref: '#/components/responses/Forbidden' }
+        '409': { $ref: '#/components/responses/Conflict' }
+        '422': { $ref: '#/components/responses/Validation' }
+  /encounters/{encounterId}:
+    parameters:
+      - { $ref: '#/components/parameters/EncounterId' }
+    get:
+      tags: [encounters]
+      operationId: getEncounter
+      summary: Encounter structure
+      responses:
+        '200':
+          description: Encounter
+          headers: { ETag: { $ref: '#/components/headers/ETag' } }
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/Encounter' }
+        '404': { $ref: '#/components/responses/NotFound' }
+    put:
+      tags: [encounters]
+      operationId: putEncounter
+      summary: Replace the encounter structure (whole-resource conflict granularity)
+      description: |
+        Structure = name, description, settings, ordered mixed `items`, and instance membership. Live state of
+        each instance is a separate resource (`/encounters/{id}/instances/{instanceId}`). Removing an instance
+        here tombstones its live state in the same transaction; adding one creates default live state.
+      parameters:
+        - { $ref: '#/components/parameters/IfMatch' }
+        - { $ref: '#/components/parameters/Prefer' }
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: '#/components/schemas/EncounterWrite' }
+      responses:
+        '200':
+          description: Updated
+          headers: { ETag: { $ref: '#/components/headers/ETag' } }
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/Encounter' }
+        '409': { $ref: '#/components/responses/Conflict' }
+        '412': { $ref: '#/components/responses/Stale' }
+        '422': { $ref: '#/components/responses/Validation' }
+        '428': { $ref: '#/components/responses/PreconditionRequired' }
+    delete:
+      tags: [encounters]
+      operationId: deleteEncounter
+      summary: Delete an encounter (tombstones its links and instance state first)
+      parameters:
+        - { $ref: '#/components/parameters/IfMatch' }
+      responses:
+        '200':
+          description: Tombstone
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/Tombstone' }
+        '412': { $ref: '#/components/responses/Stale' }
+        '428': { $ref: '#/components/responses/PreconditionRequired' }
+  /encounters/{encounterId}/instances:
+    parameters:
+      - { $ref: '#/components/parameters/EncounterId' }
+    get:
+      tags: [encounters]
+      operationId: listEncounterInstances
+      summary: Live state of every instance
+      parameters:
+        - { $ref: '#/components/parameters/Limit' }
+        - { $ref: '#/components/parameters/PageCursor' }
+      responses:
+        '200':
+          description: Instances
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/EncounterInstanceList' }
+        '401': { $ref: '#/components/responses/Unauthorized' }
+  /encounters/{encounterId}/instances/{instanceId}:
+    parameters:
+      - { $ref: '#/components/parameters/EncounterId' }
+      - { $ref: '#/components/parameters/InstanceId' }
+    get:
+      tags: [encounters]
+      operationId: getEncounterInstance
+      summary: Live state of one adversary instance
+      responses:
+        '200':
+          description: Instance
+          headers: { ETag: { $ref: '#/components/headers/ETag' } }
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/EncounterInstance' }
+        '404': { $ref: '#/components/responses/NotFound' }
+    put:
+      tags: [encounters]
+      operationId: putEncounterInstance
+      summary: Replace live state (name, marks, conditions)
+      parameters:
+        - { $ref: '#/components/parameters/IfMatch' }
+        - { $ref: '#/components/parameters/Prefer' }
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: '#/components/schemas/EncounterInstanceWrite' }
+      responses:
+        '200':
+          description: Updated
+          headers: { ETag: { $ref: '#/components/headers/ETag' } }
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/EncounterInstance' }
+        '409': { $ref: '#/components/responses/Conflict' }
+        '412': { $ref: '#/components/responses/Stale' }
+        '422': { $ref: '#/components/responses/Validation' }
+        '428': { $ref: '#/components/responses/PreconditionRequired' }
+
+  /homebrew:
+    get:
+      tags: [homebrew]
+      operationId: listHomebrew
+      summary: Homebrew visible to the grant
+      description: |
+        Homebrew is a library entity owned by one user; campaigns use it by reference (vault). Without
+        `homebrew:all`, visible: homebrew referenced by a selected campaign's vault or by an encounter the grant can
+        see, and homebrew this workspace created itself. With `homebrew:all`, every homebrew item the principal owns is
+        visible too. Items owned by other users that a selected campaign's vault references are `readonly: true`.
+      parameters:
+        - { $ref: '#/components/parameters/Limit' }
+        - { $ref: '#/components/parameters/PageCursor' }
+        - { name: type, in: query, schema: { $ref: '#/components/schemas/HomebrewType' } }
+      responses:
+        '200':
+          description: Homebrew
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/HomebrewList' }
+        '401': { $ref: '#/components/responses/Unauthorized' }
+    post:
+      tags: [homebrew]
+      operationId: createHomebrew
+      summary: Create homebrew owned by the principal
+      parameters:
+        - { $ref: '#/components/parameters/IdempotencyKey' }
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: '#/components/schemas/HomebrewCreate' }
+      responses:
+        '201':
+          description: Created
+          headers: { ETag: { $ref: '#/components/headers/ETag' } }
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/Homebrew' }
+        '200':
+          description: Idempotent replay or existing `client_ref` with identical content
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/Homebrew' }
+        '403': { $ref: '#/components/responses/Forbidden' }
+        '409': { $ref: '#/components/responses/Conflict' }
+        '422': { $ref: '#/components/responses/Validation' }
+  /homebrew/{homebrewId}:
+    parameters:
+      - { $ref: '#/components/parameters/HomebrewId' }
+    get:
+      tags: [homebrew]
+      operationId: getHomebrew
+      summary: One homebrew item
+      responses:
+        '200':
+          description: Homebrew
+          headers: { ETag: { $ref: '#/components/headers/ETag' } }
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/Homebrew' }
+        '404': { $ref: '#/components/responses/NotFound' }
+    put:
+      tags: [homebrew]
+      operationId: putHomebrew
+      summary: Replace a homebrew item (owner only; `type` cannot change)
+      parameters:
+        - { $ref: '#/components/parameters/IfMatch' }
+        - { $ref: '#/components/parameters/Prefer' }
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: '#/components/schemas/HomebrewWrite' }
+      responses:
+        '200':
+          description: Updated
+          headers: { ETag: { $ref: '#/components/headers/ETag' } }
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/Homebrew' }
+        '403': { $ref: '#/components/responses/Forbidden' }
+        '409': { $ref: '#/components/responses/Conflict' }
+        '412': { $ref: '#/components/responses/Stale' }
+        '422': { $ref: '#/components/responses/Validation' }
+        '428': { $ref: '#/components/responses/PreconditionRequired' }
+    delete:
+      tags: [homebrew]
+      operationId: deleteHomebrew
+      summary: Delete homebrew (owner only; tombstone)
+      parameters:
+        - { $ref: '#/components/parameters/IfMatch' }
+      responses:
+        '200':
+          description: Tombstone
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/Tombstone' }
+        '403': { $ref: '#/components/responses/Forbidden' }
+        '412': { $ref: '#/components/responses/Stale' }
+        '428': { $ref: '#/components/responses/PreconditionRequired' }
+
+  /catalog/sources:
+    get:
+      tags: [catalog]
+      operationId: listCatalogSources
+      summary: Unlocked official sources with display labels
+      description: |
+        `source_key` is the identity everywhere (it is also Daggerdash's `source` value). `name` and `short_title`
+        are display labels only and are never written back.
+      responses:
+        '200':
+          description: Sources
+          content:
+            application/json:
+              schema:
+                type: object
+                required: [items]
+                additionalProperties: false
+                properties:
+                  items: { type: array, items: { $ref: '#/components/schemas/CatalogSource' } }
+        '403': { $ref: '#/components/responses/Forbidden' }
+  /catalog/items:
+    get:
+      tags: [catalog]
+      operationId: listCatalogItems
+      summary: Unlocked official adversaries and environments
+      description: |
+        Requires `catalog:unlocked`. Items are immutable per `item_version`; a newer published version is a new
+        revision of the same id. Writes are never accepted (`official_immutable`).
+      parameters:
+        - { $ref: '#/components/parameters/Limit' }
+        - { $ref: '#/components/parameters/PageCursor' }
+        - { name: type, in: query, schema: { type: string, enum: [adversaries, environments] } }
+        - { name: source_key, in: query, schema: { type: string } }
+      responses:
+        '200':
+          description: Catalog items
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/CatalogItemList' }
+        '403': { $ref: '#/components/responses/Forbidden' }
+  /catalog/items/{catalogId}:
+    parameters:
+      - name: catalogId
+        in: path
+        required: true
+        description: "`<source_key>~<item_type>~<item_id>`, each part percent-encoded."
+        schema: { type: string }
+    get:
+      tags: [catalog]
+      operationId: getCatalogItem
+      summary: One official item
+      responses:
+        '200':
+          description: Catalog item
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/CatalogItem' }
+        '404': { $ref: '#/components/responses/NotFound' }
+
+  /conflicts:
+    get:
+      tags: [conflicts]
+      operationId: listConflicts
+      summary: Open and resolved conflicts
+      parameters:
+        - { $ref: '#/components/parameters/Limit' }
+        - { $ref: '#/components/parameters/PageCursor' }
+        - { name: state, in: query, schema: { type: string, enum: [open, resolved] } }
+      responses:
+        '200':
+          description: Conflicts
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/ConflictList' }
+        '401': { $ref: '#/components/responses/Unauthorized' }
+    post:
+      tags: [conflicts]
+      operationId: createConflict
+      summary: 'Park a local version that lost a race (explicit form of `Prefer: conflict=park`)'
+      parameters:
+        - { $ref: '#/components/parameters/IdempotencyKey' }
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: '#/components/schemas/ConflictCreate' }
+      responses:
+        '201':
+          description: Conflict recorded
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/Conflict' }
+        '200':
+          description: Idempotent replay
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/Conflict' }
+        '404': { $ref: '#/components/responses/NotFound' }
+        '422': { $ref: '#/components/responses/Validation' }
+  /conflicts/{conflictId}:
+    parameters:
+      - { name: conflictId, in: path, required: true, schema: { type: string, format: uuid } }
+    get:
+      tags: [conflicts]
+      operationId: getConflict
+      summary: One conflict with both versions
+      responses:
+        '200':
+          description: Conflict
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/Conflict' }
+        '404': { $ref: '#/components/responses/NotFound' }
+  /conflicts/{conflictId}/resolution:
+    parameters:
+      - { name: conflictId, in: path, required: true, schema: { type: string, format: uuid } }
+    post:
+      tags: [conflicts]
+      operationId: resolveConflict
+      summary: The GM's decision; the losing version stays in the conflict record
+      parameters:
+        - { $ref: '#/components/parameters/IdempotencyKey' }
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: '#/components/schemas/ConflictResolutionInput' }
+      responses:
+        '200':
+          description: Resolved (target has a new revision)
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/Conflict' }
+        '404': { $ref: '#/components/responses/NotFound' }
+        '412': { $ref: '#/components/responses/Stale' }
+        '422': { $ref: '#/components/responses/Validation' }
+
+components:
+  securitySchemes:
+    workspaceToken:
+      type: http
+      scheme: bearer
+      description: |
+        Opaque desktop workspace token (hashed at rest) from the browser consent flow (fqc.2/.5). Go resolves
+        token → grant → user on every request and re-checks GM membership; it never trusts forwarded browser headers.
+    internalPrincipal:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
+      description: |
+        Used only on `/internal/v1/*` (same resources and semantics as this document, not routed by Caddy).
+        A short-lived EdDSA JWT minted by SvelteKit after verifying the Auth.js session (`aud=daggerlore-go`,
+        `sub`=user id, `exp`≤60 s, `jti`), plus a service credential. Internal calls have no grant scope: they act
+        as the whole account.
+
+  headers:
+    ETag:
+      description: The resource revision as a quoted integer, for example `"7"`.
+      required: true
+      schema: { type: string, pattern: '^"[0-9]+"$' }
+    GrantRevision:
+      description: |
+        Increments on every approved or applied change to the workspace grant. When it differs from the value the
+        client last saw, the client re-reads `GET /workspace` and runs a snapshot, because resources may have
+        become visible that no journal entry announces.
+      required: true
+      schema: { type: string, pattern: '^[0-9]+$' }
+
+  parameters:
+    CampaignId: { name: campaignId, in: path, required: true, schema: { type: string, format: uuid } }
+    EncounterId: { name: encounterId, in: path, required: true, schema: { type: string, format: uuid } }
+    HomebrewId: { name: homebrewId, in: path, required: true, schema: { type: string, format: uuid } }
+    CountdownId: { name: countdownId, in: path, required: true, schema: { type: string, format: uuid } }
+    AttachmentId: { name: attachmentId, in: path, required: true, schema: { type: string, format: uuid } }
+    InstanceId: { name: instanceId, in: path, required: true, schema: { type: string, format: uuid } }
+    NoteVisibility: { name: visibility, in: path, required: true, schema: { type: string, enum: [public, private] } }
+    IfMatch:
+      name: If-Match
+      in: header
+      required: true
+      description: The `ETag` of the revision the change is based on.
+      schema: { type: string, pattern: '^"[0-9]+"$' }
+    IdempotencyKey:
+      name: Idempotency-Key
+      in: header
+      required: true
+      description: |
+        1–64 characters from `[A-Za-z0-9_-]`, unique per logical mutation (the client outbox entry id). Replaying
+        the same key with the same body returns the original response with `Idempotent-Replay: true`; the same key
+        with a different body is `422 idempotency_key_reuse`. Keys are remembered for at least 24 hours.
+      schema: { type: string, pattern: '^[A-Za-z0-9_-]{1,64}$' }
+    Prefer:
+      name: Prefer
+      in: header
+      required: false
+      description: |
+        `conflict=park` makes a stale write atomically create a `Conflict` holding the submitted version and
+        respond `409 conflict` instead of `412 stale_revision`.
+      schema: { type: string, enum: [conflict=park] }
+    Limit: { name: limit, in: query, schema: { type: integer, minimum: 1, maximum: 200, default: 50 } }
+    PageCursor: { name: cursor, in: query, schema: { type: string } }
+
+  responses:
+    Unauthorized: { description: 'Missing, invalid or revoked token', content: { application/problem+json: { schema: { $ref: '#/components/schemas/Problem' } } } }
+    Forbidden: { description: Not permitted, content: { application/problem+json: { schema: { $ref: '#/components/schemas/Problem' } } } }
+    NotFound: { description: 'Not found or outside the grant (indistinguishable by design)', content: { application/problem+json: { schema: { $ref: '#/components/schemas/Problem' } } } }
+    Gone: { description: 'Cursor or snapshot token expired; re-bootstrap', content: { application/problem+json: { schema: { $ref: '#/components/schemas/Problem' } } } }
+    Stale: { description: '`If-Match` does not match; `current` carries the server version', content: { application/problem+json: { schema: { $ref: '#/components/schemas/Problem' } } } }
+    PreconditionRequired: { description: '`If-Match` missing', content: { application/problem+json: { schema: { $ref: '#/components/schemas/Problem' } } } }
+    Conflict: { description: 'Name or `client_ref` collision, or a parked conflict (`conflict_id` set)', content: { application/problem+json: { schema: { $ref: '#/components/schemas/Problem' } } } }
+    Validation: { description: Invalid body, content: { application/problem+json: { schema: { $ref: '#/components/schemas/Problem' } } } }
+    TooLarge: { description: Body exceeds the published limit, content: { application/problem+json: { schema: { $ref: '#/components/schemas/Problem' } } } }
+    UnsupportedMedia: { description: Content type not allowed, content: { application/problem+json: { schema: { $ref: '#/components/schemas/Problem' } } } }
+
+  schemas:
+    # ---------------------------------------------------------------- primitives
+    Uuid: { type: string, format: uuid }
+    Timestamp: { type: string, format: date-time }
+    Cursor:
+      type: string
+      description: Opaque, monotonically increasing journal position. Compare only for equality; never parse.
+      pattern: '^c_[A-Za-z0-9_-]{1,64}$'
+    ClientRef:
+      type: string
+      description: |
+        The client's own identity for the thing, formatted `<namespace>:<value>`, for example
+        `daggerdash:5b1c0f6e2d3a4c7f8e9d0a1b2c3d4e5f`. Unique per workspace and kind.
+      pattern: '^[a-z0-9-]{1,32}:[A-Za-z0-9_-]{1,96}$'
+    Extensions:
+      type: object
+      description: Opaque client-owned JSON. Preserved verbatim, never interpreted, size-limited by capabilities.
+      additionalProperties: true
+    ResourceKind:
+      type: string
+      enum:
+        - campaign
+        - campaign_fear
+        - countdown
+        - campaign_public_notes
+        - campaign_private_notes
+        - attachment
+        - encounter
+        - encounter_link
+        - encounter_instance
+        - homebrew
+        - catalog_item
+        - conflict
+    HomebrewType:
+      type: string
+      description: The HomebrewTable names from src/lib/domain/permissions.ts.
+      enum:
+        - primary_weapons
+        - secondary_weapons
+        - armor
+        - loot
+        - consumables
+        - beastforms
+        - classes
+        - subclasses
+        - domains
+        - domain_cards
+        - ancestry_cards
+        - community_cards
+        - transformations
+        - character_sheet_addons
+        - adversaries
+        - environments
+    Provenance:
+      type: object
+      required: [origin]
+      additionalProperties: false
+      properties:
+        origin: { type: string, enum: [homebrew, official, campaign, encounter] }
+        owner:
+          description: Homebrew owner. Only the owner may write.
+          type: object
+          required: [user_id, display_name]
+          additionalProperties: false
+          properties:
+            user_id: { $ref: '#/components/schemas/Uuid' }
+            display_name: { type: string }
+        official:
+          description: Immutable official source of an official item.
+          $ref: '#/components/schemas/OfficialRef'
+    OfficialRef:
+      type: object
+      required: [source_key, item_type, item_id]
+      additionalProperties: false
+      properties:
+        origin: { const: official }
+        source_key: { type: string, minLength: 1 }
+        item_type: { type: string, enum: [adversaries, environments] }
+        item_id: { type: string, minLength: 1 }
+        item_version:
+          type: integer
+          minimum: 1
+          description: Pinned version. Absent means "latest unlocked version at read time".
+        legacy_id: { type: string }
+    HomebrewRef:
+      type: object
+      required: [origin, homebrew_id]
+      additionalProperties: false
+      properties:
+        origin: { const: homebrew }
+        homebrew_id: { $ref: '#/components/schemas/Uuid' }
+        legacy_id: { type: string }
+    CatalogRef:
+      description: |
+        A reference to an adversary or environment, never a copy. `legacy_id` preserves Daggerlore's original
+        `base_adversary_id` / `base_environment_id` string so web data round-trips unchanged.
+      oneOf:
+        - $ref: '#/components/schemas/HomebrewRef'
+        - allOf:
+            - $ref: '#/components/schemas/OfficialRef'
+            - required: [origin]
+
+    # ---------------------------------------------------------------- envelope
+    ResourceBase:
+      type: object
+      required: [id, kind, revision, created_at, updated_at, deleted_at, client_ref, readonly, provenance, extensions, data]
+      properties:
+        id: { type: string, minLength: 1 }
+        kind: { $ref: '#/components/schemas/ResourceKind' }
+        revision: { type: integer, minimum: 1 }
+        created_at: { $ref: '#/components/schemas/Timestamp' }
+        updated_at: { $ref: '#/components/schemas/Timestamp' }
+        deleted_at: { type: 'null' }
+        client_ref:
+          description: Set when this workspace created the resource (or was told it by a mapping); otherwise null.
+          oneOf: [{ $ref: '#/components/schemas/ClientRef' }, { type: 'null' }]
+        readonly:
+          type: boolean
+          description: True for official content and for homebrew owned by someone else.
+        provenance: { $ref: '#/components/schemas/Provenance' }
+        extensions: { $ref: '#/components/schemas/Extensions' }
+        data: {}
+    Tombstone:
+      type: object
+      required: [id, kind, revision, deleted_at, data]
+      additionalProperties: false
+      properties:
+        id: { type: string }
+        kind: { $ref: '#/components/schemas/ResourceKind' }
+        revision: { type: integer, minimum: 1 }
+        deleted_at: { $ref: '#/components/schemas/Timestamp' }
+        data: { type: 'null' }
+        type:
+          description: For homebrew tombstones, the homebrew type, so a client knows which cache a deletion belongs to.
+          $ref: '#/components/schemas/HomebrewType'
+        parent: { $ref: '#/components/schemas/Parent' }
+
+    # ---------------------------------------------------------------- campaign
+    CampaignData:
+      type: object
+      required: [name, fear_visible_to_players, enabled_source_keys, homebrew_vault, current_encounter_id]
+      additionalProperties: false
+      properties:
+        name: { type: string, minLength: 1 }
+        fear_visible_to_players: { type: boolean }
+        enabled_source_keys: { type: array, items: { type: string, minLength: 1 }, uniqueItems: true }
+        homebrew_vault:
+          description: |
+            References to homebrew by id (`CompendiumContentIds`), not copies. Includes sheet-related types so
+            they survive a desktop round trip even though the desktop cannot edit them.
+          type: object
+          required:
+            - primary_weapons
+            - secondary_weapons
+            - armor
+            - loot
+            - consumables
+            - beastforms
+            - classes
+            - subclasses
+            - domains
+            - domain_cards
+            - ancestry_cards
+            - community_cards
+            - transformations
+            - character_sheet_addons
+            - adversaries
+            - environments
+          additionalProperties: false
+          properties:
+            primary_weapons: { $ref: '#/components/schemas/UuidList' }
+            secondary_weapons: { $ref: '#/components/schemas/UuidList' }
+            armor: { $ref: '#/components/schemas/UuidList' }
+            loot: { $ref: '#/components/schemas/UuidList' }
+            consumables: { $ref: '#/components/schemas/UuidList' }
+            beastforms: { $ref: '#/components/schemas/UuidList' }
+            classes: { $ref: '#/components/schemas/UuidList' }
+            subclasses: { $ref: '#/components/schemas/UuidList' }
+            domains: { $ref: '#/components/schemas/UuidList' }
+            domain_cards: { $ref: '#/components/schemas/UuidList' }
+            ancestry_cards: { $ref: '#/components/schemas/UuidList' }
+            community_cards: { $ref: '#/components/schemas/UuidList' }
+            transformations: { $ref: '#/components/schemas/UuidList' }
+            character_sheet_addons: { $ref: '#/components/schemas/UuidList' }
+            adversaries: { $ref: '#/components/schemas/UuidList' }
+            environments: { $ref: '#/components/schemas/UuidList' }
+        current_encounter_id:
+          description: Must reference an encounter linked to this campaign, or be null.
+          oneOf: [{ $ref: '#/components/schemas/Uuid' }, { type: 'null' }]
+      x-server-rules:
+        - Every id in `homebrew_vault` names homebrew of the matching type that the principal may read.
+        - '`current_encounter_id` is an encounter linked to this campaign.'
+    UuidList: { type: array, items: { $ref: '#/components/schemas/Uuid' }, uniqueItems: true }
+    Campaign:
+      allOf:
+        - $ref: '#/components/schemas/ResourceBase'
+        - type: object
+          properties:
+            kind: { const: campaign }
+            data: { $ref: '#/components/schemas/CampaignData' }
+    CampaignWrite:
+      type: object
+      required: [data]
+      additionalProperties: false
+      properties:
+        data: { $ref: '#/components/schemas/CampaignData' }
+        extensions: { $ref: '#/components/schemas/Extensions' }
+    CampaignList:
+      type: object
+      required: [items, next_cursor]
+      properties:
+        items: { type: array, items: { $ref: '#/components/schemas/Campaign' } }
+        next_cursor: { type: [string, 'null'] }
+
+    CampaignFearData:
+      type: object
+      required: [value]
+      additionalProperties: false
+      properties:
+        value:
+          type: integer
+          minimum: 0
+          maximum: 12
+          description: Fear is a whole number from 0 to 12; there are no fractions of fear.
+    CampaignFear:
+      allOf:
+        - $ref: '#/components/schemas/ResourceBase'
+        - type: object
+          properties:
+            id: { $ref: '#/components/schemas/Uuid', description: The campaign id. }
+            kind: { const: campaign_fear }
+            data: { $ref: '#/components/schemas/CampaignFearData' }
+    CampaignFearWrite:
+      type: object
+      required: [data]
+      additionalProperties: false
+      properties:
+        data: { $ref: '#/components/schemas/CampaignFearData' }
+        extensions: { $ref: '#/components/schemas/Extensions' }
+
+    CountdownData:
+      type: object
+      required: [name, floor, reset_to, current, visible_to_players]
+      additionalProperties: false
+      properties:
+        name: { type: string }
+        floor:
+          type: integer
+          minimum: 0
+          description: Daggerlore `min`. Counting down never goes below it. Independent of `reset_to`.
+        reset_to:
+          description: |
+            Daggerdash `start`: the value a reset goes back to. `null` means no baseline was ever recorded
+            (all data created before this field existed); clients must not invent one on the server.
+          oneOf: [{ type: integer, minimum: 0 }, { type: 'null' }]
+        current: { type: integer, minimum: 0 }
+        visible_to_players: { type: boolean, description: Daggerlore `visibleToPlayers`; absent in old data reads as false. }
+      x-server-rules:
+        - '`floor` ≤ `reset_to` when `reset_to` is not null.'
+    Countdown:
+      allOf:
+        - $ref: '#/components/schemas/ResourceBase'
+        - type: object
+          properties:
+            kind: { const: countdown }
+            data: { $ref: '#/components/schemas/CountdownData' }
+            parent: { $ref: '#/components/schemas/Parent' }
+    Parent:
+      type: object
+      required: [kind, id]
+      properties:
+        kind: { $ref: '#/components/schemas/ResourceKind' }
+        id: { type: string }
+    CountdownCreate:
+      type: object
+      required: [client_ref, data]
+      additionalProperties: false
+      properties:
+        client_ref: { $ref: '#/components/schemas/ClientRef' }
+        position:
+          type: integer
+          minimum: 0
+          description: Index to insert at; default appends. GM order is the order of the list.
+        data: { $ref: '#/components/schemas/CountdownData' }
+        extensions: { $ref: '#/components/schemas/Extensions' }
+    CountdownWrite:
+      type: object
+      required: [data]
+      additionalProperties: false
+      properties:
+        position: { type: integer, minimum: 0 }
+        data: { $ref: '#/components/schemas/CountdownData' }
+        extensions: { $ref: '#/components/schemas/Extensions' }
+    CountdownList:
+      type: object
+      required: [items, next_cursor]
+      properties:
+        items:
+          type: array
+          items:
+            oneOf: [{ $ref: '#/components/schemas/Countdown' }, { $ref: '#/components/schemas/Tombstone' }]
+        next_cursor: { type: [string, 'null'] }
+
+    CampaignNotesData:
+      type: object
+      required: [markdown]
+      additionalProperties: false
+      properties:
+        markdown:
+          type: string
+          maxLength: 200000
+          description: Markdown source (CommonMark + GFM), exactly what the web editor stores. Rendered with sanitization by every reader.
+    CampaignNotes:
+      allOf:
+        - $ref: '#/components/schemas/ResourceBase'
+        - type: object
+          properties:
+            id: { $ref: '#/components/schemas/Uuid', description: The campaign id. }
+            kind: { enum: [campaign_public_notes, campaign_private_notes] }
+            data: { $ref: '#/components/schemas/CampaignNotesData' }
+    CampaignNotesWrite:
+      type: object
+      required: [data]
+      additionalProperties: false
+      properties:
+        data: { $ref: '#/components/schemas/CampaignNotesData' }
+        extensions: { $ref: '#/components/schemas/Extensions' }
+
+    AttachmentData:
+      type: object
+      required: [name, content_type, size, sha256, visibility, upload_state, uploaded_at]
+      additionalProperties: false
+      properties:
+        name: { type: string, minLength: 1, maxLength: 255 }
+        content_type:
+          type: string
+          enum: [image/jpeg, image/png, image/gif, image/webp, image/avif, application/pdf, text/plain, text/markdown]
+        size: { type: integer, minimum: 0, maximum: 10485760 }
+        sha256: { type: string, pattern: '^[0-9a-f]{64}$' }
+        visibility:
+          type: string
+          enum: [gm_only, players]
+          description: Existing web uploads read as `players` (every member can open them today).
+        upload_state: { type: string, enum: [pending, complete] }
+        uploaded_at: { oneOf: [{ $ref: '#/components/schemas/Timestamp' }, { type: 'null' }] }
+    Attachment:
+      allOf:
+        - $ref: '#/components/schemas/ResourceBase'
+        - type: object
+          properties:
+            kind: { const: attachment }
+            data: { $ref: '#/components/schemas/AttachmentData' }
+            parent: { $ref: '#/components/schemas/Parent' }
+    AttachmentCreate:
+      type: object
+      required: [client_ref, data]
+      additionalProperties: false
+      properties:
+        client_ref: { $ref: '#/components/schemas/ClientRef' }
+        data:
+          type: object
+          required: [name, content_type, size, sha256, visibility]
+          additionalProperties: false
+          properties:
+            name: { type: string, minLength: 1, maxLength: 255 }
+            content_type: { $ref: '#/components/schemas/AttachmentData/properties/content_type' }
+            size: { type: integer, minimum: 0, maximum: 10485760 }
+            sha256: { type: string, pattern: '^[0-9a-f]{64}$' }
+            visibility: { type: string, enum: [gm_only, players] }
+        extensions: { $ref: '#/components/schemas/Extensions' }
+    AttachmentWrite:
+      type: object
+      required: [data]
+      additionalProperties: false
+      properties:
+        data:
+          description: Only `name` and `visibility` are mutable; bytes are immutable once complete.
+          type: object
+          required: [name, visibility]
+          additionalProperties: false
+          properties:
+            name: { type: string, minLength: 1, maxLength: 255 }
+            visibility: { type: string, enum: [gm_only, players] }
+        extensions: { $ref: '#/components/schemas/Extensions' }
+    AttachmentList:
+      type: object
+      required: [items, next_cursor]
+      properties:
+        items:
+          type: array
+          items:
+            oneOf: [{ $ref: '#/components/schemas/Attachment' }, { $ref: '#/components/schemas/Tombstone' }]
+        next_cursor: { type: [string, 'null'] }
+
+    # ---------------------------------------------------------------- encounters
+    Condition:
+      description: |
+        A condition is an object. Names are free-form: the three rule conditions (Vulnerable, Restrained, Hidden)
+        and any custom name round-trip identically. `enabled: false` is a remembered-but-off condition.
+      $ref: 'schemas/domain.generated.json#/$defs/condition'
+    InstanceRef:
+      type: object
+      required: [instance_id]
+      additionalProperties: false
+      properties:
+        instance_id: { $ref: '#/components/schemas/Uuid' }
+    InstanceRefInput:
+      description: An existing instance (`instance_id`) or a new one (`{}`; the server assigns the id).
+      type: object
+      additionalProperties: false
+      properties:
+        instance_id: { $ref: '#/components/schemas/Uuid' }
+    AdversaryItem:
+      type: object
+      required: [item_id, type, ref, instances]
+      additionalProperties: false
+      properties:
+        item_id: { $ref: '#/components/schemas/Uuid' }
+        type: { const: adversary }
+        ref: { $ref: '#/components/schemas/CatalogRef' }
+        edited_adversary:
+          description: This encounter's own copy of the adversary (a real copy, with `ref` as its base).
+          $ref: 'schemas/domain.generated.json#/$defs/adversaries'
+        instances:
+          description: Instance membership and order. Names, marks and conditions are live state (`EncounterInstance`).
+          type: array
+          items: { $ref: '#/components/schemas/InstanceRef' }
+    AdversaryItemInput:
+      type: object
+      required: [type, ref, instances]
+      additionalProperties: false
+      properties:
+        item_id:
+          description: Present for an existing item; absent for a new one (the server assigns it).
+          $ref: '#/components/schemas/Uuid'
+        type: { const: adversary }
+        ref: { $ref: '#/components/schemas/CatalogRef' }
+        edited_adversary:
+          $ref: 'schemas/domain.generated.json#/$defs/adversaries'
+        instances:
+          type: array
+          items: { $ref: '#/components/schemas/InstanceRefInput' }
+    EnvironmentItem:
+      type: object
+      required: [item_id, type, ref]
+      additionalProperties: false
+      properties:
+        item_id: { $ref: '#/components/schemas/Uuid' }
+        type: { const: environment }
+        ref: { $ref: '#/components/schemas/CatalogRef' }
+        edited_environment:
+          $ref: 'schemas/domain.generated.json#/$defs/environments'
+    EnvironmentItemInput:
+      type: object
+      required: [type, ref]
+      additionalProperties: false
+      properties:
+        item_id:
+          description: Present for an existing item; absent for a new one (the server assigns it).
+          $ref: '#/components/schemas/Uuid'
+        type: { const: environment }
+        ref: { $ref: '#/components/schemas/CatalogRef' }
+        edited_environment:
+          $ref: 'schemas/domain.generated.json#/$defs/environments'
+    EncounterSettings:
+      type: object
+      required: [name, description_html, condition_list, enable_massive_damage, number_of_players, encounter_tier, bonus_damage, extra_battle_points]
+      properties:
+        name: { type: string }
+        description_html: { type: string, description: Sanitized HTML. }
+        condition_list:
+          description: |
+            The custom condition names this encounter offers (Daggerlore `condition_list`). `null` = never set
+            (use the defaults). Preserved verbatim, including names the desktop does not model.
+          oneOf: [{ type: array, items: { type: string, minLength: 1 } }, { type: 'null' }]
+        enable_massive_damage: { type: boolean }
+        number_of_players: { type: integer, minimum: 1 }
+        encounter_tier: { type: integer, enum: [1, 2, 3, 4] }
+        bonus_damage: { type: boolean }
+        extra_battle_points: { type: integer }
+    EncounterData:
+      description: |
+        An encounter belongs to its owner, not to a campaign: it is a reusable library entity that campaigns
+        reference through `EncounterLink`s. The server owns every `item_id` and `instance_id`.
+      allOf:
+        - $ref: '#/components/schemas/EncounterSettings'
+        - type: object
+          required: [items]
+          properties:
+            items:
+              description: Ordered, mixed adversary/environment items. Array order is the canonical order.
+              type: array
+              items:
+                oneOf:
+                  - $ref: '#/components/schemas/AdversaryItem'
+                  - $ref: '#/components/schemas/EnvironmentItem'
+                discriminator: { propertyName: type }
+      unevaluatedProperties: false
+      x-server-rules:
+        - '`item_id` and `instance_id` values are unique within the encounter.'
+        - Every `ref` resolves to something the principal can read.
+    EncounterWriteData:
+      description: |
+        Like `EncounterData`, but new items and new instances omit their ids and the server assigns them; the response
+        carries the assigned ids and the client records the mapping. An id that is present must already belong to this
+        encounter (a client cannot invent ids).
+      allOf:
+        - $ref: '#/components/schemas/EncounterSettings'
+        - type: object
+          required: [items]
+          properties:
+            items:
+              type: array
+              items:
+                oneOf:
+                  - $ref: '#/components/schemas/AdversaryItemInput'
+                  - $ref: '#/components/schemas/EnvironmentItemInput'
+                discriminator: { propertyName: type }
+      unevaluatedProperties: false
+      x-server-rules:
+        - A present `item_id` or `instance_id` belongs to this encounter and appears once.
+        - Every `ref` resolves to something the principal can read.
+    NewInstanceState:
+      description: |
+        Live state for instances created by this very write, addressed by their position in the submitted `items`
+        (the server has not assigned their ids yet). Instances without an entry start with default state.
+      type: array
+      items:
+        type: object
+        required: [item_index, instance_index, data]
+        additionalProperties: false
+        properties:
+          item_index: { type: integer, minimum: 0 }
+          instance_index: { type: integer, minimum: 0 }
+          data: { $ref: '#/components/schemas/EncounterInstanceData' }
+    Encounter:
+      allOf:
+        - $ref: '#/components/schemas/ResourceBase'
+        - type: object
+          properties:
+            kind: { const: encounter }
+            data: { $ref: '#/components/schemas/EncounterData' }
+            campaign_ids:
+              description: Selected campaigns this encounter is linked to (read-only mirror of `EncounterLink`s).
+              type: array
+              items: { $ref: '#/components/schemas/Uuid' }
+              uniqueItems: true
+          required: [campaign_ids]
+    EncounterCreate:
+      type: object
+      required: [client_ref, data]
+      additionalProperties: false
+      properties:
+        client_ref: { $ref: '#/components/schemas/ClientRef' }
+        campaign_ids:
+          description: |
+            Selected campaigns to link at creation. May be empty or absent: an encounter is a library entity and
+            links are added and removed independently.
+          type: array
+          items: { $ref: '#/components/schemas/Uuid' }
+          uniqueItems: true
+        data: { $ref: '#/components/schemas/EncounterWriteData' }
+        new_instance_state: { $ref: '#/components/schemas/NewInstanceState' }
+        extensions: { $ref: '#/components/schemas/Extensions' }
+    EncounterWrite:
+      type: object
+      required: [data]
+      additionalProperties: false
+      properties:
+        data: { $ref: '#/components/schemas/EncounterWriteData' }
+        new_instance_state: { $ref: '#/components/schemas/NewInstanceState' }
+        extensions: { $ref: '#/components/schemas/Extensions' }
+    EncounterList:
+      type: object
+      required: [items, next_cursor]
+      properties:
+        items:
+          type: array
+          items:
+            oneOf: [{ $ref: '#/components/schemas/Encounter' }, { $ref: '#/components/schemas/Tombstone' }]
+        next_cursor: { type: [string, 'null'] }
+    EncounterLinkData:
+      type: object
+      required: [campaign_id, encounter_id]
+      additionalProperties: false
+      properties:
+        campaign_id: { $ref: '#/components/schemas/Uuid' }
+        encounter_id: { $ref: '#/components/schemas/Uuid' }
+    EncounterLink:
+      allOf:
+        - $ref: '#/components/schemas/ResourceBase'
+        - type: object
+          properties:
+            id:
+              type: string
+              description: '`<campaign_id>~<encounter_id>`'
+            kind: { const: encounter_link }
+            data: { $ref: '#/components/schemas/EncounterLinkData' }
+    EncounterLinkList:
+      type: object
+      required: [items, next_cursor]
+      properties:
+        items:
+          type: array
+          items:
+            oneOf: [{ $ref: '#/components/schemas/EncounterLink' }, { $ref: '#/components/schemas/Tombstone' }]
+        next_cursor: { type: [string, 'null'] }
+    EncounterInstanceData:
+      type: object
+      required: [name, marked_hp, marked_stress, conditions]
+      additionalProperties: false
+      properties:
+        name: { type: string }
+        marked_hp: { type: integer, minimum: 0 }
+        marked_stress: { type: integer, minimum: 0 }
+        conditions: { type: array, items: { $ref: '#/components/schemas/Condition' } }
+    EncounterInstance:
+      allOf:
+        - $ref: '#/components/schemas/ResourceBase'
+        - type: object
+          properties:
+            id: { $ref: '#/components/schemas/Uuid', description: The `instance_id`. }
+            kind: { const: encounter_instance }
+            data: { $ref: '#/components/schemas/EncounterInstanceData' }
+            parent: { $ref: '#/components/schemas/Parent' }
+    EncounterInstanceWrite:
+      type: object
+      required: [data]
+      additionalProperties: false
+      properties:
+        data: { $ref: '#/components/schemas/EncounterInstanceData' }
+        extensions: { $ref: '#/components/schemas/Extensions' }
+    EncounterInstanceList:
+      type: object
+      required: [items, next_cursor]
+      properties:
+        items:
+          type: array
+          items:
+            oneOf: [{ $ref: '#/components/schemas/EncounterInstance' }, { $ref: '#/components/schemas/Tombstone' }]
+        next_cursor: { type: [string, 'null'] }
+
+    # ---------------------------------------------------------------- homebrew
+    HomebrewTypedData:
+      description: |
+        `data` is the domain schema for `type`, verbatim (generated from the zod types; refinements are server
+        rules, listed in `x-server-rules`). Exactly one branch matches because `type` is constant per branch.
+      oneOf:
+        - { properties: { type: { const: primary_weapons }, data: { $ref: 'schemas/domain.generated.json#/$defs/primary_weapons' } }, required: [type, data] }
+        - { properties: { type: { const: secondary_weapons }, data: { $ref: 'schemas/domain.generated.json#/$defs/secondary_weapons' } }, required: [type, data] }
+        - { properties: { type: { const: armor }, data: { $ref: 'schemas/domain.generated.json#/$defs/armor' } }, required: [type, data] }
+        - { properties: { type: { const: loot }, data: { $ref: 'schemas/domain.generated.json#/$defs/loot' } }, required: [type, data] }
+        - { properties: { type: { const: consumables }, data: { $ref: 'schemas/domain.generated.json#/$defs/consumables' } }, required: [type, data] }
+        - { properties: { type: { const: beastforms }, data: { $ref: 'schemas/domain.generated.json#/$defs/beastforms' } }, required: [type, data] }
+        - { properties: { type: { const: classes }, data: { $ref: 'schemas/domain.generated.json#/$defs/classes' } }, required: [type, data] }
+        - { properties: { type: { const: subclasses }, data: { $ref: 'schemas/domain.generated.json#/$defs/subclasses' } }, required: [type, data] }
+        - { properties: { type: { const: domains }, data: { $ref: 'schemas/domain.generated.json#/$defs/domains' } }, required: [type, data] }
+        - { properties: { type: { const: domain_cards }, data: { $ref: 'schemas/domain.generated.json#/$defs/domain_cards' } }, required: [type, data] }
+        - { properties: { type: { const: ancestry_cards }, data: { $ref: 'schemas/domain.generated.json#/$defs/ancestry_cards' } }, required: [type, data] }
+        - { properties: { type: { const: community_cards }, data: { $ref: 'schemas/domain.generated.json#/$defs/community_cards' } }, required: [type, data] }
+        - { properties: { type: { const: transformations }, data: { $ref: 'schemas/domain.generated.json#/$defs/transformations' } }, required: [type, data] }
+        - { properties: { type: { const: character_sheet_addons }, data: { $ref: 'schemas/domain.generated.json#/$defs/character_sheet_addons' } }, required: [type, data] }
+        - { properties: { type: { const: adversaries }, data: { $ref: 'schemas/domain.generated.json#/$defs/adversaries' } }, required: [type, data] }
+        - { properties: { type: { const: environments }, data: { $ref: 'schemas/domain.generated.json#/$defs/environments' } }, required: [type, data] }
+      x-server-rules:
+        - Adversary `experiences` and `experience_modifiers` are parallel arrays of equal length.
+        - Class `primary_domain_id` differs from `secondary_domain_id`; `subclass_ids` are unique (case-insensitive).
+        - Domain cards require a non-empty `domain_id`.
+        - Card `options` choice and selection ids are unique, and conditional choices reference existing ones.
+        - Feature downtime allowance ids are unique; `requires_active_effect` names an existing effect.
+        - The server stores `data.source_key` as `Homebrew` whatever the client sends (as the web app does today).
+    Homebrew:
+      allOf:
+        - $ref: '#/components/schemas/ResourceBase'
+        - $ref: '#/components/schemas/HomebrewTypedData'
+        - type: object
+          properties:
+            kind: { const: homebrew }
+    HomebrewCreate:
+      allOf:
+        - $ref: '#/components/schemas/HomebrewTypedData'
+        - type: object
+          required: [client_ref, type, data]
+          properties:
+            client_ref: { $ref: '#/components/schemas/ClientRef' }
+            type: { $ref: '#/components/schemas/HomebrewType' }
+            data: {}
+            add_to_campaign_ids:
+              description: |
+                Selected campaigns whose `homebrew_vault` should reference the new item. Each is a campaign
+                settings revision, journaled in the same transaction. Default none (the item is only in the
+                owner's personal vault, which the server always updates).
+              type: array
+              items: { $ref: '#/components/schemas/Uuid' }
+              uniqueItems: true
+            extensions: { $ref: '#/components/schemas/Extensions' }
+          unevaluatedProperties: false
+    HomebrewWrite:
+      allOf:
+        - $ref: '#/components/schemas/HomebrewTypedData'
+        - type: object
+          required: [type, data]
+          properties:
+            type: { $ref: '#/components/schemas/HomebrewType' }
+            data: {}
+            extensions: { $ref: '#/components/schemas/Extensions' }
+          unevaluatedProperties: false
+    HomebrewList:
+      type: object
+      required: [items, next_cursor]
+      properties:
+        items:
+          type: array
+          items:
+            oneOf: [{ $ref: '#/components/schemas/Homebrew' }, { $ref: '#/components/schemas/Tombstone' }]
+        next_cursor: { type: [string, 'null'] }
+
+    # ---------------------------------------------------------------- catalog
+    CatalogItem:
+      allOf:
+        - $ref: '#/components/schemas/ResourceBase'
+        - type: object
+          required: [type]
+          properties:
+            kind: { const: catalog_item }
+            type: { type: string, enum: [adversaries, environments] }
+            readonly: { const: true }
+            revision:
+              type: integer
+              description: The official `item_version`.
+            data:
+              oneOf:
+                - { $ref: 'schemas/domain.generated.json#/$defs/adversaries' }
+                - { $ref: 'schemas/domain.generated.json#/$defs/environments' }
+    CatalogSource:
+      type: object
+      required: [source_key, name, short_title]
+      additionalProperties: false
+      properties:
+        source_key: { type: string, minLength: 1 }
+        name: { type: string }
+        short_title: { type: string }
+    CatalogItemList:
+      type: object
+      required: [items, next_cursor]
+      properties:
+        items: { type: array, items: { $ref: '#/components/schemas/CatalogItem' } }
+        next_cursor: { type: [string, 'null'] }
+
+    # ---------------------------------------------------------------- conflicts
+    VersionBody:
+      type: object
+      required: [data, extensions]
+      additionalProperties: false
+      properties:
+        data: {}
+        extensions: { $ref: '#/components/schemas/Extensions' }
+        revision: { type: [integer, 'null'], minimum: 1 }
+        deleted: { type: boolean, default: false }
+    ConflictCreate:
+      type: object
+      required: [target, base_revision, local]
+      additionalProperties: false
+      properties:
+        target:
+          type: object
+          required: [kind, id]
+          additionalProperties: false
+          properties:
+            kind: { $ref: '#/components/schemas/ResourceKind' }
+            id: { type: string }
+        base_revision: { type: integer, minimum: 1 }
+        local: { $ref: '#/components/schemas/VersionBody' }
+    ConflictData:
+      type: object
+      required: [target, state, base_revision, local, server, created_by_workspace]
+      properties:
+        target:
+          type: object
+          required: [kind, id]
+          properties:
+            kind: { $ref: '#/components/schemas/ResourceKind' }
+            id: { type: string }
+        state: { type: string, enum: [open, resolved] }
+        base_revision: { type: integer, minimum: 1 }
+        local: { $ref: '#/components/schemas/VersionBody' }
+        server:
+          description: The server version at the time the conflict was recorded (may be a deletion).
+          $ref: '#/components/schemas/VersionBody'
+        created_by_workspace: { $ref: '#/components/schemas/Uuid' }
+        resolution:
+          type: [object, 'null']
+          properties:
+            choice: { type: string, enum: [keep_server, keep_local, merged] }
+            resolved_at: { $ref: '#/components/schemas/Timestamp' }
+            result_revision: { type: integer, minimum: 1 }
+            discarded:
+              description: The version that did not win. Kept for the life of the campaign.
+              $ref: '#/components/schemas/VersionBody'
+    Conflict:
+      allOf:
+        - $ref: '#/components/schemas/ResourceBase'
+        - type: object
+          properties:
+            kind: { const: conflict }
+            data: { $ref: '#/components/schemas/ConflictData' }
+    ConflictResolutionInput:
+      type: object
+      required: [choice, expected_target_revision]
+      additionalProperties: false
+      properties:
+        choice: { type: string, enum: [keep_server, keep_local, merged] }
+        expected_target_revision:
+          type: integer
+          minimum: 1
+          description: The target revision the GM looked at; a newer one makes the resolution `412 stale_revision`.
+        merged:
+          description: Required when `choice` is `merged`.
+          type: object
+          required: [data]
+          additionalProperties: false
+          properties:
+            data: {}
+            extensions: { $ref: '#/components/schemas/Extensions' }
+    ConflictList:
+      type: object
+      required: [items, next_cursor]
+      properties:
+        items: { type: array, items: { $ref: '#/components/schemas/Conflict' } }
+        next_cursor: { type: [string, 'null'] }
+
+    # ---------------------------------------------------------------- sync
+    AnyResource:
+      oneOf:
+        - { $ref: '#/components/schemas/Campaign' }
+        - { $ref: '#/components/schemas/CampaignFear' }
+        - { $ref: '#/components/schemas/Countdown' }
+        - { $ref: '#/components/schemas/CampaignNotes' }
+        - { $ref: '#/components/schemas/Attachment' }
+        - { $ref: '#/components/schemas/Encounter' }
+        - { $ref: '#/components/schemas/EncounterLink' }
+        - { $ref: '#/components/schemas/EncounterInstance' }
+        - { $ref: '#/components/schemas/Homebrew' }
+        - { $ref: '#/components/schemas/CatalogItem' }
+        - { $ref: '#/components/schemas/Conflict' }
+        - { $ref: '#/components/schemas/Tombstone' }
+    SnapshotPage:
+      type: object
+      required: [snapshot_cursor, items, next_page_token]
+      additionalProperties: false
+      properties:
+        snapshot_cursor:
+          $ref: '#/components/schemas/Cursor'
+        items: { type: array, items: { $ref: '#/components/schemas/AnyResource' } }
+        next_page_token: { type: [string, 'null'] }
+    Change:
+      type: object
+      required: [cursor, op, kind, id, revision, occurred_at, actor]
+      additionalProperties: false
+      properties:
+        cursor: { $ref: '#/components/schemas/Cursor' }
+        op:
+          type: string
+          enum: [upsert, delete, purge]
+          description: |
+            `upsert` and `delete` carry the new revision. `purge` tells the client to stop syncing the target
+            (grant narrowed, campaign deselected, encounter unlinked from the last selected campaign, token
+            scope lost). A purge is not a deletion: clients keep local primary data and only drop remote-only caches.
+        kind: { $ref: '#/components/schemas/ResourceKind' }
+        id: { type: string }
+        revision: { type: integer, minimum: 1 }
+        occurred_at: { $ref: '#/components/schemas/Timestamp' }
+        reason:
+          type: string
+          enum: [deselected, unlinked, scope_reduced, revoked, owner_changed]
+        parent: { $ref: '#/components/schemas/Parent' }
+        resource:
+          description: 'Embedded when the serialized resource is at most 64 KiB; otherwise absent with `fetch: true`.'
+          oneOf: [{ $ref: '#/components/schemas/AnyResource' }, { type: 'null' }]
+        fetch: { type: boolean, default: false }
+        actor:
+          type: object
+          required: [kind]
+          additionalProperties: false
+          properties:
+            kind: { type: string, enum: [web, desktop, system] }
+            workspace_id:
+              description: Lets a client recognise its own echo. It must still advance its stored revision.
+              oneOf: [{ $ref: '#/components/schemas/Uuid' }, { type: 'null' }]
+            idempotency_key: { type: [string, 'null'] }
+    ChangePage:
+      type: object
+      required: [changes, next_cursor, has_more]
+      additionalProperties: false
+      properties:
+        changes: { type: array, items: { $ref: '#/components/schemas/Change' } }
+        next_cursor: { $ref: '#/components/schemas/Cursor' }
+        has_more: { type: boolean }
+
+    # ---------------------------------------------------------------- meta
+    Capabilities:
+      type: object
+      required: [api_version, kinds, limits, sync, scopes]
+      additionalProperties: false
+      properties:
+        api_version: { type: string, const: v1 }
+        kinds: { type: array, items: { $ref: '#/components/schemas/ResourceKind' } }
+        homebrew_types: { type: array, items: { $ref: '#/components/schemas/HomebrewType' } }
+        scopes:
+          type: array
+          items: { type: string, enum: [campaigns, homebrew:all, encounters:all, catalog:unlocked] }
+          description: What this grant allows.
+        limits:
+          type: object
+          required: [max_page_size, max_body_bytes, max_attachment_bytes, max_extensions_bytes, idempotency_retention_hours, change_retention_days]
+          additionalProperties: false
+          properties:
+            max_page_size: { type: integer }
+            max_body_bytes: { type: integer }
+            max_attachment_bytes: { type: integer }
+            max_extensions_bytes: { type: integer }
+            idempotency_retention_hours: { type: integer }
+            change_retention_days: { type: integer }
+        sync:
+          type: object
+          required: [target_p95_ms, target_p99_ms, server_delivery_p95_ms, long_poll_max_wait_ms, fallback_poll_interval_ms, mechanism]
+          additionalProperties: false
+          properties:
+            target_p95_ms: { type: integer, const: 5000 }
+            target_p99_ms: { type: integer, const: 10000 }
+            server_delivery_p95_ms: { type: integer, const: 2000 }
+            long_poll_max_wait_ms: { type: integer, const: 25000 }
+            fallback_poll_interval_ms: { type: integer, const: 3000 }
+            mechanism: { type: string, const: long-poll }
+    Workspace:
+      type: object
+      required: [workspace_id, user_id, grant_revision, scopes, campaigns, available_campaigns]
+      additionalProperties: false
+      properties:
+        workspace_id: { $ref: '#/components/schemas/Uuid' }
+        user_id: { $ref: '#/components/schemas/Uuid' }
+        grant_revision:
+          type: integer
+          minimum: 1
+          description: Same counter as the `X-Grant-Revision` header on sync responses.
+        scopes:
+          type: array
+          items: { type: string, enum: [campaigns, homebrew:all, encounters:all, catalog:unlocked] }
+          uniqueItems: true
+        campaigns:
+          description: Explicitly selected campaigns.
+          type: array
+          items:
+            type: object
+            required: [campaign_id, name, selected_at]
+            additionalProperties: false
+            properties:
+              campaign_id: { $ref: '#/components/schemas/Uuid' }
+              name: { type: string }
+              selected_at: { $ref: '#/components/schemas/Timestamp' }
+        available_campaigns:
+          description: Campaigns the account GMs that are not selected. Never enrolled implicitly.
+          type: array
+          items:
+            type: object
+            required: [campaign_id, name]
+            additionalProperties: false
+            properties:
+              campaign_id: { $ref: '#/components/schemas/Uuid' }
+              name: { type: string }
+    ScopeRequestInput:
+      type: object
+      additionalProperties: false
+      minProperties: 1
+      properties:
+        add_campaign_ids: { type: array, items: { $ref: '#/components/schemas/Uuid' }, uniqueItems: true }
+        add_scopes:
+          type: array
+          items: { type: string, enum: [homebrew:all, encounters:all, catalog:unlocked] }
+          uniqueItems: true
+    ScopeRequest:
+      type: object
+      required: [request_id, state, consent_url, expires_at]
+      additionalProperties: false
+      properties:
+        request_id: { $ref: '#/components/schemas/Uuid' }
+        state: { type: string, enum: [pending, approved, denied, expired] }
+        consent_url: { type: string, format: uri }
+        expires_at: { $ref: '#/components/schemas/Timestamp' }
+
+    # ---------------------------------------------------------------- errors
+    ErrorCode:
+      type: string
+      enum:
+        - unauthenticated
+        - token_revoked
+        - forbidden
+        - scope_not_granted
+        - official_immutable
+        - readonly_resource
+        - not_found
+        - cursor_expired
+        - stale_revision
+        - precondition_required
+        - conflict
+        - client_ref_conflict
+        - idempotency_key_reuse
+        - validation_failed
+        - payload_too_large
+        - unsupported_media_type
+        - rate_limited
+        - unavailable
+        - internal_error
+    FieldError:
+      type: object
+      required: [pointer, code, message]
+      additionalProperties: false
+      properties:
+        pointer: { type: string, description: 'JSON Pointer into the request body.' }
+        code: { type: string }
+        message: { type: string }
+    Problem:
+      type: object
+      required: [type, title, status, code, retryable, request_id]
+      properties:
+        type: { type: string, format: uri-reference }
+        title: { type: string }
+        status: { type: integer, minimum: 400, maximum: 599 }
+        code: { $ref: '#/components/schemas/ErrorCode' }
+        detail: { type: string }
+        retryable:
+          type: boolean
+          description: True when the identical request may succeed later (429, 503, a lost race on `client_ref`).
+        retry_after_ms: { type: integer, minimum: 0 }
+        request_id: { type: string }
+        field_errors: { type: array, items: { $ref: '#/components/schemas/FieldError' } }
+        current:
+          description: On `stale_revision` and `conflict`, the server's current version of the target.
+          $ref: '#/components/schemas/AnyResource'
+        conflict_id:
+          description: 'Set on `conflict` when `Prefer: conflict=park` recorded the submitted version.'
+          $ref: '#/components/schemas/Uuid'

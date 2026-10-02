@@ -1,0 +1,5 @@
+{
+  "source_key": "Homebrew", "level_requirement": 2, "title": "Foundry Apron",
+  "description_html": "<p>Thick leather, scorched at the hem.</p>",
+  "max_armor": 4, "damage_thresholds": { "major": 7, "severe": 14 }, "features": []
+}

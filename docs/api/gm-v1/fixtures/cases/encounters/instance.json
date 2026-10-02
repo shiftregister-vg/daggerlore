@@ -1,0 +1,306 @@
+{
+  "name": "Instance live state: custom and disabled conditions, invalid marks, stale",
+  "kind": "encounter_instance",
+  "steps": [
+    {
+      "label": "update-ok-custom-condition",
+      "class": "ok",
+      "operation": "putEncounterInstance",
+      "request": {
+        "path": {
+          "encounterId": "e5c0a1b2-6d7e-4f80-91a2-b3c4d5e6f708",
+          "instanceId": "44444444-0000-4000-8000-000000000002"
+        },
+        "headers": {
+          "If-Match": "\"4\""
+        },
+        "body": {
+          "data": {
+            "name": "Wisp Two",
+            "marked_hp": 3,
+            "marked_stress": 1,
+            "conditions": [
+              {
+                "name": "Vulnerable",
+                "enabled": true
+              },
+              {
+                "name": "Burning",
+                "enabled": true
+              },
+              {
+                "name": "Hidden",
+                "enabled": false
+              }
+            ]
+          }
+        }
+      },
+      "response": {
+        "status": 200,
+        "headers": {
+          "ETag": "\"5\""
+        },
+        "body": {
+          "id": "44444444-0000-4000-8000-000000000002",
+          "kind": "encounter_instance",
+          "revision": 5,
+          "created_at": "2026-10-02T09:00:00Z",
+          "updated_at": "2026-10-02T09:05:12Z",
+          "deleted_at": null,
+          "client_ref": null,
+          "readonly": false,
+          "provenance": {
+            "origin": "campaign"
+          },
+          "extensions": {},
+          "data": {
+            "name": "Wisp Two",
+            "marked_hp": 3,
+            "marked_stress": 1,
+            "conditions": [
+              {
+                "name": "Vulnerable",
+                "enabled": true
+              },
+              {
+                "name": "Burning",
+                "enabled": true
+              },
+              {
+                "name": "Hidden",
+                "enabled": false
+              }
+            ]
+          },
+          "parent": {
+            "kind": "encounter",
+            "id": "e5c0a1b2-6d7e-4f80-91a2-b3c4d5e6f708"
+          }
+        }
+      }
+    },
+    {
+      "label": "invalid-negative-hp",
+      "class": "invalid",
+      "operation": "putEncounterInstance",
+      "request": {
+        "path": {
+          "encounterId": "e5c0a1b2-6d7e-4f80-91a2-b3c4d5e6f708",
+          "instanceId": "44444444-0000-4000-8000-000000000002"
+        },
+        "headers": {
+          "If-Match": "\"5\""
+        },
+        "body": {
+          "data": {
+            "name": "Wisp Two",
+            "marked_hp": -1,
+            "marked_stress": 1,
+            "conditions": [
+              {
+                "name": "Vulnerable",
+                "enabled": true
+              },
+              {
+                "name": "Burning",
+                "enabled": true
+              },
+              {
+                "name": "Hidden",
+                "enabled": false
+              }
+            ]
+          }
+        }
+      },
+      "response": {
+        "status": 422,
+        "body": {
+          "type": "https://daggerlore.app/problems/validation_failed",
+          "title": "Invalid instance",
+          "status": 422,
+          "code": "validation_failed",
+          "retryable": false,
+          "request_id": "req_01HZX0439",
+          "field_errors": [
+            {
+              "pointer": "/data/marked_hp",
+              "code": "minimum",
+              "message": "Marked HP cannot be negative"
+            }
+          ]
+        }
+      },
+      "validation": "schema"
+    },
+    {
+      "label": "stale",
+      "class": "stale",
+      "operation": "putEncounterInstance",
+      "request": {
+        "path": {
+          "encounterId": "e5c0a1b2-6d7e-4f80-91a2-b3c4d5e6f708",
+          "instanceId": "44444444-0000-4000-8000-000000000002"
+        },
+        "headers": {
+          "If-Match": "\"4\""
+        },
+        "body": {
+          "data": {
+            "name": "Wisp Two",
+            "marked_hp": 3,
+            "marked_stress": 1,
+            "conditions": [
+              {
+                "name": "Vulnerable",
+                "enabled": true
+              },
+              {
+                "name": "Burning",
+                "enabled": true
+              },
+              {
+                "name": "Hidden",
+                "enabled": false
+              }
+            ]
+          }
+        }
+      },
+      "response": {
+        "status": 412,
+        "body": {
+          "type": "https://daggerlore.app/problems/stale_revision",
+          "title": "Instance changed",
+          "status": 412,
+          "code": "stale_revision",
+          "retryable": false,
+          "request_id": "req_01HZX0426",
+          "current": {
+            "id": "44444444-0000-4000-8000-000000000002",
+            "kind": "encounter_instance",
+            "revision": 6,
+            "created_at": "2026-10-02T09:00:00Z",
+            "updated_at": "2026-10-02T09:05:12Z",
+            "deleted_at": null,
+            "client_ref": null,
+            "readonly": false,
+            "provenance": {
+              "origin": "campaign"
+            },
+            "extensions": {},
+            "data": {
+              "name": "Wisp Two",
+              "marked_hp": 5,
+              "marked_stress": 1,
+              "conditions": [
+                {
+                  "name": "Vulnerable",
+                  "enabled": true
+                },
+                {
+                  "name": "Burning",
+                  "enabled": true
+                },
+                {
+                  "name": "Hidden",
+                  "enabled": false
+                }
+              ]
+            },
+            "parent": {
+              "kind": "encounter",
+              "id": "e5c0a1b2-6d7e-4f80-91a2-b3c4d5e6f708"
+            }
+          }
+        }
+      }
+    },
+    {
+      "label": "stale-parked",
+      "class": "stale",
+      "operation": "putEncounterInstance",
+      "request": {
+        "path": {
+          "encounterId": "e5c0a1b2-6d7e-4f80-91a2-b3c4d5e6f708",
+          "instanceId": "44444444-0000-4000-8000-000000000002"
+        },
+        "headers": {
+          "If-Match": "\"4\"",
+          "Prefer": "conflict=park"
+        },
+        "body": {
+          "data": {
+            "name": "Wisp Two",
+            "marked_hp": 3,
+            "marked_stress": 1,
+            "conditions": [
+              {
+                "name": "Vulnerable",
+                "enabled": true
+              },
+              {
+                "name": "Burning",
+                "enabled": true
+              },
+              {
+                "name": "Hidden",
+                "enabled": false
+              }
+            ]
+          }
+        }
+      },
+      "response": {
+        "status": 409,
+        "body": {
+          "type": "https://daggerlore.app/problems/conflict",
+          "title": "Instance changed; your version was kept",
+          "status": 409,
+          "code": "conflict",
+          "retryable": false,
+          "request_id": "req_01HZX0417",
+          "current": {
+            "id": "44444444-0000-4000-8000-000000000002",
+            "kind": "encounter_instance",
+            "revision": 6,
+            "created_at": "2026-10-02T09:00:00Z",
+            "updated_at": "2026-10-02T09:05:12Z",
+            "deleted_at": null,
+            "client_ref": null,
+            "readonly": false,
+            "provenance": {
+              "origin": "campaign"
+            },
+            "extensions": {},
+            "data": {
+              "name": "Wisp Two",
+              "marked_hp": 5,
+              "marked_stress": 1,
+              "conditions": [
+                {
+                  "name": "Vulnerable",
+                  "enabled": true
+                },
+                {
+                  "name": "Burning",
+                  "enabled": true
+                },
+                {
+                  "name": "Hidden",
+                  "enabled": false
+                }
+              ]
+            },
+            "parent": {
+              "kind": "encounter",
+              "id": "e5c0a1b2-6d7e-4f80-91a2-b3c4d5e6f708"
+            }
+          },
+          "conflict_id": "f0e1d2c3-b4a5-4968-8776-655443322110"
+        }
+      }
+    }
+  ]
+}

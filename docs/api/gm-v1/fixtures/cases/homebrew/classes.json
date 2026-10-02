@@ -1,0 +1,663 @@
+{
+  "name": "Homebrew classes: create, replay, invalid, update, stale, delete",
+  "kind": "homebrew",
+  "type": "classes",
+  "steps": [
+    {
+      "label": "create-ok",
+      "class": "ok",
+      "operation": "createHomebrew",
+      "request": {
+        "headers": {
+          "Idempotency-Key": "ob-hb-classes"
+        },
+        "body": {
+          "client_ref": "daggerdash:636c61737365730000000000000000ab",
+          "type": "classes",
+          "data": {
+            "source_key": "Homebrew",
+            "title": "Foundryborn",
+            "image_url": "",
+            "artist_name": "",
+            "description_html": "<p>Smiths who carry the forge with them.</p>",
+            "starting_evasion": 10,
+            "starting_max_hp": 6,
+            "hope_feature": {
+              "title": "Stoke",
+              "description_html": "<p>Spend Hope to add heat.</p>",
+              "character_modifiers": [],
+              "weapon_modifiers": []
+            },
+            "class_features": [],
+            "subclass_ids": [],
+            "suggested_traits": {
+              "strength": 2,
+              "finesse": 1
+            },
+            "starting_inventory": {
+              "gold_coins": 1,
+              "free_gear": [
+                "Tongs"
+              ],
+              "loot_or_consumable_options": [],
+              "class_gear_options": []
+            },
+            "background_questions": [
+              "Which forge did you leave?"
+            ],
+            "connection_questions": [
+              "Who owes you a blade?"
+            ],
+            "character_description_suggestions": {
+              "clothes": "Scorched leathers",
+              "eyes": "Amber",
+              "body": "Broad",
+              "skin": "Ash-streaked",
+              "attitude": "Patient"
+            }
+          },
+          "extensions": {
+            "daggerdash": {
+              "cached_as": "opaque"
+            }
+          }
+        }
+      },
+      "response": {
+        "status": 201,
+        "headers": {
+          "ETag": "\"1\""
+        },
+        "body": {
+          "id": "b1b2b3b4-c1c2-4d1d-8e1e-f1f2f3f4f5f6",
+          "kind": "homebrew",
+          "revision": 1,
+          "created_at": "2026-10-02T09:00:00Z",
+          "updated_at": "2026-10-02T09:05:12Z",
+          "deleted_at": null,
+          "client_ref": "daggerdash:636c61737365730000000000000000ab",
+          "readonly": false,
+          "provenance": {
+            "origin": "homebrew",
+            "owner": {
+              "user_id": "0b6f0a1e-4d36-4a52-8d0f-6f3b2d9c7a11",
+              "display_name": "Vanessa"
+            }
+          },
+          "extensions": {
+            "daggerdash": {
+              "cached_as": "opaque"
+            }
+          },
+          "data": {
+            "source_key": "Homebrew",
+            "title": "Foundryborn",
+            "image_url": "",
+            "artist_name": "",
+            "description_html": "<p>Smiths who carry the forge with them.</p>",
+            "starting_evasion": 10,
+            "starting_max_hp": 6,
+            "hope_feature": {
+              "title": "Stoke",
+              "description_html": "<p>Spend Hope to add heat.</p>",
+              "character_modifiers": [],
+              "weapon_modifiers": []
+            },
+            "class_features": [],
+            "subclass_ids": [],
+            "suggested_traits": {
+              "strength": 2,
+              "finesse": 1
+            },
+            "starting_inventory": {
+              "gold_coins": 1,
+              "free_gear": [
+                "Tongs"
+              ],
+              "loot_or_consumable_options": [],
+              "class_gear_options": []
+            },
+            "background_questions": [
+              "Which forge did you leave?"
+            ],
+            "connection_questions": [
+              "Who owes you a blade?"
+            ],
+            "character_description_suggestions": {
+              "clothes": "Scorched leathers",
+              "eyes": "Amber",
+              "body": "Broad",
+              "skin": "Ash-streaked",
+              "attitude": "Patient"
+            }
+          },
+          "type": "classes"
+        }
+      }
+    },
+    {
+      "label": "retry-replay",
+      "class": "retry",
+      "operation": "createHomebrew",
+      "request": {
+        "headers": {
+          "Idempotency-Key": "ob-hb-classes"
+        },
+        "body": {
+          "client_ref": "daggerdash:636c61737365730000000000000000ab",
+          "type": "classes",
+          "data": {
+            "source_key": "Homebrew",
+            "title": "Foundryborn",
+            "image_url": "",
+            "artist_name": "",
+            "description_html": "<p>Smiths who carry the forge with them.</p>",
+            "starting_evasion": 10,
+            "starting_max_hp": 6,
+            "hope_feature": {
+              "title": "Stoke",
+              "description_html": "<p>Spend Hope to add heat.</p>",
+              "character_modifiers": [],
+              "weapon_modifiers": []
+            },
+            "class_features": [],
+            "subclass_ids": [],
+            "suggested_traits": {
+              "strength": 2,
+              "finesse": 1
+            },
+            "starting_inventory": {
+              "gold_coins": 1,
+              "free_gear": [
+                "Tongs"
+              ],
+              "loot_or_consumable_options": [],
+              "class_gear_options": []
+            },
+            "background_questions": [
+              "Which forge did you leave?"
+            ],
+            "connection_questions": [
+              "Who owes you a blade?"
+            ],
+            "character_description_suggestions": {
+              "clothes": "Scorched leathers",
+              "eyes": "Amber",
+              "body": "Broad",
+              "skin": "Ash-streaked",
+              "attitude": "Patient"
+            }
+          },
+          "extensions": {
+            "daggerdash": {
+              "cached_as": "opaque"
+            }
+          }
+        }
+      },
+      "response": {
+        "status": 200,
+        "headers": {
+          "ETag": "\"1\"",
+          "Idempotent-Replay": "true"
+        },
+        "body": {
+          "id": "b1b2b3b4-c1c2-4d1d-8e1e-f1f2f3f4f5f6",
+          "kind": "homebrew",
+          "revision": 1,
+          "created_at": "2026-10-02T09:00:00Z",
+          "updated_at": "2026-10-02T09:05:12Z",
+          "deleted_at": null,
+          "client_ref": "daggerdash:636c61737365730000000000000000ab",
+          "readonly": false,
+          "provenance": {
+            "origin": "homebrew",
+            "owner": {
+              "user_id": "0b6f0a1e-4d36-4a52-8d0f-6f3b2d9c7a11",
+              "display_name": "Vanessa"
+            }
+          },
+          "extensions": {
+            "daggerdash": {
+              "cached_as": "opaque"
+            }
+          },
+          "data": {
+            "source_key": "Homebrew",
+            "title": "Foundryborn",
+            "image_url": "",
+            "artist_name": "",
+            "description_html": "<p>Smiths who carry the forge with them.</p>",
+            "starting_evasion": 10,
+            "starting_max_hp": 6,
+            "hope_feature": {
+              "title": "Stoke",
+              "description_html": "<p>Spend Hope to add heat.</p>",
+              "character_modifiers": [],
+              "weapon_modifiers": []
+            },
+            "class_features": [],
+            "subclass_ids": [],
+            "suggested_traits": {
+              "strength": 2,
+              "finesse": 1
+            },
+            "starting_inventory": {
+              "gold_coins": 1,
+              "free_gear": [
+                "Tongs"
+              ],
+              "loot_or_consumable_options": [],
+              "class_gear_options": []
+            },
+            "background_questions": [
+              "Which forge did you leave?"
+            ],
+            "connection_questions": [
+              "Who owes you a blade?"
+            ],
+            "character_description_suggestions": {
+              "clothes": "Scorched leathers",
+              "eyes": "Amber",
+              "body": "Broad",
+              "skin": "Ash-streaked",
+              "attitude": "Patient"
+            }
+          },
+          "type": "classes"
+        }
+      },
+      "replays": 0
+    },
+    {
+      "label": "invalid-missing-title",
+      "class": "invalid",
+      "operation": "createHomebrew",
+      "request": {
+        "headers": {
+          "Idempotency-Key": "ob-hb-bad-classes"
+        },
+        "body": {
+          "client_ref": "daggerdash:636c61737365730000000000000000ab1",
+          "type": "classes",
+          "data": {
+            "source_key": "Homebrew",
+            "image_url": "",
+            "artist_name": "",
+            "description_html": "<p>Smiths who carry the forge with them.</p>",
+            "starting_evasion": 10,
+            "starting_max_hp": 6,
+            "hope_feature": {
+              "title": "Stoke",
+              "description_html": "<p>Spend Hope to add heat.</p>",
+              "character_modifiers": [],
+              "weapon_modifiers": []
+            },
+            "class_features": [],
+            "subclass_ids": [],
+            "suggested_traits": {
+              "strength": 2,
+              "finesse": 1
+            },
+            "starting_inventory": {
+              "gold_coins": 1,
+              "free_gear": [
+                "Tongs"
+              ],
+              "loot_or_consumable_options": [],
+              "class_gear_options": []
+            },
+            "background_questions": [
+              "Which forge did you leave?"
+            ],
+            "connection_questions": [
+              "Who owes you a blade?"
+            ],
+            "character_description_suggestions": {
+              "clothes": "Scorched leathers",
+              "eyes": "Amber",
+              "body": "Broad",
+              "skin": "Ash-streaked",
+              "attitude": "Patient"
+            }
+          }
+        }
+      },
+      "response": {
+        "status": 422,
+        "body": {
+          "type": "https://daggerlore.app/problems/validation_failed",
+          "title": "Invalid homebrew",
+          "status": 422,
+          "code": "validation_failed",
+          "retryable": false,
+          "request_id": "req_01HZX0439",
+          "field_errors": [
+            {
+              "pointer": "/data/title",
+              "code": "required",
+              "message": "Title is required"
+            }
+          ]
+        }
+      },
+      "validation": "schema"
+    },
+    {
+      "label": "put-ok",
+      "class": "ok",
+      "operation": "putHomebrew",
+      "request": {
+        "path": {
+          "homebrewId": "b1b2b3b4-c1c2-4d1d-8e1e-f1f2f3f4f5f6"
+        },
+        "headers": {
+          "If-Match": "\"1\""
+        },
+        "body": {
+          "type": "classes",
+          "data": {
+            "source_key": "Homebrew",
+            "title": "Foundryborn II",
+            "image_url": "",
+            "artist_name": "",
+            "description_html": "<p>Smiths who carry the forge with them.</p>",
+            "starting_evasion": 10,
+            "starting_max_hp": 6,
+            "hope_feature": {
+              "title": "Stoke",
+              "description_html": "<p>Spend Hope to add heat.</p>",
+              "character_modifiers": [],
+              "weapon_modifiers": []
+            },
+            "class_features": [],
+            "subclass_ids": [],
+            "suggested_traits": {
+              "strength": 2,
+              "finesse": 1
+            },
+            "starting_inventory": {
+              "gold_coins": 1,
+              "free_gear": [
+                "Tongs"
+              ],
+              "loot_or_consumable_options": [],
+              "class_gear_options": []
+            },
+            "background_questions": [
+              "Which forge did you leave?"
+            ],
+            "connection_questions": [
+              "Who owes you a blade?"
+            ],
+            "character_description_suggestions": {
+              "clothes": "Scorched leathers",
+              "eyes": "Amber",
+              "body": "Broad",
+              "skin": "Ash-streaked",
+              "attitude": "Patient"
+            }
+          },
+          "extensions": {
+            "daggerdash": {
+              "cached_as": "opaque"
+            }
+          }
+        }
+      },
+      "response": {
+        "status": 200,
+        "headers": {
+          "ETag": "\"2\""
+        },
+        "body": {
+          "id": "b1b2b3b4-c1c2-4d1d-8e1e-f1f2f3f4f5f6",
+          "kind": "homebrew",
+          "revision": 2,
+          "created_at": "2026-10-02T09:00:00Z",
+          "updated_at": "2026-10-02T09:05:12Z",
+          "deleted_at": null,
+          "client_ref": "daggerdash:636c61737365730000000000000000ab",
+          "readonly": false,
+          "provenance": {
+            "origin": "homebrew",
+            "owner": {
+              "user_id": "0b6f0a1e-4d36-4a52-8d0f-6f3b2d9c7a11",
+              "display_name": "Vanessa"
+            }
+          },
+          "extensions": {
+            "daggerdash": {
+              "cached_as": "opaque"
+            }
+          },
+          "data": {
+            "source_key": "Homebrew",
+            "title": "Foundryborn II",
+            "image_url": "",
+            "artist_name": "",
+            "description_html": "<p>Smiths who carry the forge with them.</p>",
+            "starting_evasion": 10,
+            "starting_max_hp": 6,
+            "hope_feature": {
+              "title": "Stoke",
+              "description_html": "<p>Spend Hope to add heat.</p>",
+              "character_modifiers": [],
+              "weapon_modifiers": []
+            },
+            "class_features": [],
+            "subclass_ids": [],
+            "suggested_traits": {
+              "strength": 2,
+              "finesse": 1
+            },
+            "starting_inventory": {
+              "gold_coins": 1,
+              "free_gear": [
+                "Tongs"
+              ],
+              "loot_or_consumable_options": [],
+              "class_gear_options": []
+            },
+            "background_questions": [
+              "Which forge did you leave?"
+            ],
+            "connection_questions": [
+              "Who owes you a blade?"
+            ],
+            "character_description_suggestions": {
+              "clothes": "Scorched leathers",
+              "eyes": "Amber",
+              "body": "Broad",
+              "skin": "Ash-streaked",
+              "attitude": "Patient"
+            }
+          },
+          "type": "classes"
+        }
+      }
+    },
+    {
+      "label": "stale",
+      "class": "stale",
+      "operation": "putHomebrew",
+      "request": {
+        "path": {
+          "homebrewId": "b1b2b3b4-c1c2-4d1d-8e1e-f1f2f3f4f5f6"
+        },
+        "headers": {
+          "If-Match": "\"1\""
+        },
+        "body": {
+          "type": "classes",
+          "data": {
+            "source_key": "Homebrew",
+            "title": "Foundryborn",
+            "image_url": "",
+            "artist_name": "",
+            "description_html": "<p>Smiths who carry the forge with them.</p>",
+            "starting_evasion": 10,
+            "starting_max_hp": 6,
+            "hope_feature": {
+              "title": "Stoke",
+              "description_html": "<p>Spend Hope to add heat.</p>",
+              "character_modifiers": [],
+              "weapon_modifiers": []
+            },
+            "class_features": [],
+            "subclass_ids": [],
+            "suggested_traits": {
+              "strength": 2,
+              "finesse": 1
+            },
+            "starting_inventory": {
+              "gold_coins": 1,
+              "free_gear": [
+                "Tongs"
+              ],
+              "loot_or_consumable_options": [],
+              "class_gear_options": []
+            },
+            "background_questions": [
+              "Which forge did you leave?"
+            ],
+            "connection_questions": [
+              "Who owes you a blade?"
+            ],
+            "character_description_suggestions": {
+              "clothes": "Scorched leathers",
+              "eyes": "Amber",
+              "body": "Broad",
+              "skin": "Ash-streaked",
+              "attitude": "Patient"
+            }
+          }
+        }
+      },
+      "response": {
+        "status": 412,
+        "body": {
+          "type": "https://daggerlore.app/problems/stale_revision",
+          "title": "Homebrew changed",
+          "status": 412,
+          "code": "stale_revision",
+          "retryable": false,
+          "request_id": "req_01HZX0426",
+          "current": {
+            "id": "b1b2b3b4-c1c2-4d1d-8e1e-f1f2f3f4f5f6",
+            "kind": "homebrew",
+            "revision": 2,
+            "created_at": "2026-10-02T09:00:00Z",
+            "updated_at": "2026-10-02T09:05:12Z",
+            "deleted_at": null,
+            "client_ref": "daggerdash:636c61737365730000000000000000ab",
+            "readonly": false,
+            "provenance": {
+              "origin": "homebrew",
+              "owner": {
+                "user_id": "0b6f0a1e-4d36-4a52-8d0f-6f3b2d9c7a11",
+                "display_name": "Vanessa"
+              }
+            },
+            "extensions": {
+              "daggerdash": {
+                "cached_as": "opaque"
+              }
+            },
+            "data": {
+              "source_key": "Homebrew",
+              "title": "Foundryborn II",
+              "image_url": "",
+              "artist_name": "",
+              "description_html": "<p>Smiths who carry the forge with them.</p>",
+              "starting_evasion": 10,
+              "starting_max_hp": 6,
+              "hope_feature": {
+                "title": "Stoke",
+                "description_html": "<p>Spend Hope to add heat.</p>",
+                "character_modifiers": [],
+                "weapon_modifiers": []
+              },
+              "class_features": [],
+              "subclass_ids": [],
+              "suggested_traits": {
+                "strength": 2,
+                "finesse": 1
+              },
+              "starting_inventory": {
+                "gold_coins": 1,
+                "free_gear": [
+                  "Tongs"
+                ],
+                "loot_or_consumable_options": [],
+                "class_gear_options": []
+              },
+              "background_questions": [
+                "Which forge did you leave?"
+              ],
+              "connection_questions": [
+                "Who owes you a blade?"
+              ],
+              "character_description_suggestions": {
+                "clothes": "Scorched leathers",
+                "eyes": "Amber",
+                "body": "Broad",
+                "skin": "Ash-streaked",
+                "attitude": "Patient"
+              }
+            },
+            "type": "classes"
+          }
+        }
+      }
+    },
+    {
+      "label": "delete-ok",
+      "class": "delete",
+      "operation": "deleteHomebrew",
+      "request": {
+        "path": {
+          "homebrewId": "b1b2b3b4-c1c2-4d1d-8e1e-f1f2f3f4f5f6"
+        },
+        "headers": {
+          "If-Match": "\"2\""
+        }
+      },
+      "response": {
+        "status": 200,
+        "body": {
+          "id": "b1b2b3b4-c1c2-4d1d-8e1e-f1f2f3f4f5f6",
+          "kind": "homebrew",
+          "revision": 3,
+          "deleted_at": "2026-10-02T09:05:12Z",
+          "data": null,
+          "type": "classes"
+        }
+      }
+    },
+    {
+      "label": "delete-repeat",
+      "class": "delete",
+      "operation": "deleteHomebrew",
+      "request": {
+        "path": {
+          "homebrewId": "b1b2b3b4-c1c2-4d1d-8e1e-f1f2f3f4f5f6"
+        },
+        "headers": {
+          "If-Match": "\"2\""
+        }
+      },
+      "response": {
+        "status": 200,
+        "body": {
+          "id": "b1b2b3b4-c1c2-4d1d-8e1e-f1f2f3f4f5f6",
+          "kind": "homebrew",
+          "revision": 3,
+          "deleted_at": "2026-10-02T09:05:12Z",
+          "data": null,
+          "type": "classes"
+        }
+      }
+    }
+  ]
+}

@@ -1,0 +1,344 @@
+{
+  "name": "Snapshot: pinned cursor, then replay changes after it",
+  "kind": "sync",
+  "steps": [
+    {
+      "label": "snapshot-first-page",
+      "class": "ok",
+      "operation": "getSnapshotPage",
+      "request": {
+        "query": {
+          "limit": 3
+        }
+      },
+      "response": {
+        "status": 200,
+        "headers": {
+          "X-Grant-Revision": "3"
+        },
+        "body": {
+          "snapshot_cursor": "c_0000001200",
+          "items": [
+            {
+              "id": "3f0c8f9e-5a1b-4c2d-9e7a-1b2c3d4e5f60",
+              "kind": "campaign",
+              "revision": 5,
+              "created_at": "2026-10-02T09:00:00Z",
+              "updated_at": "2026-10-02T09:05:12Z",
+              "deleted_at": null,
+              "client_ref": null,
+              "readonly": false,
+              "provenance": {
+                "origin": "campaign"
+              },
+              "extensions": {
+                "daggerdash": {
+                  "campaign_uid": "5b1c0f6e2d3a4c7f8e9d0a1b2c3d4e5f"
+                }
+              },
+              "data": {
+                "name": "The Ashen Reach",
+                "fear_visible_to_players": true,
+                "enabled_source_keys": [
+                  "SRD"
+                ],
+                "homebrew_vault": {
+                  "primary_weapons": [],
+                  "secondary_weapons": [],
+                  "armor": [],
+                  "loot": [],
+                  "consumables": [],
+                  "beastforms": [],
+                  "classes": [
+                    "b9b8b7b6-a5a4-4a3a-8a2a-a1a0a9a8a7a6"
+                  ],
+                  "subclasses": [],
+                  "domains": [],
+                  "domain_cards": [],
+                  "ancestry_cards": [],
+                  "community_cards": [],
+                  "transformations": [],
+                  "character_sheet_addons": [],
+                  "adversaries": [
+                    "b1b2b3b4-c1c2-4d1d-8e1e-f1f2f3f4f5f6"
+                  ],
+                  "environments": []
+                },
+                "current_encounter_id": "e5c0a1b2-6d7e-4f80-91a2-b3c4d5e6f708"
+              }
+            },
+            {
+              "id": "d4a1b2c3-7e8f-4091-a2b3-c4d5e6f70819",
+              "kind": "countdown",
+              "revision": 3,
+              "created_at": "2026-10-02T09:00:00Z",
+              "updated_at": "2026-10-02T09:05:12Z",
+              "deleted_at": null,
+              "client_ref": "daggerdash:7c1d2e3f4a5b6c7d8e9f0a1b2c3d4e5f",
+              "readonly": false,
+              "provenance": {
+                "origin": "campaign"
+              },
+              "extensions": {},
+              "data": {
+                "name": "Foundry floods",
+                "floor": 2,
+                "reset_to": null,
+                "current": 4,
+                "visible_to_players": true
+              },
+              "parent": {
+                "kind": "campaign",
+                "id": "3f0c8f9e-5a1b-4c2d-9e7a-1b2c3d4e5f60"
+              }
+            },
+            {
+              "id": "3f0c8f9e-5a1b-4c2d-9e7a-1b2c3d4e5f60",
+              "kind": "campaign_fear",
+              "revision": 10,
+              "created_at": "2026-10-02T09:00:00Z",
+              "updated_at": "2026-10-02T09:05:12Z",
+              "deleted_at": null,
+              "client_ref": null,
+              "readonly": false,
+              "provenance": {
+                "origin": "campaign"
+              },
+              "extensions": {},
+              "data": {
+                "value": 4
+              }
+            }
+          ],
+          "next_page_token": "pg_2"
+        }
+      }
+    },
+    {
+      "label": "snapshot-last-page",
+      "class": "ok",
+      "operation": "getSnapshotPage",
+      "request": {
+        "query": {
+          "page_token": "pg_2",
+          "limit": 3
+        }
+      },
+      "response": {
+        "status": 200,
+        "headers": {
+          "X-Grant-Revision": "3"
+        },
+        "body": {
+          "snapshot_cursor": "c_0000001200",
+          "items": [
+            {
+              "id": "d4a1b2c3-7e8f-4091-a2b3-c4d5e6f70810",
+              "kind": "countdown",
+              "revision": 7,
+              "deleted_at": "2026-10-02T09:05:12Z",
+              "data": null,
+              "parent": {
+                "kind": "campaign",
+                "id": "3f0c8f9e-5a1b-4c2d-9e7a-1b2c3d4e5f60"
+              }
+            }
+          ],
+          "next_page_token": null
+        }
+      }
+    },
+    {
+      "label": "changes-after-snapshot",
+      "class": "ok",
+      "operation": "getChanges",
+      "request": {
+        "query": {
+          "after": "c_0000001200",
+          "wait_ms": 0,
+          "limit": 100
+        },
+        "headers": {
+          "X-Sync-Ack": "c_0000001200"
+        }
+      },
+      "response": {
+        "status": 200,
+        "headers": {
+          "X-Grant-Revision": "3"
+        },
+        "body": {
+          "changes": [
+            {
+              "cursor": "c_0000001201",
+              "op": "upsert",
+              "kind": "campaign_fear",
+              "id": "3f0c8f9e-5a1b-4c2d-9e7a-1b2c3d4e5f60",
+              "revision": 11,
+              "occurred_at": "2026-10-02T09:05:12Z",
+              "resource": {
+                "id": "3f0c8f9e-5a1b-4c2d-9e7a-1b2c3d4e5f60",
+                "kind": "campaign_fear",
+                "revision": 11,
+                "created_at": "2026-10-02T09:00:00Z",
+                "updated_at": "2026-10-02T09:05:12Z",
+                "deleted_at": null,
+                "client_ref": null,
+                "readonly": false,
+                "provenance": {
+                  "origin": "campaign"
+                },
+                "extensions": {},
+                "data": {
+                  "value": 5
+                }
+              },
+              "fetch": false,
+              "actor": {
+                "kind": "web",
+                "workspace_id": null,
+                "idempotency_key": null
+              }
+            },
+            {
+              "cursor": "c_0000001202",
+              "op": "delete",
+              "kind": "countdown",
+              "id": "d4a1b2c3-7e8f-4091-a2b3-c4d5e6f70819",
+              "revision": 4,
+              "occurred_at": "2026-10-02T09:05:12Z",
+              "parent": {
+                "kind": "campaign",
+                "id": "3f0c8f9e-5a1b-4c2d-9e7a-1b2c3d4e5f60"
+              },
+              "resource": {
+                "id": "d4a1b2c3-7e8f-4091-a2b3-c4d5e6f70819",
+                "kind": "countdown",
+                "revision": 4,
+                "deleted_at": "2026-10-02T09:05:12Z",
+                "data": null,
+                "parent": {
+                  "kind": "campaign",
+                  "id": "3f0c8f9e-5a1b-4c2d-9e7a-1b2c3d4e5f60"
+                }
+              },
+              "fetch": false,
+              "actor": {
+                "kind": "desktop",
+                "workspace_id": "c1d2e3f4-0a1b-4c2d-8e3f-a4b5c6d7e8f9",
+                "idempotency_key": "ob-01hzx-0001"
+              }
+            },
+            {
+              "cursor": "c_0000001203",
+              "op": "purge",
+              "kind": "campaign",
+              "id": "9a8b7c6d-5e4f-4a3b-8c2d-1e0f9a8b7c6d",
+              "revision": 2,
+              "occurred_at": "2026-10-02T09:05:12Z",
+              "reason": "deselected",
+              "resource": null,
+              "fetch": false,
+              "actor": {
+                "kind": "system",
+                "workspace_id": null,
+                "idempotency_key": null
+              }
+            },
+            {
+              "cursor": "c_0000001204",
+              "op": "upsert",
+              "kind": "encounter",
+              "id": "e5c0a1b2-6d7e-4f80-91a2-b3c4d5e6f708",
+              "revision": 2,
+              "occurred_at": "2026-10-02T09:05:12Z",
+              "resource": null,
+              "fetch": true,
+              "actor": {
+                "kind": "web",
+                "workspace_id": null,
+                "idempotency_key": null
+              }
+            }
+          ],
+          "next_cursor": "c_0000001204",
+          "has_more": false
+        }
+      }
+    },
+    {
+      "label": "long-poll-timeout-empty",
+      "class": "ok",
+      "operation": "getChanges",
+      "request": {
+        "query": {
+          "after": "c_0000001204",
+          "wait_ms": 25000
+        }
+      },
+      "response": {
+        "status": 200,
+        "headers": {
+          "X-Grant-Revision": "3"
+        },
+        "body": {
+          "changes": [],
+          "next_cursor": "c_0000001204",
+          "has_more": false
+        }
+      }
+    },
+    {
+      "label": "cursor-expired",
+      "class": "gone",
+      "operation": "getChanges",
+      "request": {
+        "query": {
+          "after": "c_0000000003"
+        }
+      },
+      "response": {
+        "status": 410,
+        "body": {
+          "type": "https://daggerlore.app/problems/cursor_expired",
+          "title": "That cursor is older than the retained journal",
+          "status": 410,
+          "code": "cursor_expired",
+          "retryable": false,
+          "request_id": "req_01HZX0424",
+          "detail": "Re-bootstrap with /sync/snapshot"
+        }
+      }
+    },
+    {
+      "label": "invalid-wait",
+      "class": "invalid",
+      "operation": "getChanges",
+      "request": {
+        "query": {
+          "after": "c_0000001204",
+          "wait_ms": 60000
+        }
+      },
+      "response": {
+        "status": 422,
+        "body": {
+          "type": "https://daggerlore.app/problems/validation_failed",
+          "title": "wait_ms is at most 25000",
+          "status": 422,
+          "code": "validation_failed",
+          "retryable": false,
+          "request_id": "req_01HZX0439",
+          "field_errors": [
+            {
+              "pointer": "/wait_ms",
+              "code": "maximum",
+              "message": "At most 25000"
+            }
+          ]
+        }
+      },
+      "validation": "server_rule"
+    }
+  ]
+}

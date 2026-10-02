@@ -1,0 +1,17 @@
+{
+  "source_key": "Homebrew",
+  "title": "Collapsing Foundry",
+  "description": "A drowned foundry whose floors give way under heat.",
+  "tier": 2,
+  "image_url": "",
+  "artist_name": "",
+  "type": "Traversal",
+  "impulses": "Burn the unwary, drown the careless",
+  "relative_strength": true,
+  "difficulty": 15,
+  "potential_adversaries": "Cinder Wisp, Slag Golem",
+  "potential_adversaries_ids": ["homebrew:cinder-wisp"],
+  "features": [
+    { "type": "Action", "name": "Floor Gives Way", "description_html": "<p>A section of floor collapses.</p>", "questions": "Who is standing nearest the furnace?" }
+  ]
+}

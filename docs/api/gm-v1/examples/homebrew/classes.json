@@ -1,0 +1,10 @@
+{
+  "source_key": "Homebrew", "title": "Foundryborn", "image_url": "", "artist_name": "",
+  "description_html": "<p>Smiths who carry the forge with them.</p>",
+  "starting_evasion": 10, "starting_max_hp": 6,
+  "hope_feature": { "title": "Stoke", "description_html": "<p>Spend Hope to add heat.</p>", "character_modifiers": [], "weapon_modifiers": [] },
+  "class_features": [], "subclass_ids": [], "suggested_traits": { "strength": 2, "finesse": 1 },
+  "starting_inventory": { "gold_coins": 1, "free_gear": ["Tongs"], "loot_or_consumable_options": [], "class_gear_options": [] },
+  "background_questions": ["Which forge did you leave?"], "connection_questions": ["Who owes you a blade?"],
+  "character_description_suggestions": { "clothes": "Scorched leathers", "eyes": "Amber", "body": "Broad", "skin": "Ash-streaked", "attitude": "Patient" }
+}

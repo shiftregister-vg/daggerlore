@@ -1,0 +1,7 @@
+{
+  "database": "dolt",
+  "backend": "dolt",
+  "dolt_mode": "embedded",
+  "dolt_database": "daggerlore",
+  "project_id": "0c570a5f-5045-4644-85c3-5588719b4d92"
+}

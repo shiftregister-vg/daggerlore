@@ -1,0 +1,81 @@
+{
+  "name": "Adversary created offline on the desktop gets safe defaults for what it cannot model",
+  "mapping": "adversary",
+  "server": null,
+  "desktop": null,
+  "create": {
+    "local": {
+      "name": "Slag Hound",
+      "tier": 1,
+      "kind": "Bruiser",
+      "source": "Homebrew",
+      "difficulty": 11,
+      "hp": 6,
+      "stress": 2,
+      "threshold_major": 6,
+      "threshold_severe": 11,
+      "attack_modifier": 1,
+      "attack_name": "Bite",
+      "attack_range": "Melee",
+      "damage_dice": "1d10",
+      "damage_bonus": 2,
+      "damage_type": "phy",
+      "motives": "Hunt, scorch",
+      "description": "A dog of molten slag.",
+      "experiences": [
+        {
+          "name": "Scent",
+          "modifier": 2
+        }
+      ],
+      "features": [
+        {
+          "name": "Hot Breath",
+          "kind": "action",
+          "max_uses": null,
+          "text": "Deal **2** Stress.",
+          "questions": ""
+        }
+      ]
+    },
+    "expect_data": {
+      "source_key": "Homebrew",
+      "title": "Slag Hound",
+      "tier": 1,
+      "type": "Bruiser",
+      "image_url": "",
+      "artist_name": "",
+      "description": "A dog of molten slag.",
+      "motives_tactics": "Hunt, scorch",
+      "difficulty": 11,
+      "thresholds": {
+        "major": 6,
+        "severe": 11
+      },
+      "max_hp": 6,
+      "max_stress": 2,
+      "attack_modifier": 1,
+      "standard_attack": {
+        "name": "Bite",
+        "range": "Melee",
+        "damage_dice": "1d10",
+        "damage_bonus": 2,
+        "damage_type": "phy"
+      },
+      "experiences": [
+        "Scent"
+      ],
+      "experience_modifiers": [
+        2
+      ],
+      "features": [
+        {
+          "type": "Action",
+          "name": "Hot Breath",
+          "max_uses": null,
+          "description_html": "<p>Deal <strong>2</strong> Stress.</p>"
+        }
+      ]
+    }
+  }
+}

@@ -1,0 +1,867 @@
+{
+  "name": "Homebrew adversaries: create, replay, invalid, update, stale, delete",
+  "kind": "homebrew",
+  "type": "adversaries",
+  "steps": [
+    {
+      "label": "create-ok",
+      "class": "ok",
+      "operation": "createHomebrew",
+      "request": {
+        "headers": {
+          "Idempotency-Key": "ob-hb-adversaries"
+        },
+        "body": {
+          "client_ref": "daggerdash:616476657273617269657300000000ab",
+          "type": "adversaries",
+          "data": {
+            "source_key": "Homebrew",
+            "title": "Cinder Wisp",
+            "tier": 2,
+            "type": "Skulk",
+            "image_url": "https://usercontent.daggerlore.example/images/cinder-wisp.webp",
+            "artist_name": "Ada Marsh",
+            "description": "A flickering ember spirit that nests in abandoned forges.",
+            "motives_tactics": "Burn, hide, relight",
+            "difficulty": 14,
+            "thresholds": {
+              "major": 8,
+              "severe": 15
+            },
+            "max_hp": 5,
+            "max_stress": 3,
+            "attack_modifier": 3,
+            "standard_attack": {
+              "name": "Scorch",
+              "range": "Very Close",
+              "damage_dice": "2d6",
+              "damage_bonus": 2,
+              "damage_type": "mag"
+            },
+            "experiences": [
+              "Forge Lore",
+              "Slippery"
+            ],
+            "experience_modifiers": [
+              2,
+              3
+            ],
+            "features": [
+              {
+                "type": "Passive",
+                "name": "Smoldering",
+                "max_uses": null,
+                "description_html": "<p>Creatures that start their turn <strong>Close</strong> mark a Stress.</p>"
+              },
+              {
+                "type": "Reaction",
+                "name": "Gutter Out",
+                "max_uses": 1,
+                "description_html": "<p>When marked HP, become <em>Hidden</em>.</p>"
+              }
+            ]
+          },
+          "extensions": {
+            "daggerdash": {
+              "cached_as": "modeled"
+            }
+          },
+          "add_to_campaign_ids": [
+            "3f0c8f9e-5a1b-4c2d-9e7a-1b2c3d4e5f60"
+          ]
+        }
+      },
+      "response": {
+        "status": 201,
+        "headers": {
+          "ETag": "\"1\""
+        },
+        "body": {
+          "id": "b1b2b3b4-c1c2-4d1d-8e1e-f1f2f3f4f5f6",
+          "kind": "homebrew",
+          "revision": 1,
+          "created_at": "2026-10-02T09:00:00Z",
+          "updated_at": "2026-10-02T09:05:12Z",
+          "deleted_at": null,
+          "client_ref": "daggerdash:616476657273617269657300000000ab",
+          "readonly": false,
+          "provenance": {
+            "origin": "homebrew",
+            "owner": {
+              "user_id": "0b6f0a1e-4d36-4a52-8d0f-6f3b2d9c7a11",
+              "display_name": "Vanessa"
+            }
+          },
+          "extensions": {
+            "daggerdash": {
+              "cached_as": "modeled"
+            }
+          },
+          "data": {
+            "source_key": "Homebrew",
+            "title": "Cinder Wisp",
+            "tier": 2,
+            "type": "Skulk",
+            "image_url": "https://usercontent.daggerlore.example/images/cinder-wisp.webp",
+            "artist_name": "Ada Marsh",
+            "description": "A flickering ember spirit that nests in abandoned forges.",
+            "motives_tactics": "Burn, hide, relight",
+            "difficulty": 14,
+            "thresholds": {
+              "major": 8,
+              "severe": 15
+            },
+            "max_hp": 5,
+            "max_stress": 3,
+            "attack_modifier": 3,
+            "standard_attack": {
+              "name": "Scorch",
+              "range": "Very Close",
+              "damage_dice": "2d6",
+              "damage_bonus": 2,
+              "damage_type": "mag"
+            },
+            "experiences": [
+              "Forge Lore",
+              "Slippery"
+            ],
+            "experience_modifiers": [
+              2,
+              3
+            ],
+            "features": [
+              {
+                "type": "Passive",
+                "name": "Smoldering",
+                "max_uses": null,
+                "description_html": "<p>Creatures that start their turn <strong>Close</strong> mark a Stress.</p>"
+              },
+              {
+                "type": "Reaction",
+                "name": "Gutter Out",
+                "max_uses": 1,
+                "description_html": "<p>When marked HP, become <em>Hidden</em>.</p>"
+              }
+            ]
+          },
+          "type": "adversaries"
+        }
+      }
+    },
+    {
+      "label": "retry-replay",
+      "class": "retry",
+      "operation": "createHomebrew",
+      "request": {
+        "headers": {
+          "Idempotency-Key": "ob-hb-adversaries"
+        },
+        "body": {
+          "client_ref": "daggerdash:616476657273617269657300000000ab",
+          "type": "adversaries",
+          "data": {
+            "source_key": "Homebrew",
+            "title": "Cinder Wisp",
+            "tier": 2,
+            "type": "Skulk",
+            "image_url": "https://usercontent.daggerlore.example/images/cinder-wisp.webp",
+            "artist_name": "Ada Marsh",
+            "description": "A flickering ember spirit that nests in abandoned forges.",
+            "motives_tactics": "Burn, hide, relight",
+            "difficulty": 14,
+            "thresholds": {
+              "major": 8,
+              "severe": 15
+            },
+            "max_hp": 5,
+            "max_stress": 3,
+            "attack_modifier": 3,
+            "standard_attack": {
+              "name": "Scorch",
+              "range": "Very Close",
+              "damage_dice": "2d6",
+              "damage_bonus": 2,
+              "damage_type": "mag"
+            },
+            "experiences": [
+              "Forge Lore",
+              "Slippery"
+            ],
+            "experience_modifiers": [
+              2,
+              3
+            ],
+            "features": [
+              {
+                "type": "Passive",
+                "name": "Smoldering",
+                "max_uses": null,
+                "description_html": "<p>Creatures that start their turn <strong>Close</strong> mark a Stress.</p>"
+              },
+              {
+                "type": "Reaction",
+                "name": "Gutter Out",
+                "max_uses": 1,
+                "description_html": "<p>When marked HP, become <em>Hidden</em>.</p>"
+              }
+            ]
+          },
+          "extensions": {
+            "daggerdash": {
+              "cached_as": "modeled"
+            }
+          },
+          "add_to_campaign_ids": [
+            "3f0c8f9e-5a1b-4c2d-9e7a-1b2c3d4e5f60"
+          ]
+        }
+      },
+      "response": {
+        "status": 200,
+        "headers": {
+          "ETag": "\"1\"",
+          "Idempotent-Replay": "true"
+        },
+        "body": {
+          "id": "b1b2b3b4-c1c2-4d1d-8e1e-f1f2f3f4f5f6",
+          "kind": "homebrew",
+          "revision": 1,
+          "created_at": "2026-10-02T09:00:00Z",
+          "updated_at": "2026-10-02T09:05:12Z",
+          "deleted_at": null,
+          "client_ref": "daggerdash:616476657273617269657300000000ab",
+          "readonly": false,
+          "provenance": {
+            "origin": "homebrew",
+            "owner": {
+              "user_id": "0b6f0a1e-4d36-4a52-8d0f-6f3b2d9c7a11",
+              "display_name": "Vanessa"
+            }
+          },
+          "extensions": {
+            "daggerdash": {
+              "cached_as": "modeled"
+            }
+          },
+          "data": {
+            "source_key": "Homebrew",
+            "title": "Cinder Wisp",
+            "tier": 2,
+            "type": "Skulk",
+            "image_url": "https://usercontent.daggerlore.example/images/cinder-wisp.webp",
+            "artist_name": "Ada Marsh",
+            "description": "A flickering ember spirit that nests in abandoned forges.",
+            "motives_tactics": "Burn, hide, relight",
+            "difficulty": 14,
+            "thresholds": {
+              "major": 8,
+              "severe": 15
+            },
+            "max_hp": 5,
+            "max_stress": 3,
+            "attack_modifier": 3,
+            "standard_attack": {
+              "name": "Scorch",
+              "range": "Very Close",
+              "damage_dice": "2d6",
+              "damage_bonus": 2,
+              "damage_type": "mag"
+            },
+            "experiences": [
+              "Forge Lore",
+              "Slippery"
+            ],
+            "experience_modifiers": [
+              2,
+              3
+            ],
+            "features": [
+              {
+                "type": "Passive",
+                "name": "Smoldering",
+                "max_uses": null,
+                "description_html": "<p>Creatures that start their turn <strong>Close</strong> mark a Stress.</p>"
+              },
+              {
+                "type": "Reaction",
+                "name": "Gutter Out",
+                "max_uses": 1,
+                "description_html": "<p>When marked HP, become <em>Hidden</em>.</p>"
+              }
+            ]
+          },
+          "type": "adversaries"
+        }
+      },
+      "replays": 0
+    },
+    {
+      "label": "invalid-missing-title",
+      "class": "invalid",
+      "operation": "createHomebrew",
+      "request": {
+        "headers": {
+          "Idempotency-Key": "ob-hb-bad-adversaries"
+        },
+        "body": {
+          "client_ref": "daggerdash:616476657273617269657300000000ab1",
+          "type": "adversaries",
+          "data": {
+            "source_key": "Homebrew",
+            "tier": 2,
+            "type": "Skulk",
+            "image_url": "https://usercontent.daggerlore.example/images/cinder-wisp.webp",
+            "artist_name": "Ada Marsh",
+            "description": "A flickering ember spirit that nests in abandoned forges.",
+            "motives_tactics": "Burn, hide, relight",
+            "difficulty": 14,
+            "thresholds": {
+              "major": 8,
+              "severe": 15
+            },
+            "max_hp": 5,
+            "max_stress": 3,
+            "attack_modifier": 3,
+            "standard_attack": {
+              "name": "Scorch",
+              "range": "Very Close",
+              "damage_dice": "2d6",
+              "damage_bonus": 2,
+              "damage_type": "mag"
+            },
+            "experiences": [
+              "Forge Lore",
+              "Slippery"
+            ],
+            "experience_modifiers": [
+              2,
+              3
+            ],
+            "features": [
+              {
+                "type": "Passive",
+                "name": "Smoldering",
+                "max_uses": null,
+                "description_html": "<p>Creatures that start their turn <strong>Close</strong> mark a Stress.</p>"
+              },
+              {
+                "type": "Reaction",
+                "name": "Gutter Out",
+                "max_uses": 1,
+                "description_html": "<p>When marked HP, become <em>Hidden</em>.</p>"
+              }
+            ]
+          }
+        }
+      },
+      "response": {
+        "status": 422,
+        "body": {
+          "type": "https://daggerlore.app/problems/validation_failed",
+          "title": "Invalid homebrew",
+          "status": 422,
+          "code": "validation_failed",
+          "retryable": false,
+          "request_id": "req_01HZX0439",
+          "field_errors": [
+            {
+              "pointer": "/data/title",
+              "code": "required",
+              "message": "Title is required"
+            }
+          ]
+        }
+      },
+      "validation": "schema"
+    },
+    {
+      "label": "put-ok",
+      "class": "ok",
+      "operation": "putHomebrew",
+      "request": {
+        "path": {
+          "homebrewId": "b1b2b3b4-c1c2-4d1d-8e1e-f1f2f3f4f5f6"
+        },
+        "headers": {
+          "If-Match": "\"1\""
+        },
+        "body": {
+          "type": "adversaries",
+          "data": {
+            "source_key": "Homebrew",
+            "title": "Cinder Wisp II",
+            "tier": 2,
+            "type": "Skulk",
+            "image_url": "https://usercontent.daggerlore.example/images/cinder-wisp.webp",
+            "artist_name": "Ada Marsh",
+            "description": "A flickering ember spirit that nests in abandoned forges.",
+            "motives_tactics": "Burn, hide, relight",
+            "difficulty": 14,
+            "thresholds": {
+              "major": 8,
+              "severe": 15
+            },
+            "max_hp": 5,
+            "max_stress": 3,
+            "attack_modifier": 3,
+            "standard_attack": {
+              "name": "Scorch",
+              "range": "Very Close",
+              "damage_dice": "2d6",
+              "damage_bonus": 2,
+              "damage_type": "mag"
+            },
+            "experiences": [
+              "Forge Lore",
+              "Slippery"
+            ],
+            "experience_modifiers": [
+              2,
+              3
+            ],
+            "features": [
+              {
+                "type": "Passive",
+                "name": "Smoldering",
+                "max_uses": null,
+                "description_html": "<p>Creatures that start their turn <strong>Close</strong> mark a Stress.</p>"
+              },
+              {
+                "type": "Reaction",
+                "name": "Gutter Out",
+                "max_uses": 1,
+                "description_html": "<p>When marked HP, become <em>Hidden</em>.</p>"
+              }
+            ]
+          },
+          "extensions": {
+            "daggerdash": {
+              "cached_as": "modeled"
+            }
+          }
+        }
+      },
+      "response": {
+        "status": 200,
+        "headers": {
+          "ETag": "\"2\""
+        },
+        "body": {
+          "id": "b1b2b3b4-c1c2-4d1d-8e1e-f1f2f3f4f5f6",
+          "kind": "homebrew",
+          "revision": 2,
+          "created_at": "2026-10-02T09:00:00Z",
+          "updated_at": "2026-10-02T09:05:12Z",
+          "deleted_at": null,
+          "client_ref": "daggerdash:616476657273617269657300000000ab",
+          "readonly": false,
+          "provenance": {
+            "origin": "homebrew",
+            "owner": {
+              "user_id": "0b6f0a1e-4d36-4a52-8d0f-6f3b2d9c7a11",
+              "display_name": "Vanessa"
+            }
+          },
+          "extensions": {
+            "daggerdash": {
+              "cached_as": "modeled"
+            }
+          },
+          "data": {
+            "source_key": "Homebrew",
+            "title": "Cinder Wisp II",
+            "tier": 2,
+            "type": "Skulk",
+            "image_url": "https://usercontent.daggerlore.example/images/cinder-wisp.webp",
+            "artist_name": "Ada Marsh",
+            "description": "A flickering ember spirit that nests in abandoned forges.",
+            "motives_tactics": "Burn, hide, relight",
+            "difficulty": 14,
+            "thresholds": {
+              "major": 8,
+              "severe": 15
+            },
+            "max_hp": 5,
+            "max_stress": 3,
+            "attack_modifier": 3,
+            "standard_attack": {
+              "name": "Scorch",
+              "range": "Very Close",
+              "damage_dice": "2d6",
+              "damage_bonus": 2,
+              "damage_type": "mag"
+            },
+            "experiences": [
+              "Forge Lore",
+              "Slippery"
+            ],
+            "experience_modifiers": [
+              2,
+              3
+            ],
+            "features": [
+              {
+                "type": "Passive",
+                "name": "Smoldering",
+                "max_uses": null,
+                "description_html": "<p>Creatures that start their turn <strong>Close</strong> mark a Stress.</p>"
+              },
+              {
+                "type": "Reaction",
+                "name": "Gutter Out",
+                "max_uses": 1,
+                "description_html": "<p>When marked HP, become <em>Hidden</em>.</p>"
+              }
+            ]
+          },
+          "type": "adversaries"
+        }
+      }
+    },
+    {
+      "label": "stale",
+      "class": "stale",
+      "operation": "putHomebrew",
+      "request": {
+        "path": {
+          "homebrewId": "b1b2b3b4-c1c2-4d1d-8e1e-f1f2f3f4f5f6"
+        },
+        "headers": {
+          "If-Match": "\"1\""
+        },
+        "body": {
+          "type": "adversaries",
+          "data": {
+            "source_key": "Homebrew",
+            "title": "Cinder Wisp",
+            "tier": 2,
+            "type": "Skulk",
+            "image_url": "https://usercontent.daggerlore.example/images/cinder-wisp.webp",
+            "artist_name": "Ada Marsh",
+            "description": "A flickering ember spirit that nests in abandoned forges.",
+            "motives_tactics": "Burn, hide, relight",
+            "difficulty": 14,
+            "thresholds": {
+              "major": 8,
+              "severe": 15
+            },
+            "max_hp": 5,
+            "max_stress": 3,
+            "attack_modifier": 3,
+            "standard_attack": {
+              "name": "Scorch",
+              "range": "Very Close",
+              "damage_dice": "2d6",
+              "damage_bonus": 2,
+              "damage_type": "mag"
+            },
+            "experiences": [
+              "Forge Lore",
+              "Slippery"
+            ],
+            "experience_modifiers": [
+              2,
+              3
+            ],
+            "features": [
+              {
+                "type": "Passive",
+                "name": "Smoldering",
+                "max_uses": null,
+                "description_html": "<p>Creatures that start their turn <strong>Close</strong> mark a Stress.</p>"
+              },
+              {
+                "type": "Reaction",
+                "name": "Gutter Out",
+                "max_uses": 1,
+                "description_html": "<p>When marked HP, become <em>Hidden</em>.</p>"
+              }
+            ]
+          }
+        }
+      },
+      "response": {
+        "status": 412,
+        "body": {
+          "type": "https://daggerlore.app/problems/stale_revision",
+          "title": "Homebrew changed",
+          "status": 412,
+          "code": "stale_revision",
+          "retryable": false,
+          "request_id": "req_01HZX0426",
+          "current": {
+            "id": "b1b2b3b4-c1c2-4d1d-8e1e-f1f2f3f4f5f6",
+            "kind": "homebrew",
+            "revision": 2,
+            "created_at": "2026-10-02T09:00:00Z",
+            "updated_at": "2026-10-02T09:05:12Z",
+            "deleted_at": null,
+            "client_ref": "daggerdash:616476657273617269657300000000ab",
+            "readonly": false,
+            "provenance": {
+              "origin": "homebrew",
+              "owner": {
+                "user_id": "0b6f0a1e-4d36-4a52-8d0f-6f3b2d9c7a11",
+                "display_name": "Vanessa"
+              }
+            },
+            "extensions": {
+              "daggerdash": {
+                "cached_as": "modeled"
+              }
+            },
+            "data": {
+              "source_key": "Homebrew",
+              "title": "Cinder Wisp II",
+              "tier": 2,
+              "type": "Skulk",
+              "image_url": "https://usercontent.daggerlore.example/images/cinder-wisp.webp",
+              "artist_name": "Ada Marsh",
+              "description": "A flickering ember spirit that nests in abandoned forges.",
+              "motives_tactics": "Burn, hide, relight",
+              "difficulty": 14,
+              "thresholds": {
+                "major": 8,
+                "severe": 15
+              },
+              "max_hp": 5,
+              "max_stress": 3,
+              "attack_modifier": 3,
+              "standard_attack": {
+                "name": "Scorch",
+                "range": "Very Close",
+                "damage_dice": "2d6",
+                "damage_bonus": 2,
+                "damage_type": "mag"
+              },
+              "experiences": [
+                "Forge Lore",
+                "Slippery"
+              ],
+              "experience_modifiers": [
+                2,
+                3
+              ],
+              "features": [
+                {
+                  "type": "Passive",
+                  "name": "Smoldering",
+                  "max_uses": null,
+                  "description_html": "<p>Creatures that start their turn <strong>Close</strong> mark a Stress.</p>"
+                },
+                {
+                  "type": "Reaction",
+                  "name": "Gutter Out",
+                  "max_uses": 1,
+                  "description_html": "<p>When marked HP, become <em>Hidden</em>.</p>"
+                }
+              ]
+            },
+            "type": "adversaries"
+          }
+        }
+      }
+    },
+    {
+      "label": "invalid-parallel-experiences",
+      "class": "invalid",
+      "operation": "createHomebrew",
+      "request": {
+        "headers": {
+          "Idempotency-Key": "ob-hb-bad-exp"
+        },
+        "body": {
+          "client_ref": "daggerdash:616476657273617269657300000000ab2",
+          "type": "adversaries",
+          "data": {
+            "source_key": "Homebrew",
+            "title": "Cinder Wisp",
+            "tier": 2,
+            "type": "Skulk",
+            "image_url": "https://usercontent.daggerlore.example/images/cinder-wisp.webp",
+            "artist_name": "Ada Marsh",
+            "description": "A flickering ember spirit that nests in abandoned forges.",
+            "motives_tactics": "Burn, hide, relight",
+            "difficulty": 14,
+            "thresholds": {
+              "major": 8,
+              "severe": 15
+            },
+            "max_hp": 5,
+            "max_stress": 3,
+            "attack_modifier": 3,
+            "standard_attack": {
+              "name": "Scorch",
+              "range": "Very Close",
+              "damage_dice": "2d6",
+              "damage_bonus": 2,
+              "damage_type": "mag"
+            },
+            "experiences": [
+              "Forge Lore",
+              "Slippery"
+            ],
+            "experience_modifiers": [
+              2
+            ],
+            "features": [
+              {
+                "type": "Passive",
+                "name": "Smoldering",
+                "max_uses": null,
+                "description_html": "<p>Creatures that start their turn <strong>Close</strong> mark a Stress.</p>"
+              },
+              {
+                "type": "Reaction",
+                "name": "Gutter Out",
+                "max_uses": 1,
+                "description_html": "<p>When marked HP, become <em>Hidden</em>.</p>"
+              }
+            ]
+          }
+        }
+      },
+      "response": {
+        "status": 422,
+        "body": {
+          "type": "https://daggerlore.app/problems/validation_failed",
+          "title": "Experience names and modifiers must have the same length",
+          "status": 422,
+          "code": "validation_failed",
+          "retryable": false,
+          "request_id": "req_01HZX0439",
+          "field_errors": [
+            {
+              "pointer": "/data/experience_modifiers",
+              "code": "length_mismatch",
+              "message": "Must match experiences"
+            }
+          ]
+        }
+      },
+      "validation": "server_rule"
+    },
+    {
+      "label": "forbidden-not-owner",
+      "class": "forbidden",
+      "operation": "putHomebrew",
+      "request": {
+        "path": {
+          "homebrewId": "b9b8b7b6-a5a4-4a3a-8a2a-a1a0a9a8a7a6"
+        },
+        "headers": {
+          "If-Match": "\"1\""
+        },
+        "body": {
+          "type": "adversaries",
+          "data": {
+            "source_key": "Homebrew",
+            "title": "Cinder Wisp",
+            "tier": 2,
+            "type": "Skulk",
+            "image_url": "https://usercontent.daggerlore.example/images/cinder-wisp.webp",
+            "artist_name": "Ada Marsh",
+            "description": "A flickering ember spirit that nests in abandoned forges.",
+            "motives_tactics": "Burn, hide, relight",
+            "difficulty": 14,
+            "thresholds": {
+              "major": 8,
+              "severe": 15
+            },
+            "max_hp": 5,
+            "max_stress": 3,
+            "attack_modifier": 3,
+            "standard_attack": {
+              "name": "Scorch",
+              "range": "Very Close",
+              "damage_dice": "2d6",
+              "damage_bonus": 2,
+              "damage_type": "mag"
+            },
+            "experiences": [
+              "Forge Lore",
+              "Slippery"
+            ],
+            "experience_modifiers": [
+              2,
+              3
+            ],
+            "features": [
+              {
+                "type": "Passive",
+                "name": "Smoldering",
+                "max_uses": null,
+                "description_html": "<p>Creatures that start their turn <strong>Close</strong> mark a Stress.</p>"
+              },
+              {
+                "type": "Reaction",
+                "name": "Gutter Out",
+                "max_uses": 1,
+                "description_html": "<p>When marked HP, become <em>Hidden</em>.</p>"
+              }
+            ]
+          }
+        }
+      },
+      "response": {
+        "status": 403,
+        "body": {
+          "type": "https://daggerlore.app/problems/readonly_resource",
+          "title": "Only the owner can change this homebrew",
+          "status": 403,
+          "code": "readonly_resource",
+          "retryable": false,
+          "request_id": "req_01HZX0420"
+        }
+      }
+    },
+    {
+      "label": "delete-ok",
+      "class": "delete",
+      "operation": "deleteHomebrew",
+      "request": {
+        "path": {
+          "homebrewId": "b1b2b3b4-c1c2-4d1d-8e1e-f1f2f3f4f5f6"
+        },
+        "headers": {
+          "If-Match": "\"2\""
+        }
+      },
+      "response": {
+        "status": 200,
+        "body": {
+          "id": "b1b2b3b4-c1c2-4d1d-8e1e-f1f2f3f4f5f6",
+          "kind": "homebrew",
+          "revision": 3,
+          "deleted_at": "2026-10-02T09:05:12Z",
+          "data": null,
+          "type": "adversaries"
+        }
+      }
+    },
+    {
+      "label": "delete-repeat",
+      "class": "delete",
+      "operation": "deleteHomebrew",
+      "request": {
+        "path": {
+          "homebrewId": "b1b2b3b4-c1c2-4d1d-8e1e-f1f2f3f4f5f6"
+        },
+        "headers": {
+          "If-Match": "\"2\""
+        }
+      },
+      "response": {
+        "status": 200,
+        "body": {
+          "id": "b1b2b3b4-c1c2-4d1d-8e1e-f1f2f3f4f5f6",
+          "kind": "homebrew",
+          "revision": 3,
+          "deleted_at": "2026-10-02T09:05:12Z",
+          "data": null,
+          "type": "adversaries"
+        }
+      }
+    }
+  ]
+}

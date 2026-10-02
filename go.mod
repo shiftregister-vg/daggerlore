@@ -2,7 +2,11 @@ module github.com/shiftregister-vg/daggerlore
 
 go 1.27.1
 
-require github.com/gofiber/fiber/v3 v3.4.0
+require (
+	github.com/gofiber/fiber/v3 v3.4.0
+	github.com/santhosh-tekuri/jsonschema/v6 v6.0.2
+	go.yaml.in/yaml/v3 v3.0.5
+)
 
 require (
 	github.com/andybalholm/brotli v1.2.2 // indirect

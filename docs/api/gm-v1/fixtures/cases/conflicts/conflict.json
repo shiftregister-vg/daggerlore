@@ -1,0 +1,431 @@
+{
+  "name": "Conflict: park, replay, resolve keeping both versions, stale resolution",
+  "kind": "conflict",
+  "steps": [
+    {
+      "label": "create-ok",
+      "class": "ok",
+      "operation": "createConflict",
+      "request": {
+        "headers": {
+          "Idempotency-Key": "ob-01hzx-0301"
+        },
+        "body": {
+          "target": {
+            "kind": "countdown",
+            "id": "d4a1b2c3-7e8f-4091-a2b3-c4d5e6f70819"
+          },
+          "base_revision": 2,
+          "local": {
+            "data": {
+              "name": "Foundry floods",
+              "floor": 2,
+              "reset_to": 8,
+              "current": 1,
+              "visible_to_players": true
+            },
+            "extensions": {},
+            "revision": null,
+            "deleted": false
+          }
+        }
+      },
+      "response": {
+        "status": 201,
+        "body": {
+          "id": "f0e1d2c3-b4a5-4968-8776-655443322110",
+          "kind": "conflict",
+          "revision": 1,
+          "created_at": "2026-10-02T09:00:00Z",
+          "updated_at": "2026-10-02T09:05:12Z",
+          "deleted_at": null,
+          "client_ref": null,
+          "readonly": false,
+          "provenance": {
+            "origin": "campaign"
+          },
+          "extensions": {},
+          "data": {
+            "target": {
+              "kind": "countdown",
+              "id": "d4a1b2c3-7e8f-4091-a2b3-c4d5e6f70819"
+            },
+            "state": "open",
+            "base_revision": 2,
+            "local": {
+              "data": {
+                "name": "Foundry floods",
+                "floor": 2,
+                "reset_to": 8,
+                "current": 1,
+                "visible_to_players": true
+              },
+              "extensions": {},
+              "revision": null,
+              "deleted": false
+            },
+            "server": {
+              "data": {
+                "name": "Foundry floods",
+                "floor": 2,
+                "reset_to": 8,
+                "current": 4,
+                "visible_to_players": true
+              },
+              "extensions": {},
+              "revision": 3,
+              "deleted": false
+            },
+            "created_by_workspace": "c1d2e3f4-0a1b-4c2d-8e3f-a4b5c6d7e8f9",
+            "resolution": null
+          }
+        }
+      }
+    },
+    {
+      "label": "retry-replay",
+      "class": "retry",
+      "operation": "createConflict",
+      "request": {
+        "headers": {
+          "Idempotency-Key": "ob-01hzx-0301"
+        },
+        "body": {
+          "target": {
+            "kind": "countdown",
+            "id": "d4a1b2c3-7e8f-4091-a2b3-c4d5e6f70819"
+          },
+          "base_revision": 2,
+          "local": {
+            "data": {
+              "name": "Foundry floods",
+              "floor": 2,
+              "reset_to": 8,
+              "current": 1,
+              "visible_to_players": true
+            },
+            "extensions": {},
+            "revision": null,
+            "deleted": false
+          }
+        }
+      },
+      "response": {
+        "status": 200,
+        "body": {
+          "id": "f0e1d2c3-b4a5-4968-8776-655443322110",
+          "kind": "conflict",
+          "revision": 1,
+          "created_at": "2026-10-02T09:00:00Z",
+          "updated_at": "2026-10-02T09:05:12Z",
+          "deleted_at": null,
+          "client_ref": null,
+          "readonly": false,
+          "provenance": {
+            "origin": "campaign"
+          },
+          "extensions": {},
+          "data": {
+            "target": {
+              "kind": "countdown",
+              "id": "d4a1b2c3-7e8f-4091-a2b3-c4d5e6f70819"
+            },
+            "state": "open",
+            "base_revision": 2,
+            "local": {
+              "data": {
+                "name": "Foundry floods",
+                "floor": 2,
+                "reset_to": 8,
+                "current": 1,
+                "visible_to_players": true
+              },
+              "extensions": {},
+              "revision": null,
+              "deleted": false
+            },
+            "server": {
+              "data": {
+                "name": "Foundry floods",
+                "floor": 2,
+                "reset_to": 8,
+                "current": 4,
+                "visible_to_players": true
+              },
+              "extensions": {},
+              "revision": 3,
+              "deleted": false
+            },
+            "created_by_workspace": "c1d2e3f4-0a1b-4c2d-8e3f-a4b5c6d7e8f9",
+            "resolution": null
+          }
+        },
+        "headers": {
+          "Idempotent-Replay": "true"
+        }
+      },
+      "replays": 0
+    },
+    {
+      "label": "invalid-missing-base",
+      "class": "invalid",
+      "operation": "createConflict",
+      "request": {
+        "headers": {
+          "Idempotency-Key": "ob-01hzx-0302"
+        },
+        "body": {
+          "target": {
+            "kind": "countdown",
+            "id": "d4a1b2c3-7e8f-4091-a2b3-c4d5e6f70819"
+          },
+          "local": {
+            "data": {
+              "name": "Foundry floods",
+              "floor": 2,
+              "reset_to": 8,
+              "current": 1,
+              "visible_to_players": true
+            },
+            "extensions": {},
+            "revision": null,
+            "deleted": false
+          }
+        }
+      },
+      "response": {
+        "status": 422,
+        "body": {
+          "type": "https://daggerlore.app/problems/validation_failed",
+          "title": "Invalid conflict",
+          "status": 422,
+          "code": "validation_failed",
+          "retryable": false,
+          "request_id": "req_01HZX0439",
+          "field_errors": [
+            {
+              "pointer": "/base_revision",
+              "code": "required",
+              "message": "base_revision is required"
+            }
+          ]
+        }
+      },
+      "validation": "schema"
+    },
+    {
+      "label": "resolve-ok",
+      "class": "ok",
+      "operation": "resolveConflict",
+      "request": {
+        "path": {
+          "conflictId": "f0e1d2c3-b4a5-4968-8776-655443322110"
+        },
+        "headers": {
+          "Idempotency-Key": "ob-01hzx-0303"
+        },
+        "body": {
+          "choice": "keep_local",
+          "expected_target_revision": 3
+        }
+      },
+      "response": {
+        "status": 200,
+        "body": {
+          "id": "f0e1d2c3-b4a5-4968-8776-655443322110",
+          "kind": "conflict",
+          "revision": 2,
+          "created_at": "2026-10-02T09:00:00Z",
+          "updated_at": "2026-10-02T09:05:12Z",
+          "deleted_at": null,
+          "client_ref": null,
+          "readonly": false,
+          "provenance": {
+            "origin": "campaign"
+          },
+          "extensions": {},
+          "data": {
+            "target": {
+              "kind": "countdown",
+              "id": "d4a1b2c3-7e8f-4091-a2b3-c4d5e6f70819"
+            },
+            "state": "resolved",
+            "base_revision": 2,
+            "local": {
+              "data": {
+                "name": "Foundry floods",
+                "floor": 2,
+                "reset_to": 8,
+                "current": 1,
+                "visible_to_players": true
+              },
+              "extensions": {},
+              "revision": null,
+              "deleted": false
+            },
+            "server": {
+              "data": {
+                "name": "Foundry floods",
+                "floor": 2,
+                "reset_to": 8,
+                "current": 4,
+                "visible_to_players": true
+              },
+              "extensions": {},
+              "revision": 3,
+              "deleted": false
+            },
+            "created_by_workspace": "c1d2e3f4-0a1b-4c2d-8e3f-a4b5c6d7e8f9",
+            "resolution": {
+              "choice": "keep_local",
+              "resolved_at": "2026-10-02T09:05:12Z",
+              "result_revision": 4,
+              "discarded": {
+                "data": {
+                  "name": "Foundry floods",
+                  "floor": 2,
+                  "reset_to": 8,
+                  "current": 4,
+                  "visible_to_players": true
+                },
+                "extensions": {},
+                "revision": 3,
+                "deleted": false
+              }
+            }
+          }
+        }
+      }
+    },
+    {
+      "label": "stale-resolution",
+      "class": "stale",
+      "operation": "resolveConflict",
+      "request": {
+        "path": {
+          "conflictId": "f0e1d2c3-b4a5-4968-8776-655443322110"
+        },
+        "headers": {
+          "Idempotency-Key": "ob-01hzx-0304"
+        },
+        "body": {
+          "choice": "keep_server",
+          "expected_target_revision": 3
+        }
+      },
+      "response": {
+        "status": 412,
+        "body": {
+          "type": "https://daggerlore.app/problems/stale_revision",
+          "title": "The target changed after you looked at it",
+          "status": 412,
+          "code": "stale_revision",
+          "retryable": false,
+          "request_id": "req_01HZX0426",
+          "current": {
+            "id": "d4a1b2c3-7e8f-4091-a2b3-c4d5e6f70819",
+            "kind": "countdown",
+            "revision": 5,
+            "created_at": "2026-10-02T09:00:00Z",
+            "updated_at": "2026-10-02T09:05:12Z",
+            "deleted_at": null,
+            "client_ref": "daggerdash:7c1d2e3f4a5b6c7d8e9f0a1b2c3d4e5f",
+            "readonly": false,
+            "provenance": {
+              "origin": "campaign"
+            },
+            "extensions": {},
+            "data": {
+              "name": "Foundry floods",
+              "floor": 2,
+              "reset_to": 8,
+              "current": 2,
+              "visible_to_players": true
+            },
+            "parent": {
+              "kind": "campaign",
+              "id": "3f0c8f9e-5a1b-4c2d-9e7a-1b2c3d4e5f60"
+            }
+          }
+        }
+      }
+    },
+    {
+      "label": "get-ok",
+      "class": "ok",
+      "operation": "getConflict",
+      "request": {
+        "path": {
+          "conflictId": "f0e1d2c3-b4a5-4968-8776-655443322110"
+        }
+      },
+      "response": {
+        "status": 200,
+        "body": {
+          "id": "f0e1d2c3-b4a5-4968-8776-655443322110",
+          "kind": "conflict",
+          "revision": 2,
+          "created_at": "2026-10-02T09:00:00Z",
+          "updated_at": "2026-10-02T09:05:12Z",
+          "deleted_at": null,
+          "client_ref": null,
+          "readonly": false,
+          "provenance": {
+            "origin": "campaign"
+          },
+          "extensions": {},
+          "data": {
+            "target": {
+              "kind": "countdown",
+              "id": "d4a1b2c3-7e8f-4091-a2b3-c4d5e6f70819"
+            },
+            "state": "resolved",
+            "base_revision": 2,
+            "local": {
+              "data": {
+                "name": "Foundry floods",
+                "floor": 2,
+                "reset_to": 8,
+                "current": 1,
+                "visible_to_players": true
+              },
+              "extensions": {},
+              "revision": null,
+              "deleted": false
+            },
+            "server": {
+              "data": {
+                "name": "Foundry floods",
+                "floor": 2,
+                "reset_to": 8,
+                "current": 4,
+                "visible_to_players": true
+              },
+              "extensions": {},
+              "revision": 3,
+              "deleted": false
+            },
+            "created_by_workspace": "c1d2e3f4-0a1b-4c2d-8e3f-a4b5c6d7e8f9",
+            "resolution": {
+              "choice": "keep_local",
+              "resolved_at": "2026-10-02T09:05:12Z",
+              "result_revision": 4,
+              "discarded": {
+                "data": {
+                  "name": "Foundry floods",
+                  "floor": 2,
+                  "reset_to": 8,
+                  "current": 4,
+                  "visible_to_players": true
+                },
+                "extensions": {},
+                "revision": 3,
+                "deleted": false
+              }
+            }
+          }
+        }
+      }
+    }
+  ]
+}

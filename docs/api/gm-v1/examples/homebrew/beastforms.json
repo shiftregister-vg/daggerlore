@@ -1,0 +1,6 @@
+{
+  "source_key": "Homebrew", "level_requirement": 3, "title": "Ash Hound", "category": "Predator",
+  "character_trait": { "trait": "instinct", "bonus": 1 },
+  "attack": { "range": "Melee", "trait": "instinct", "damage_dice": "d8", "damage_bonus": 1, "damage_type": "phy" },
+  "advantages": ["Tracking by scent"], "evasion_bonus": 1, "features": []
+}

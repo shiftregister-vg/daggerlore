@@ -1,0 +1,501 @@
+{
+  "name": "Campaign settings: update, invalid, stale and parked conflict",
+  "kind": "campaign",
+  "steps": [
+    {
+      "label": "update-ok",
+      "class": "ok",
+      "operation": "putCampaign",
+      "request": {
+        "path": {
+          "campaignId": "3f0c8f9e-5a1b-4c2d-9e7a-1b2c3d4e5f60"
+        },
+        "headers": {
+          "If-Match": "\"4\""
+        },
+        "body": {
+          "data": {
+            "name": "The Ashen Reach",
+            "fear_visible_to_players": true,
+            "enabled_source_keys": [
+              "SRD"
+            ],
+            "homebrew_vault": {
+              "primary_weapons": [],
+              "secondary_weapons": [],
+              "armor": [],
+              "loot": [],
+              "consumables": [],
+              "beastforms": [],
+              "classes": [
+                "b9b8b7b6-a5a4-4a3a-8a2a-a1a0a9a8a7a6"
+              ],
+              "subclasses": [],
+              "domains": [],
+              "domain_cards": [],
+              "ancestry_cards": [],
+              "community_cards": [],
+              "transformations": [],
+              "character_sheet_addons": [],
+              "adversaries": [
+                "b1b2b3b4-c1c2-4d1d-8e1e-f1f2f3f4f5f6"
+              ],
+              "environments": []
+            },
+            "current_encounter_id": "e5c0a1b2-6d7e-4f80-91a2-b3c4d5e6f708"
+          },
+          "extensions": {
+            "daggerdash": {
+              "campaign_uid": "5b1c0f6e2d3a4c7f8e9d0a1b2c3d4e5f"
+            }
+          }
+        }
+      },
+      "response": {
+        "status": 200,
+        "headers": {
+          "ETag": "\"5\""
+        },
+        "body": {
+          "id": "3f0c8f9e-5a1b-4c2d-9e7a-1b2c3d4e5f60",
+          "kind": "campaign",
+          "revision": 5,
+          "created_at": "2026-10-02T09:00:00Z",
+          "updated_at": "2026-10-02T09:05:12Z",
+          "deleted_at": null,
+          "client_ref": null,
+          "readonly": false,
+          "provenance": {
+            "origin": "campaign"
+          },
+          "extensions": {
+            "daggerdash": {
+              "campaign_uid": "5b1c0f6e2d3a4c7f8e9d0a1b2c3d4e5f"
+            }
+          },
+          "data": {
+            "name": "The Ashen Reach",
+            "fear_visible_to_players": true,
+            "enabled_source_keys": [
+              "SRD"
+            ],
+            "homebrew_vault": {
+              "primary_weapons": [],
+              "secondary_weapons": [],
+              "armor": [],
+              "loot": [],
+              "consumables": [],
+              "beastforms": [],
+              "classes": [
+                "b9b8b7b6-a5a4-4a3a-8a2a-a1a0a9a8a7a6"
+              ],
+              "subclasses": [],
+              "domains": [],
+              "domain_cards": [],
+              "ancestry_cards": [],
+              "community_cards": [],
+              "transformations": [],
+              "character_sheet_addons": [],
+              "adversaries": [
+                "b1b2b3b4-c1c2-4d1d-8e1e-f1f2f3f4f5f6"
+              ],
+              "environments": []
+            },
+            "current_encounter_id": "e5c0a1b2-6d7e-4f80-91a2-b3c4d5e6f708"
+          }
+        }
+      }
+    },
+    {
+      "label": "invalid-empty-name",
+      "class": "invalid",
+      "operation": "putCampaign",
+      "request": {
+        "path": {
+          "campaignId": "3f0c8f9e-5a1b-4c2d-9e7a-1b2c3d4e5f60"
+        },
+        "headers": {
+          "If-Match": "\"5\""
+        },
+        "body": {
+          "data": {
+            "name": "",
+            "fear_visible_to_players": true,
+            "enabled_source_keys": [
+              "SRD"
+            ],
+            "homebrew_vault": {
+              "primary_weapons": [],
+              "secondary_weapons": [],
+              "armor": [],
+              "loot": [],
+              "consumables": [],
+              "beastforms": [],
+              "classes": [
+                "b9b8b7b6-a5a4-4a3a-8a2a-a1a0a9a8a7a6"
+              ],
+              "subclasses": [],
+              "domains": [],
+              "domain_cards": [],
+              "ancestry_cards": [],
+              "community_cards": [],
+              "transformations": [],
+              "character_sheet_addons": [],
+              "adversaries": [
+                "b1b2b3b4-c1c2-4d1d-8e1e-f1f2f3f4f5f6"
+              ],
+              "environments": []
+            },
+            "current_encounter_id": "e5c0a1b2-6d7e-4f80-91a2-b3c4d5e6f708"
+          }
+        }
+      },
+      "response": {
+        "status": 422,
+        "body": {
+          "type": "https://daggerlore.app/problems/validation_failed",
+          "title": "Invalid campaign",
+          "status": 422,
+          "code": "validation_failed",
+          "retryable": false,
+          "request_id": "req_01HZX0439",
+          "field_errors": [
+            {
+              "pointer": "/data/name",
+              "code": "min_length",
+              "message": "Name is required"
+            }
+          ]
+        }
+      },
+      "validation": "schema"
+    },
+    {
+      "label": "invalid-unlinked-current-encounter",
+      "class": "invalid",
+      "operation": "putCampaign",
+      "request": {
+        "path": {
+          "campaignId": "3f0c8f9e-5a1b-4c2d-9e7a-1b2c3d4e5f60"
+        },
+        "headers": {
+          "If-Match": "\"5\""
+        },
+        "body": {
+          "data": {
+            "name": "The Ashen Reach",
+            "fear_visible_to_players": true,
+            "enabled_source_keys": [
+              "SRD"
+            ],
+            "homebrew_vault": {
+              "primary_weapons": [],
+              "secondary_weapons": [],
+              "armor": [],
+              "loot": [],
+              "consumables": [],
+              "beastforms": [],
+              "classes": [
+                "b9b8b7b6-a5a4-4a3a-8a2a-a1a0a9a8a7a6"
+              ],
+              "subclasses": [],
+              "domains": [],
+              "domain_cards": [],
+              "ancestry_cards": [],
+              "community_cards": [],
+              "transformations": [],
+              "character_sheet_addons": [],
+              "adversaries": [
+                "b1b2b3b4-c1c2-4d1d-8e1e-f1f2f3f4f5f6"
+              ],
+              "environments": []
+            },
+            "current_encounter_id": "e5c0a1b2-6d7e-4f80-91a2-b3c4d5e6f700"
+          }
+        }
+      },
+      "response": {
+        "status": 422,
+        "body": {
+          "type": "https://daggerlore.app/problems/validation_failed",
+          "title": "Invalid campaign",
+          "status": 422,
+          "code": "validation_failed",
+          "retryable": false,
+          "request_id": "req_01HZX0439",
+          "field_errors": [
+            {
+              "pointer": "/data/current_encounter_id",
+              "code": "not_linked",
+              "message": "The encounter is not linked to this campaign"
+            }
+          ]
+        }
+      },
+      "validation": "server_rule"
+    },
+    {
+      "label": "stale",
+      "class": "stale",
+      "operation": "putCampaign",
+      "request": {
+        "path": {
+          "campaignId": "3f0c8f9e-5a1b-4c2d-9e7a-1b2c3d4e5f60"
+        },
+        "headers": {
+          "If-Match": "\"3\""
+        },
+        "body": {
+          "data": {
+            "name": "The Ashen Reach",
+            "fear_visible_to_players": true,
+            "enabled_source_keys": [
+              "SRD"
+            ],
+            "homebrew_vault": {
+              "primary_weapons": [],
+              "secondary_weapons": [],
+              "armor": [],
+              "loot": [],
+              "consumables": [],
+              "beastforms": [],
+              "classes": [
+                "b9b8b7b6-a5a4-4a3a-8a2a-a1a0a9a8a7a6"
+              ],
+              "subclasses": [],
+              "domains": [],
+              "domain_cards": [],
+              "ancestry_cards": [],
+              "community_cards": [],
+              "transformations": [],
+              "character_sheet_addons": [],
+              "adversaries": [
+                "b1b2b3b4-c1c2-4d1d-8e1e-f1f2f3f4f5f6"
+              ],
+              "environments": []
+            },
+            "current_encounter_id": "e5c0a1b2-6d7e-4f80-91a2-b3c4d5e6f708"
+          }
+        }
+      },
+      "response": {
+        "status": 412,
+        "body": {
+          "type": "https://daggerlore.app/problems/stale_revision",
+          "title": "Campaign changed",
+          "status": 412,
+          "code": "stale_revision",
+          "retryable": false,
+          "request_id": "req_01HZX0426",
+          "current": {
+            "id": "3f0c8f9e-5a1b-4c2d-9e7a-1b2c3d4e5f60",
+            "kind": "campaign",
+            "revision": 5,
+            "created_at": "2026-10-02T09:00:00Z",
+            "updated_at": "2026-10-02T09:05:12Z",
+            "deleted_at": null,
+            "client_ref": null,
+            "readonly": false,
+            "provenance": {
+              "origin": "campaign"
+            },
+            "extensions": {
+              "daggerdash": {
+                "campaign_uid": "5b1c0f6e2d3a4c7f8e9d0a1b2c3d4e5f"
+              }
+            },
+            "data": {
+              "name": "The Ashen Reach",
+              "fear_visible_to_players": true,
+              "enabled_source_keys": [
+                "SRD"
+              ],
+              "homebrew_vault": {
+                "primary_weapons": [],
+                "secondary_weapons": [],
+                "armor": [],
+                "loot": [],
+                "consumables": [],
+                "beastforms": [],
+                "classes": [
+                  "b9b8b7b6-a5a4-4a3a-8a2a-a1a0a9a8a7a6"
+                ],
+                "subclasses": [],
+                "domains": [],
+                "domain_cards": [],
+                "ancestry_cards": [],
+                "community_cards": [],
+                "transformations": [],
+                "character_sheet_addons": [],
+                "adversaries": [
+                  "b1b2b3b4-c1c2-4d1d-8e1e-f1f2f3f4f5f6"
+                ],
+                "environments": []
+              },
+              "current_encounter_id": "e5c0a1b2-6d7e-4f80-91a2-b3c4d5e6f708"
+            }
+          }
+        }
+      }
+    },
+    {
+      "label": "stale-parked",
+      "class": "stale",
+      "operation": "putCampaign",
+      "request": {
+        "path": {
+          "campaignId": "3f0c8f9e-5a1b-4c2d-9e7a-1b2c3d4e5f60"
+        },
+        "headers": {
+          "If-Match": "\"3\"",
+          "Prefer": "conflict=park"
+        },
+        "body": {
+          "data": {
+            "name": "The Ashen Reach",
+            "fear_visible_to_players": true,
+            "enabled_source_keys": [
+              "SRD"
+            ],
+            "homebrew_vault": {
+              "primary_weapons": [],
+              "secondary_weapons": [],
+              "armor": [],
+              "loot": [],
+              "consumables": [],
+              "beastforms": [],
+              "classes": [
+                "b9b8b7b6-a5a4-4a3a-8a2a-a1a0a9a8a7a6"
+              ],
+              "subclasses": [],
+              "domains": [],
+              "domain_cards": [],
+              "ancestry_cards": [],
+              "community_cards": [],
+              "transformations": [],
+              "character_sheet_addons": [],
+              "adversaries": [
+                "b1b2b3b4-c1c2-4d1d-8e1e-f1f2f3f4f5f6"
+              ],
+              "environments": []
+            },
+            "current_encounter_id": "e5c0a1b2-6d7e-4f80-91a2-b3c4d5e6f708"
+          }
+        }
+      },
+      "response": {
+        "status": 409,
+        "body": {
+          "type": "https://daggerlore.app/problems/conflict",
+          "title": "Campaign changed; your version was kept",
+          "status": 409,
+          "code": "conflict",
+          "retryable": false,
+          "request_id": "req_01HZX0417",
+          "current": {
+            "id": "3f0c8f9e-5a1b-4c2d-9e7a-1b2c3d4e5f60",
+            "kind": "campaign",
+            "revision": 5,
+            "created_at": "2026-10-02T09:00:00Z",
+            "updated_at": "2026-10-02T09:05:12Z",
+            "deleted_at": null,
+            "client_ref": null,
+            "readonly": false,
+            "provenance": {
+              "origin": "campaign"
+            },
+            "extensions": {
+              "daggerdash": {
+                "campaign_uid": "5b1c0f6e2d3a4c7f8e9d0a1b2c3d4e5f"
+              }
+            },
+            "data": {
+              "name": "The Ashen Reach",
+              "fear_visible_to_players": true,
+              "enabled_source_keys": [
+                "SRD"
+              ],
+              "homebrew_vault": {
+                "primary_weapons": [],
+                "secondary_weapons": [],
+                "armor": [],
+                "loot": [],
+                "consumables": [],
+                "beastforms": [],
+                "classes": [
+                  "b9b8b7b6-a5a4-4a3a-8a2a-a1a0a9a8a7a6"
+                ],
+                "subclasses": [],
+                "domains": [],
+                "domain_cards": [],
+                "ancestry_cards": [],
+                "community_cards": [],
+                "transformations": [],
+                "character_sheet_addons": [],
+                "adversaries": [
+                  "b1b2b3b4-c1c2-4d1d-8e1e-f1f2f3f4f5f6"
+                ],
+                "environments": []
+              },
+              "current_encounter_id": "e5c0a1b2-6d7e-4f80-91a2-b3c4d5e6f708"
+            }
+          },
+          "conflict_id": "f0e1d2c3-b4a5-4968-8776-655443322110"
+        }
+      }
+    },
+    {
+      "label": "missing-if-match",
+      "class": "rejected",
+      "operation": "putCampaign",
+      "request": {
+        "path": {
+          "campaignId": "3f0c8f9e-5a1b-4c2d-9e7a-1b2c3d4e5f60"
+        },
+        "body": {
+          "data": {
+            "name": "The Ashen Reach",
+            "fear_visible_to_players": true,
+            "enabled_source_keys": [
+              "SRD"
+            ],
+            "homebrew_vault": {
+              "primary_weapons": [],
+              "secondary_weapons": [],
+              "armor": [],
+              "loot": [],
+              "consumables": [],
+              "beastforms": [],
+              "classes": [
+                "b9b8b7b6-a5a4-4a3a-8a2a-a1a0a9a8a7a6"
+              ],
+              "subclasses": [],
+              "domains": [],
+              "domain_cards": [],
+              "ancestry_cards": [],
+              "community_cards": [],
+              "transformations": [],
+              "character_sheet_addons": [],
+              "adversaries": [
+                "b1b2b3b4-c1c2-4d1d-8e1e-f1f2f3f4f5f6"
+              ],
+              "environments": []
+            },
+            "current_encounter_id": "e5c0a1b2-6d7e-4f80-91a2-b3c4d5e6f708"
+          }
+        }
+      },
+      "response": {
+        "status": 428,
+        "body": {
+          "type": "https://daggerlore.app/problems/precondition_required",
+          "title": "If-Match is required",
+          "status": 428,
+          "code": "precondition_required",
+          "retryable": false,
+          "request_id": "req_01HZX0449"
+        }
+      }
+    }
+  ]
+}

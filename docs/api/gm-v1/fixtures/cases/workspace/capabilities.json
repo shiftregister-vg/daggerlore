@@ -1,0 +1,87 @@
+{
+  "name": "Capabilities: limits and measurable sync targets",
+  "kind": "capabilities",
+  "steps": [
+    {
+      "label": "get-ok",
+      "class": "ok",
+      "operation": "getCapabilities",
+      "request": {},
+      "response": {
+        "status": 200,
+        "body": {
+          "api_version": "v1",
+          "kinds": [
+            "campaign",
+            "campaign_fear",
+            "countdown",
+            "campaign_public_notes",
+            "campaign_private_notes",
+            "attachment",
+            "encounter",
+            "encounter_link",
+            "encounter_instance",
+            "homebrew",
+            "catalog_item",
+            "conflict"
+          ],
+          "homebrew_types": [
+            "primary_weapons",
+            "secondary_weapons",
+            "armor",
+            "loot",
+            "consumables",
+            "beastforms",
+            "classes",
+            "subclasses",
+            "domains",
+            "domain_cards",
+            "ancestry_cards",
+            "community_cards",
+            "transformations",
+            "character_sheet_addons",
+            "adversaries",
+            "environments"
+          ],
+          "scopes": [
+            "campaigns",
+            "catalog:unlocked"
+          ],
+          "limits": {
+            "max_page_size": 200,
+            "max_body_bytes": 1048576,
+            "max_attachment_bytes": 10485760,
+            "max_extensions_bytes": 65536,
+            "idempotency_retention_hours": 24,
+            "change_retention_days": 90
+          },
+          "sync": {
+            "target_p95_ms": 5000,
+            "target_p99_ms": 10000,
+            "server_delivery_p95_ms": 2000,
+            "long_poll_max_wait_ms": 25000,
+            "fallback_poll_interval_ms": 3000,
+            "mechanism": "long-poll"
+          }
+        }
+      }
+    },
+    {
+      "label": "unauthenticated",
+      "class": "rejected",
+      "operation": "getCapabilities",
+      "request": {},
+      "response": {
+        "status": 401,
+        "body": {
+          "type": "https://daggerlore.app/problems/unauthenticated",
+          "title": "Token missing or invalid",
+          "status": 401,
+          "code": "unauthenticated",
+          "retryable": false,
+          "request_id": "req_01HZX0416"
+        }
+      }
+    }
+  ]
+}
