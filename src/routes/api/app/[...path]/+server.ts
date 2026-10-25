@@ -421,7 +421,13 @@ export async function DELETE(event) {
 		}
 		if (parts[0] === 'campaigns' && parts[1]) {
 			if (parts[2] === 'characters' && parts[3]) {
-				await repo.removeCharacterFromCampaign(uid, parts[1], parts[3]);
+				// The body is optional: older clients send a bare DELETE.
+				const options = await body<{ remove_player_access?: boolean } | null>(event).catch(
+					(): null => null
+				);
+				await repo.removeCharacterFromCampaign(uid, parts[1], parts[3], {
+					removePlayerAccess: options?.remove_player_access === true
+				});
 				return noContent();
 			}
 			await repo.deleteCampaign(uid, parts[1]);
