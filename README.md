@@ -198,8 +198,9 @@ You will also need Cloudflare credentials and R2 bucket bindings configured for
 your own account.
 
 ## Sentry
-You will need to update `/src/hooks.server.ts` with your Sentry DSN url.
-Also you will need to update `/vite.config.ts` with your sentry org and project names
+Sentry is off unless configured. Set `SENTRY_DSN` (server) and `PUBLIC_SENTRY_DSN`
+(browser) to your Sentry project's DSN to enable error reporting. To upload source
+maps at build time, also set `SENTRY_ORG`, `SENTRY_PROJECT` and `SENTRY_AUTH_TOKEN`.
 
 ## Troubleshooting
 

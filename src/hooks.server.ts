@@ -74,7 +74,7 @@ const inviteOnlyHandle: Handle = async ({ event, resolve }) => {
 };
 
 const sentryCloudflareHandle = Sentry.initCloudflareSentryHandle({
-	dsn: '',
+	dsn: env.SENTRY_DSN || '',
 	tracesSampleRate: 1.0,
 	enableLogs: true,
 	environment: dev ? 'development' : 'production'
