@@ -18,8 +18,9 @@ export default defineConfig({
 		: undefined,
 	plugins: [
 		sentrySvelteKit({
-			org: '<your-sentry-org>',
-			project: '<your-sentry-project>'
+			org: process.env.SENTRY_ORG,
+			project: process.env.SENTRY_PROJECT,
+			authToken: process.env.SENTRY_AUTH_TOKEN
 		}),
 		tailwindcss(),
 		enhancedImages(),

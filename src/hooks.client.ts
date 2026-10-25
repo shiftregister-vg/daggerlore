@@ -1,9 +1,10 @@
 import { handleErrorWithSentry, replayIntegration } from '@sentry/sveltekit';
 import * as Sentry from '@sentry/sveltekit';
 import { dev } from '$app/environment';
+import { env } from '$env/dynamic/public';
 
 Sentry.init({
-	dsn: 'https://e97167e3f8fbc8911c9afbbaf01e0c0f@o4511267035348992.ingest.us.sentry.io/4511267038101504',
+	dsn: env.PUBLIC_SENTRY_DSN || '',
 
 	tracesSampleRate: 1.0,
 
