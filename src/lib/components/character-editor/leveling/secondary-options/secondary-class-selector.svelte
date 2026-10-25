@@ -7,6 +7,8 @@
 	import ClassSummary from './class-summary.svelte';
 	import SubclassCard from '$lib/components/compendium-items/cards/subclass-card.svelte';
 	import { getCharacterContext } from '$lib/state/character.svelte';
+	import RecordEditor from '$lib/components/character-sheet/features/record-editor.svelte';
+	import { usageKey } from '$lib/state/feature-usage';
 	import type { CharacterClass } from '@domain/schemas/compendium';
 	import SubclassSheetAddons from './subclass-sheet-addons.svelte';
 
@@ -73,6 +75,12 @@
 							<div class="mb-2 flex flex-col gap-2 text-xs text-muted-foreground">
 								{@html renderMarkdown(feature.description_html)}
 							</div>
+							{#each feature.records ?? [] as record (record.id)}
+								<RecordEditor
+									{record}
+									tracker_key={usageKey('classes', character.secondary_class_id ?? '', record.id)}
+								/>
+							{/each}
 						</div>
 					{/each}
 					<div class="flex justify-center sm:justify-end">

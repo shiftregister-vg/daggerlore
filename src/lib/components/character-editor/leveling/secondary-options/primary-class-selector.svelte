@@ -4,6 +4,8 @@
 	import ClassSummary from './class-summary.svelte';
 	import { renderMarkdown, sortEntriesByTitle } from '$lib/utils';
 	import { getCharacterContext } from '$lib/state/character.svelte';
+	import RecordEditor from '$lib/components/character-sheet/features/record-editor.svelte';
+	import { usageKey } from '$lib/state/feature-usage';
 	import type { CharacterClass } from '@domain/schemas/compendium';
 
 	const characterCtx = getCharacterContext();
@@ -28,6 +30,12 @@
 				<div class="mb-2 flex flex-col gap-2 text-sm text-muted-foreground">
 					{@html renderMarkdown(primary_class.hope_feature.description_html)}
 				</div>
+				{#each primary_class.hope_feature.records ?? [] as record (record.id)}
+					<RecordEditor
+						{record}
+						tracker_key={usageKey('classes', character.primary_class_id ?? '', record.id)}
+					/>
+				{/each}
 			</div>
 			{#each primary_class.class_features as feature}
 				<div class="flex flex-col gap-2">
@@ -35,6 +43,12 @@
 					<div class="mb-2 flex flex-col gap-2 text-sm text-muted-foreground">
 						{@html renderMarkdown(feature.description_html)}
 					</div>
+					{#each feature.records ?? [] as record (record.id)}
+						<RecordEditor
+							{record}
+							tracker_key={usageKey('classes', character.primary_class_id ?? '', record.id)}
+						/>
+					{/each}
 				</div>
 			{/each}
 			<div class="flex justify-center sm:justify-end">
