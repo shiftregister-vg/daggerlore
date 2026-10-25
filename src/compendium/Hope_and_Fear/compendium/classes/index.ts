@@ -178,11 +178,32 @@ export const CLASSES = {
 		secondary_domain_id: 'grace',
 		class_features: [
 			{
-				title: 'Warlock Patron',
+				title: 'Patron’s Pact',
 				description_html:
-					'Name your patron and define their spheres of influence. Spend Favor to add a sphere value to related action rolls.',
+					'You have committed yourself to a supernatural entity—such as a god, fae, or demon—in exchange for power. Write their name on your character sheet, then work with your GM to determine their sphere of influence (such as Nature, Chaos, Wisdom, Mischief, Love, War, Justice, or Death). Before making an action roll that relates to your patron’s sphere of influence, you can **spend a Favor** to call upon their aid, rolling your Patron Die and adding its result to the total. Your Patron Die starts at a **d6** and increases to a **d8** at level 5.',
 				character_modifiers: [],
-				weapon_modifiers: []
+				weapon_modifiers: [],
+				records: [
+					{
+						id: 'patron',
+						label: 'Patron',
+						kind: 'single',
+						fields: [
+							{
+								id: 'name',
+								label: 'Patron name',
+								type: 'text',
+								placeholder: 'e.g. a god, fae or demon'
+							},
+							{
+								id: 'sphere',
+								label: 'Sphere of influence',
+								type: 'text',
+								placeholder: 'e.g. Nature, Chaos or War'
+							}
+						]
+					}
+				]
 			},
 			{
 				title: 'Favor',
