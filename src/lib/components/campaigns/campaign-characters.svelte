@@ -3,6 +3,7 @@
 	import type { Id } from '@domain/ids';
 	import Button, { buttonVariants } from '$lib/components/ui/button/button.svelte';
 	import CharacterPortrait from '$lib/components/character-sheet/standalone/character-portrait.svelte';
+	import Checkbox from '$lib/components/ui/checkbox/checkbox.svelte';
 	import * as Dialog from '$lib/components/ui/dialog';
 	import * as Label from '$lib/components/ui/label';
 	import * as Select from '$lib/components/ui/select';
@@ -56,6 +57,16 @@
 	let showRemoveDialog = $state(false);
 	let characterToRemove = $state<Id<'characters'> | null>(null);
 	let isRemovingCharacter = $state(false);
+	let removePlayerAccess = $state(false);
+
+	// The player holding the character being removed, if any. The GM is never offered for removal.
+	const playerToRemove = $derived.by(() => {
+		const entry = [...activeCharacters, ...inactiveCharacters].find(
+			(char) => char.characterId === characterToRemove
+		);
+		const member = campaignCtx.members.find((m) => m.clerk_id === entry?.claimedByClerkId);
+		return member && member.role !== 'GM' ? member : null;
+	});
 
 	let showLeaveCampaignDialog = $state(false);
 
@@ -68,6 +79,7 @@
 		if (!showRemoveDialog) {
 			characterToRemove = null;
 			isRemovingCharacter = false;
+			removePlayerAccess = false;
 		}
 
 		if (!showUnassignDialog) {
@@ -121,7 +133,9 @@
 
 		isRemovingCharacter = true;
 		try {
-			await deleteApi<void>(`/campaigns/${requireCampaignId()}/characters/${characterToRemove}`);
+			await deleteApi<void>(`/campaigns/${requireCampaignId()}/characters/${characterToRemove}`, {
+				remove_player_access: removePlayerAccess && !!playerToRemove
+			});
 			await ownedCharactersQuery.refresh();
 			showRemoveDialog = false;
 		} catch (error) {
@@ -446,6 +460,21 @@
 					character from the campaign but will not delete the character.
 				</Dialog.Description>
 			</Dialog.Header>
+			{#if playerToRemove}
+				<label class="flex cursor-pointer items-start gap-2 text-sm">
+					<Checkbox
+						id="remove-player-access"
+						class="mt-0.5"
+						checked={removePlayerAccess}
+						disabled={isRemovingCharacter}
+						onCheckedChange={(checked) => (removePlayerAccess = checked === true)}
+					/>
+					<span>
+						Also remove {playerToRemove.display_name.trim() || 'this player'}'s access to this
+						campaign
+					</span>
+				</label>
+			{/if}
 			<Dialog.Footer class="flex gap-3">
 				<Dialog.Close
 					type="button"

@@ -2745,7 +2745,14 @@ export async function listCampaigns(userId: string | undefined) {
 		campaigns[row.id] = {
 			role: member?.role ?? 'Player',
 			name: access.campaign.name,
-			player_count: access.members.filter((member) => member.role === 'Player').length,
+			// Players whose character was removed or unassigned keep their member row but are not in the party.
+			player_count: access.members.filter(
+				(member) =>
+					member.role === 'Player' &&
+					access.characters.some(
+						(entry) => entry.status === 'active' && entry.claimed_by_clerk_id === member.clerk_id
+					)
+			).length,
 			active_character_image_urls: activeCharacterImageUrls,
 			creation_time: row.created_at
 		};
@@ -2859,17 +2866,48 @@ export async function addCharacterToCampaign(
 	]);
 }
 
+// Drops a player from the campaign and unclaims every character they held.
+function withoutCampaignPlayer(
+	members: CampaignMember[],
+	characters: CampaignCharacter[],
+	clerkId: string
+) {
+	return {
+		members: members.filter((member) => member.clerk_id !== clerkId),
+		characters: characters.map((character) =>
+			character.claimed_by_clerk_id === clerkId
+				? { ...character, status: 'unclaimed' as const, claimed_by_clerk_id: undefined }
+				: character
+		)
+	};
+}
+
 export async function removeCharacterFromCampaign(
 	userId: string | undefined,
 	campaignId: string,
-	characterId: string
+	characterId: string,
+	options: { removePlayerAccess?: boolean } = {}
 ) {
 	const access = await getCampaignAccess(userId, campaignId);
 	if (!access?.isOwner) throw new Error('Not authorized');
-	const nextCharacters = access.characters.filter(
+	let members = access.members;
+	let nextCharacters = access.characters.filter(
 		(character) => character.character_id !== characterId
 	);
-	await execute('update campaigns set characters = ?, updated_at = ? where id = ?', [
+	const claimedBy = access.characters.find(
+		(character) => character.character_id === characterId
+	)?.claimed_by_clerk_id;
+	const player = members.find((member) => member.clerk_id === claimedBy);
+	// The GM is never removed, even if they claimed a character themselves.
+	if (options.removePlayerAccess && player && player.role !== 'GM') {
+		({ members, characters: nextCharacters } = withoutCampaignPlayer(
+			members,
+			nextCharacters,
+			player.clerk_id
+		));
+	}
+	await execute('update campaigns set members = ?, characters = ?, updated_at = ? where id = ?', [
+		jsonParam(members),
 		jsonParam(nextCharacters),
 		nowIso(),
 		campaignId
@@ -2929,12 +2967,7 @@ export async function leaveCampaign(userId: string | undefined, campaignId: stri
 	const access = await getCampaignAccess(id, campaignId);
 	if (!access) throw new Error('Not authorized');
 	if (access.isOwner) throw new Error('GM cannot leave campaign');
-	const members = access.members.filter((member) => member.clerk_id !== id);
-	const characters = access.characters.map((character) =>
-		character.claimed_by_clerk_id === id
-			? { ...character, status: 'unclaimed' as const, claimed_by_clerk_id: undefined }
-			: character
-	);
+	const { members, characters } = withoutCampaignPlayer(access.members, access.characters, id);
 	await execute('update campaigns set members = ?, characters = ?, updated_at = ? where id = ?', [
 		jsonParam(members),
 		jsonParam(characters),
