@@ -811,7 +811,15 @@
 												<PoolTracker {pool} tracker_key={key} tone="sheet" class="mt-1" />
 											{/each}
 											{#each feature.records ?? [] as { record, key } (key)}
-												<RecordSummary {record} tracker_key={key} tone="sheet" class="mt-1" />
+												<RecordSummary
+													{record}
+													tracker_key={key}
+													tone="sheet"
+													class="mt-1"
+													edit_href={group.key.startsWith('class:')
+														? `/characters/${characterCtx.id}/class`
+														: undefined}
+												/>
 											{/each}
 											{#each feature.effects ?? [] as { effect, key } (key)}
 												<EffectControl {effect} tracker_key={key} tone="sheet" class="mt-1" />

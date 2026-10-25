@@ -9,11 +9,13 @@
 	import FeatureTokens from './feature-tokens.svelte';
 	import UsageTracker from '$lib/components/character-sheet/features/usage-tracker.svelte';
 	import PoolTracker from '$lib/components/character-sheet/features/pool-tracker.svelte';
-	import RecordEditor from '$lib/components/character-sheet/features/record-editor.svelte';
+	import RecordSummary from '$lib/components/character-sheet/features/record-summary.svelte';
 	import EffectDetails from '$lib/components/character-sheet/features/effect-details.svelte';
 	import { usageKey } from '$lib/state/feature-usage';
 
 	const characterCtx = getCharacterContext();
+	// Records are filled in on the editor's class page; the sheet only shows them.
+	const classEditHref = $derived(`/characters/${characterCtx.id}/class`);
 	const derived_character_data = $derived(characterCtx.derived_character_data);
 	const primary_class = $derived(derived_character_data?.primary_class);
 	const secondary_class = $derived(derived_character_data?.secondary_class);
@@ -110,9 +112,11 @@
 								/>
 							{/each}
 							{#each feature.records ?? [] as record (record.id)}
-								<RecordEditor
+								<RecordSummary
 									{record}
 									tracker_key={usageKey('classes', characterCtx.character.primary_class_id, record.id)}
+									tone="sheet"
+									edit_href={classEditHref}
 									class="pt-2 pl-2"
 								/>
 							{/each}
@@ -161,9 +165,11 @@
 								/>
 							{/each}
 							{#each feature.records ?? [] as record (record.id)}
-								<RecordEditor
+								<RecordSummary
 									{record}
 									tracker_key={usageKey('classes', characterCtx.character.secondary_class_id, record.id)}
+									tone="sheet"
+									edit_href={classEditHref}
 									class="pt-2 pl-2"
 								/>
 							{/each}

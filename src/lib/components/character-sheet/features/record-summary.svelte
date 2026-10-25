@@ -15,6 +15,7 @@
 		tracker_key,
 		tone = 'card',
 		onedit,
+		edit_href,
 		class: className = ''
 	}: {
 		record: FeatureRecord;
@@ -24,6 +25,8 @@
 		tone?: 'card' | 'sheet';
 		/** Shows an Edit button that opens the full editor. */
 		onedit?: () => void;
+		/** Shows an Edit link to the page where the record is filled in, for viewers who can edit. */
+		edit_href?: string;
 		class?: string;
 	} = $props();
 
@@ -84,5 +87,12 @@
 		>
 			Edit
 		</button>
+	{:else if edit_href && tracker && characterCtx?.canEdit}
+		<a
+			href={edit_href}
+			class={cn('w-fit text-xs underline underline-offset-2', muted, 'hover:text-current')}
+		>
+			Edit
+		</a>
 	{/if}
 </div>

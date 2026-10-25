@@ -395,6 +395,26 @@ describe('feature records', () => {
 		);
 	});
 
+	it('gives a Warlock fields for their patron and its sphere of influence', () => {
+		const patronKey = 'classes:warlock:patron';
+		expect(() => CharacterClassSchema.parse(compendium.classes.warlock)).not.toThrow();
+
+		const primary = legacyCharacter();
+		primary.primary_class_id = 'warlock';
+		primary.primary_subclass_id = 'warlock_pact_of_the_endless';
+		primary.feature_records = {
+			[patronKey]: [{ id: 'p1', values: { name: 'Mordra', sphere: 'Death' } }]
+		};
+		const result = derive_character_state(primary, compendium);
+		const tracker = result.derived.record_trackers.find((entry) => entry.key === patronKey);
+
+		expect(tracker?.kind).toBe('single');
+		expect(tracker?.fields.map((field) => field.id)).toEqual(['name', 'sphere']);
+		expect(result.character.feature_records[patronKey]).toEqual([
+			{ id: 'p1', values: { name: 'Mordra', sphere: 'Death' } }
+		]);
+	});
+
 	it('carries Orderborne field values into its record once', () => {
 		const character = legacyCharacter();
 		character.card_fields = { orderborne: ['Honor', '', 'Discipline'] };
