@@ -76,6 +76,7 @@
 	const typeOptions: ModifierType[] = [
 		'flat',
 		'derived_from_trait',
+		'derived_from_spellcast_trait',
 		'derived_from_proficiency',
 		'derived_from_level'
 	];
@@ -137,6 +138,7 @@
 	const typeLabels: Record<ModifierType, string> = {
 		flat: 'Flat',
 		derived_from_trait: 'Derived from Trait',
+		derived_from_spellcast_trait: 'Derived from Spellcast Trait',
 		derived_from_proficiency: 'Derived from Proficiency',
 		derived_from_level: 'Derived from Level'
 	};
