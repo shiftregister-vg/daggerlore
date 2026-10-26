@@ -14,6 +14,7 @@
 	import DomainCardEditor from './domain-card-editor.svelte';
 	import MarkdownTextarea from './markdown-textarea.svelte';
 	import FeatureUsageEditor from './feature-usage-editor.svelte';
+	import FeatureModifiersEditor from './feature-modifiers-editor.svelte';
 	import FeaturePoolsForm from '$lib/components/homebrew/forms/shared/features/feature-pools-form.svelte';
 	import FeatureRecordsForm from '$lib/components/homebrew/forms/shared/features/feature-records-form.svelte';
 	import FeatureEffectsForm from '$lib/components/homebrew/forms/shared/features/feature-effects-form.svelte';
@@ -2673,6 +2674,13 @@
 							</section>
 						{/if}
 
+						{#if selectedItemType === 'loot'}
+							<section class="admin-panel">
+								<h2>Stat Modifiers</h2>
+								<FeatureModifiersEditor bind:item={editorItem} idPrefix="admin-loot" />
+							</section>
+						{/if}
+
 						{#if selectedItemType === 'transformations'}
 							<section class="admin-panel">
 								<div class="flex items-center justify-between">
@@ -2739,6 +2747,10 @@
 												<Button size="sm" variant="outline" onclick={() => removeArrayItem(editorItem!, 'features', index)}>Remove</Button>
 											</div>
 											<MarkdownTextarea placeholder="Feature text" bind:value={feature.description_html} />
+											<FeatureModifiersEditor
+												bind:item={editorItem.features[index]}
+												idPrefix={`admin-feature-${selectedItemType}-${index}`}
+											/>
 											{#if selectedItemType === 'ancestry_cards' || selectedItemType === 'community_cards'}
 												<FeatureUsageEditor
 													bind:feature={editorItem.features[index]}

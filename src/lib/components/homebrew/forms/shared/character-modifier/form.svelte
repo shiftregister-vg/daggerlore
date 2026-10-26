@@ -29,7 +29,8 @@
 		allowExperienceTargets = false,
 		onRemove,
 		errorSummary,
-		path
+		path,
+		idPrefix = 'character-modifier'
 	}: {
 		modifier: CharacterModifier;
 		choiceOptions?: CardOption[];
@@ -39,6 +40,7 @@
 		onRemove?: () => void;
 		errorSummary: HomebrewErrorSummary;
 		path: HomebrewErrorPath;
+		idPrefix?: string;
 	} = $props();
 
 	type ModifierBehaviour = CharacterModifier['behaviour'];
@@ -391,11 +393,11 @@
 			(option) => option.choice_id === experienceModifier.choice_id
 		)}
 		<div class="flex flex-col gap-1">
-			<label class="text-xs font-medium text-muted-foreground" for="experience-max-input"
+			<label class="text-xs font-medium text-muted-foreground" for={`${idPrefix}-experience-max`}
 				>Max number of experiences</label
 			>
 			<Input
-				id="experience-max-input"
+				id={`${idPrefix}-experience-max`}
 				type="number"
 				min="1"
 				value={String(experienceChoice?.max ?? 1)}
@@ -465,10 +467,10 @@
 			<div class="flex flex-col gap-1">
 				<label
 					class="text-xs font-medium text-muted-foreground"
-					for="derived-trait-multiplier-input">Multiplier</label
+					for={`${idPrefix}-derived-trait-multiplier`}>Multiplier</label
 				>
 				<Input
-					id="derived-trait-multiplier-input"
+					id={`${idPrefix}-derived-trait-multiplier`}
 					type="number"
 					value={String((modifier as DerivedTraitModifier).multiplier)}
 					oninput={(event) =>
@@ -478,11 +480,11 @@
 		</div>
 	{:else if modifier.type === 'flat'}
 		<div class="flex flex-col gap-1">
-			<label class="text-xs font-medium text-muted-foreground" for="flat-modifier-value-input"
+			<label class="text-xs font-medium text-muted-foreground" for={`${idPrefix}-value`}
 				>Value</label
 			>
 			<Input
-				id="flat-modifier-value-input"
+				id={`${idPrefix}-value`}
 				type="number"
 				value={String((modifier as FlatModifier).value)}
 				oninput={(event) => updateFlatValue(Number(event.currentTarget.value))}
@@ -490,11 +492,11 @@
 		</div>
 	{:else}
 		<div class="flex flex-col gap-1">
-			<label class="text-xs font-medium text-muted-foreground" for="modifier-multiplier-input"
+			<label class="text-xs font-medium text-muted-foreground" for={`${idPrefix}-multiplier`}
 				>Multiplier</label
 			>
 			<Input
-				id="modifier-multiplier-input"
+				id={`${idPrefix}-multiplier`}
 				type="number"
 				value={String((modifier as MultiplierModifier).multiplier)}
 				oninput={(event) => updateMultiplier(parseInt(event.currentTarget.value, 10) || 0)}
