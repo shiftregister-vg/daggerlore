@@ -152,6 +152,10 @@ export const CharacterModifierSchema = z
 				value: z.number()
 			}),
 			z.object({
+				type: z.literal('derived_from_spellcast_trait'),
+				multiplier: z.number()
+			}),
+			z.object({
 				type: z.literal('derived_from_proficiency'),
 				multiplier: z.number()
 			}),

@@ -229,6 +229,25 @@ describe('feature effects', () => {
 		expect(describeEffectModifiers(dodge.effect)).toEqual(['+2 Evasion']);
 	});
 
+	it('describes a dynamic Spellcast trait modifier', () => {
+		expect(
+			describeEffectModifiers({
+				id: 'enchanted',
+				ends_on: [],
+				weapon_modifiers: [],
+				character_modifiers: [
+					{
+						behaviour: 'bonus',
+						character_conditions: [],
+						target: 'major_damage_threshold',
+						type: 'derived_from_spellcast_trait',
+						multiplier: 1
+					}
+				]
+			})
+		).toEqual(['+Spellcast trait Major threshold']);
+	});
+
 	it('lists instances an event could end and ends only the confirmed ones', () => {
 		const active = {
 			[reprisal.key]: [

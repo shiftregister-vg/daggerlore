@@ -278,6 +278,23 @@
 													"properties": {
 														"type": {
 															"type": "string",
+															"const": "derived_from_spellcast_trait"
+														},
+														"multiplier": {
+															"type": "number"
+														}
+													},
+													"required": [
+														"type",
+														"multiplier"
+													],
+													"additionalProperties": false
+												},
+												{
+													"type": "object",
+													"properties": {
+														"type": {
+															"type": "string",
 															"const": "derived_from_proficiency"
 														},
 														"multiplier": {
@@ -1425,6 +1442,23 @@
 																"required": [
 																	"type",
 																	"value"
+																],
+																"additionalProperties": false
+															},
+															{
+																"type": "object",
+																"properties": {
+																	"type": {
+																		"type": "string",
+																		"const": "derived_from_spellcast_trait"
+																	},
+																	"multiplier": {
+																		"type": "number"
+																	}
+																},
+																"required": [
+																	"type",
+																	"multiplier"
 																],
 																"additionalProperties": false
 															},
@@ -2855,6 +2889,23 @@
 													"properties": {
 														"type": {
 															"type": "string",
+															"const": "derived_from_spellcast_trait"
+														},
+														"multiplier": {
+															"type": "number"
+														}
+													},
+													"required": [
+														"type",
+														"multiplier"
+													],
+													"additionalProperties": false
+												},
+												{
+													"type": "object",
+													"properties": {
+														"type": {
+															"type": "string",
 															"const": "derived_from_proficiency"
 														},
 														"multiplier": {
@@ -4002,6 +4053,23 @@
 																"required": [
 																	"type",
 																	"value"
+																],
+																"additionalProperties": false
+															},
+															{
+																"type": "object",
+																"properties": {
+																	"type": {
+																		"type": "string",
+																		"const": "derived_from_spellcast_trait"
+																	},
+																	"multiplier": {
+																		"type": "number"
+																	}
+																},
+																"required": [
+																	"type",
+																	"multiplier"
 																],
 																"additionalProperties": false
 															},
@@ -5425,6 +5493,23 @@
 													"properties": {
 														"type": {
 															"type": "string",
+															"const": "derived_from_spellcast_trait"
+														},
+														"multiplier": {
+															"type": "number"
+														}
+													},
+													"required": [
+														"type",
+														"multiplier"
+													],
+													"additionalProperties": false
+												},
+												{
+													"type": "object",
+													"properties": {
+														"type": {
+															"type": "string",
 															"const": "derived_from_proficiency"
 														},
 														"multiplier": {
@@ -6572,6 +6657,23 @@
 																"required": [
 																	"type",
 																	"value"
+																],
+																"additionalProperties": false
+															},
+															{
+																"type": "object",
+																"properties": {
+																	"type": {
+																		"type": "string",
+																		"const": "derived_from_spellcast_trait"
+																	},
+																	"multiplier": {
+																		"type": "number"
+																	}
+																},
+																"required": [
+																	"type",
+																	"multiplier"
 																],
 																"additionalProperties": false
 															},
@@ -7911,6 +8013,23 @@
 										"properties": {
 											"type": {
 												"type": "string",
+												"const": "derived_from_spellcast_trait"
+											},
+											"multiplier": {
+												"type": "number"
+											}
+										},
+										"required": [
+											"type",
+											"multiplier"
+										],
+										"additionalProperties": false
+									},
+									{
+										"type": "object",
+										"properties": {
+											"type": {
+												"type": "string",
 												"const": "derived_from_proficiency"
 											},
 											"multiplier": {
@@ -8843,6 +8962,23 @@
 													"required": [
 														"type",
 														"value"
+													],
+													"additionalProperties": false
+												},
+												{
+													"type": "object",
+													"properties": {
+														"type": {
+															"type": "string",
+															"const": "derived_from_spellcast_trait"
+														},
+														"multiplier": {
+															"type": "number"
+														}
+													},
+													"required": [
+														"type",
+														"multiplier"
 													],
 													"additionalProperties": false
 												},
@@ -9998,6 +10134,23 @@
 																"required": [
 																	"type",
 																	"value"
+																],
+																"additionalProperties": false
+															},
+															{
+																"type": "object",
+																"properties": {
+																	"type": {
+																		"type": "string",
+																		"const": "derived_from_spellcast_trait"
+																	},
+																	"multiplier": {
+																		"type": "number"
+																	}
+																},
+																"required": [
+																	"type",
+																	"multiplier"
 																],
 																"additionalProperties": false
 															},
@@ -11381,6 +11534,23 @@
 												"properties": {
 													"type": {
 														"type": "string",
+														"const": "derived_from_spellcast_trait"
+													},
+													"multiplier": {
+														"type": "number"
+													}
+												},
+												"required": [
+													"type",
+													"multiplier"
+												],
+												"additionalProperties": false
+											},
+											{
+												"type": "object",
+												"properties": {
+													"type": {
+														"type": "string",
 														"const": "derived_from_proficiency"
 													},
 													"multiplier": {
@@ -12528,6 +12698,23 @@
 															"required": [
 																"type",
 																"value"
+															],
+															"additionalProperties": false
+														},
+														{
+															"type": "object",
+															"properties": {
+																"type": {
+																	"type": "string",
+																	"const": "derived_from_spellcast_trait"
+																},
+																"multiplier": {
+																	"type": "number"
+																}
+															},
+															"required": [
+																"type",
+																"multiplier"
 															],
 															"additionalProperties": false
 														},
@@ -13857,6 +14044,23 @@
 													"properties": {
 														"type": {
 															"type": "string",
+															"const": "derived_from_spellcast_trait"
+														},
+														"multiplier": {
+															"type": "number"
+														}
+													},
+													"required": [
+														"type",
+														"multiplier"
+													],
+													"additionalProperties": false
+												},
+												{
+													"type": "object",
+													"properties": {
+														"type": {
+															"type": "string",
 															"const": "derived_from_proficiency"
 														},
 														"multiplier": {
@@ -15004,6 +15208,23 @@
 																"required": [
 																	"type",
 																	"value"
+																],
+																"additionalProperties": false
+															},
+															{
+																"type": "object",
+																"properties": {
+																	"type": {
+																		"type": "string",
+																		"const": "derived_from_spellcast_trait"
+																	},
+																	"multiplier": {
+																		"type": "number"
+																	}
+																},
+																"required": [
+																	"type",
+																	"multiplier"
 																],
 																"additionalProperties": false
 															},
@@ -16603,6 +16824,23 @@
 															"properties": {
 																"type": {
 																	"type": "string",
+																	"const": "derived_from_spellcast_trait"
+																},
+																"multiplier": {
+																	"type": "number"
+																}
+															},
+															"required": [
+																"type",
+																"multiplier"
+															],
+															"additionalProperties": false
+														},
+														{
+															"type": "object",
+															"properties": {
+																"type": {
+																	"type": "string",
 																	"const": "derived_from_proficiency"
 																},
 																"multiplier": {
@@ -17750,6 +17988,23 @@
 																		"required": [
 																			"type",
 																			"value"
+																		],
+																		"additionalProperties": false
+																	},
+																	{
+																		"type": "object",
+																		"properties": {
+																			"type": {
+																				"type": "string",
+																				"const": "derived_from_spellcast_trait"
+																			},
+																			"multiplier": {
+																				"type": "number"
+																			}
+																		},
+																		"required": [
+																			"type",
+																			"multiplier"
 																		],
 																		"additionalProperties": false
 																	},
@@ -19241,6 +19496,23 @@
 															"properties": {
 																"type": {
 																	"type": "string",
+																	"const": "derived_from_spellcast_trait"
+																},
+																"multiplier": {
+																	"type": "number"
+																}
+															},
+															"required": [
+																"type",
+																"multiplier"
+															],
+															"additionalProperties": false
+														},
+														{
+															"type": "object",
+															"properties": {
+																"type": {
+																	"type": "string",
 																	"const": "derived_from_proficiency"
 																},
 																"multiplier": {
@@ -20388,6 +20660,23 @@
 																		"required": [
 																			"type",
 																			"value"
+																		],
+																		"additionalProperties": false
+																	},
+																	{
+																		"type": "object",
+																		"properties": {
+																			"type": {
+																				"type": "string",
+																				"const": "derived_from_spellcast_trait"
+																			},
+																			"multiplier": {
+																				"type": "number"
+																			}
+																		},
+																		"required": [
+																			"type",
+																			"multiplier"
 																		],
 																		"additionalProperties": false
 																	},
@@ -21879,6 +22168,23 @@
 															"properties": {
 																"type": {
 																	"type": "string",
+																	"const": "derived_from_spellcast_trait"
+																},
+																"multiplier": {
+																	"type": "number"
+																}
+															},
+															"required": [
+																"type",
+																"multiplier"
+															],
+															"additionalProperties": false
+														},
+														{
+															"type": "object",
+															"properties": {
+																"type": {
+																	"type": "string",
 																	"const": "derived_from_proficiency"
 																},
 																"multiplier": {
@@ -23026,6 +23332,23 @@
 																		"required": [
 																			"type",
 																			"value"
+																		],
+																		"additionalProperties": false
+																	},
+																	{
+																		"type": "object",
+																		"properties": {
+																			"type": {
+																				"type": "string",
+																				"const": "derived_from_spellcast_trait"
+																			},
+																			"multiplier": {
+																				"type": "number"
+																			}
+																		},
+																		"required": [
+																			"type",
+																			"multiplier"
 																		],
 																		"additionalProperties": false
 																	},
@@ -24629,6 +24952,23 @@
 															"properties": {
 																"type": {
 																	"type": "string",
+																	"const": "derived_from_spellcast_trait"
+																},
+																"multiplier": {
+																	"type": "number"
+																}
+															},
+															"required": [
+																"type",
+																"multiplier"
+															],
+															"additionalProperties": false
+														},
+														{
+															"type": "object",
+															"properties": {
+																"type": {
+																	"type": "string",
 																	"const": "derived_from_proficiency"
 																},
 																"multiplier": {
@@ -25776,6 +26116,23 @@
 																		"required": [
 																			"type",
 																			"value"
+																		],
+																		"additionalProperties": false
+																	},
+																	{
+																		"type": "object",
+																		"properties": {
+																			"type": {
+																				"type": "string",
+																				"const": "derived_from_spellcast_trait"
+																			},
+																			"multiplier": {
+																				"type": "number"
+																			}
+																		},
+																		"required": [
+																			"type",
+																			"multiplier"
 																		],
 																		"additionalProperties": false
 																	},
@@ -27263,6 +27620,23 @@
 															"properties": {
 																"type": {
 																	"type": "string",
+																	"const": "derived_from_spellcast_trait"
+																},
+																"multiplier": {
+																	"type": "number"
+																}
+															},
+															"required": [
+																"type",
+																"multiplier"
+															],
+															"additionalProperties": false
+														},
+														{
+															"type": "object",
+															"properties": {
+																"type": {
+																	"type": "string",
 																	"const": "derived_from_proficiency"
 																},
 																"multiplier": {
@@ -28410,6 +28784,23 @@
 																		"required": [
 																			"type",
 																			"value"
+																		],
+																		"additionalProperties": false
+																	},
+																	{
+																		"type": "object",
+																		"properties": {
+																			"type": {
+																				"type": "string",
+																				"const": "derived_from_spellcast_trait"
+																			},
+																			"multiplier": {
+																				"type": "number"
+																			}
+																		},
+																		"required": [
+																			"type",
+																			"multiplier"
 																		],
 																		"additionalProperties": false
 																	},
@@ -29913,6 +30304,23 @@
 															"properties": {
 																"type": {
 																	"type": "string",
+																	"const": "derived_from_spellcast_trait"
+																},
+																"multiplier": {
+																	"type": "number"
+																}
+															},
+															"required": [
+																"type",
+																"multiplier"
+															],
+															"additionalProperties": false
+														},
+														{
+															"type": "object",
+															"properties": {
+																"type": {
+																	"type": "string",
 																	"const": "derived_from_proficiency"
 																},
 																"multiplier": {
@@ -31060,6 +31468,23 @@
 																		"required": [
 																			"type",
 																			"value"
+																		],
+																		"additionalProperties": false
+																	},
+																	{
+																		"type": "object",
+																		"properties": {
+																			"type": {
+																				"type": "string",
+																				"const": "derived_from_spellcast_trait"
+																			},
+																			"multiplier": {
+																				"type": "number"
+																			}
+																		},
+																		"required": [
+																			"type",
+																			"multiplier"
 																		],
 																		"additionalProperties": false
 																	},

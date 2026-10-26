@@ -361,6 +361,8 @@ function amountText(modifier: {
 	if (modifier.type === 'derived_from_trait') {
 		return `+${times(modifier.multiplier)}${traitName(modifier.trait ?? '')}`;
 	}
+	if (modifier.type === 'derived_from_spellcast_trait')
+		return `+${times(modifier.multiplier)}Spellcast trait`;
 	if (modifier.type === 'derived_from_proficiency')
 		return `+${times(modifier.multiplier)}Proficiency`;
 	if (modifier.type === 'derived_from_level') return `+${times(modifier.multiplier)}level`;

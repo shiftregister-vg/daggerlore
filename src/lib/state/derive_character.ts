@@ -431,6 +431,17 @@ function traitValue(traits: Traits, trait: TraitId): number {
 	return traits[trait] ?? 0;
 }
 
+// Passive equipment can use either available Spellcast trait. Subclass traits
+// take precedence over class fallbacks; a missing caster does not mask negatives.
+function spellcastTraitValue(context: Pick<EvaluationContext, 'refs' | 'traits'>): number {
+	const values = [
+		context.refs.primary_subclass?.spellcast_trait ?? context.refs.primary_class?.spellcast_trait,
+		context.refs.secondary_subclass?.spellcast_trait ??
+			context.refs.secondary_class?.spellcast_trait
+	].flatMap((trait) => (trait ? [traitValue(context.traits, trait)] : []));
+	return values.length ? Math.max(...values) : 0;
+}
+
 function getLevelChoiceOption(optionId?: AllTierLevelUpOptionId): LevelUpOption | undefined {
 	return optionId ? ALL_LEVEL_UP_OPTIONS[optionId] : undefined;
 }
@@ -1699,6 +1710,9 @@ function applyScalarModifiers(
 		if (modifier.type === 'derived_from_trait') {
 			nextValue = Math.ceil(traitValue(context.traits, modifier.trait) * modifier.multiplier);
 		}
+		if (modifier.type === 'derived_from_spellcast_trait') {
+			nextValue = Math.ceil(spellcastTraitValue(context) * modifier.multiplier);
+		}
 		if (modifier.type === 'derived_from_proficiency') {
 			nextValue = Math.ceil(context.proficiency * modifier.multiplier);
 		}
@@ -1775,6 +1789,9 @@ function deriveTraits(
 		if (modifier.type === 'derived_from_level') {
 			traits[modifier.trait] = Math.ceil(context.character.level * modifier.multiplier);
 		}
+		if (modifier.type === 'derived_from_spellcast_trait') {
+			traits[modifier.trait] = Math.ceil(spellcastTraitValue(context) * modifier.multiplier);
+		}
 	}
 
 	for (const trait of ALL_TRAIT_IDS) {
@@ -1816,6 +1833,11 @@ function deriveTraits(
 			traits[modifier.trait] =
 				(traits[modifier.trait] ?? 0) + Math.ceil(context.character.level * modifier.multiplier);
 		}
+		if (modifier.type === 'derived_from_spellcast_trait') {
+			traits[modifier.trait] =
+				(traits[modifier.trait] ?? 0) +
+				Math.ceil(spellcastTraitValue(context) * modifier.multiplier);
+		}
 	}
 
 	for (const modifier of modifiers.override_character_modifiers) {
@@ -1833,6 +1855,9 @@ function deriveTraits(
 		}
 		if (modifier.type === 'derived_from_level') {
 			traits[modifier.trait] = Math.ceil(context.character.level * modifier.multiplier);
+		}
+		if (modifier.type === 'derived_from_spellcast_trait') {
+			traits[modifier.trait] = Math.ceil(spellcastTraitValue(context) * modifier.multiplier);
 		}
 	}
 
@@ -2247,6 +2272,9 @@ function deriveExperienceModifierValue(
 	if (modifier.type === 'derived_from_trait') {
 		return Math.ceil(traitValue(context.traits, modifier.trait) * modifier.multiplier);
 	}
+	if (modifier.type === 'derived_from_spellcast_trait') {
+		return Math.ceil(spellcastTraitValue(context) * modifier.multiplier);
+	}
 	if (modifier.type === 'derived_from_proficiency') {
 		return Math.ceil(context.proficiency * modifier.multiplier);
 	}
@@ -2340,11 +2368,13 @@ function deriveDamageThresholds(
 		context
 	);
 
+	// Equipped armor thresholds are base values, even when they happen to equal
+	// the unarmored level defaults. Numeric equality must not skip the level bonus.
 	const shouldApplyMajorLevelBump =
-		(derivedArmor !== undefined && derivedArmor.damage_thresholds.major !== character.level) ||
+		derivedArmor !== undefined ||
 		hasActiveScalarModifier('major_damage_threshold', modifiers.base_character_modifiers, context);
 	const shouldApplySevereLevelBump =
-		(derivedArmor !== undefined && derivedArmor.damage_thresholds.severe !== character.level * 2) ||
+		derivedArmor !== undefined ||
 		hasActiveScalarModifier('severe_damage_threshold', modifiers.base_character_modifiers, context);
 	if (shouldApplyMajorLevelBump) {
 		thresholds.major += character.level;
