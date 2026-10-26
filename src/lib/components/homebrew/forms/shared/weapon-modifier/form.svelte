@@ -42,7 +42,8 @@
 		allowChoiceConditions = false,
 		onRemove,
 		errorSummary,
-		path
+		path,
+		idPrefix = 'weapon-modifier'
 	}: {
 		modifier: WeaponModifier;
 		choiceOptions?: CardOption[];
@@ -51,6 +52,7 @@
 		onRemove?: () => void;
 		errorSummary: HomebrewErrorSummary;
 		path: HomebrewErrorPath;
+		idPrefix?: string;
 	} = $props();
 
 	type ModifierBehaviour = WeaponModifier['behaviour'];
@@ -364,11 +366,11 @@
 
 			{#if getNumericModifierType(modifier as AttackOrDamageModifier) === 'flat'}
 				<div class="flex flex-col gap-1">
-					<label class="text-xs font-medium text-muted-foreground" for="weapon-modifier-value-input"
+					<label class="text-xs font-medium text-muted-foreground" for={`${idPrefix}-value`}
 						>Value</label
 					>
 					<Input
-						id="weapon-modifier-value-input"
+						id={`${idPrefix}-value`}
 						type="number"
 						value={String(getFlatValue(modifier as AttackOrDamageModifier))}
 						oninput={(event) => updateValue(Number(event.currentTarget.value))}
@@ -397,14 +399,11 @@
 					</div>
 
 					<div class="flex flex-col gap-1">
-						<label
-							class="text-xs font-medium text-muted-foreground"
-							for="weapon-modifier-multiplier-input"
-						>
+						<label class="text-xs font-medium text-muted-foreground" for={`${idPrefix}-multiplier`}>
 							Multiplier
 						</label>
 						<Input
-							id="weapon-modifier-multiplier-input"
+							id={`${idPrefix}-multiplier`}
 							type="number"
 							value={String(getMultiplier(modifier as AttackOrDamageModifier))}
 							oninput={(event) => updateMultiplier(Number(event.currentTarget.value))}
